@@ -49,6 +49,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .card.feat{grid-column:1 / -1;flex-direction:row}
 .card.feat .art{flex:0 0 55%;aspect-ratio:auto;min-height:300px;border-bottom:0;border-right:1px solid var(--line)}
+.card.feat.rev{flex-direction:row-reverse}
+.card.feat.rev .art{border-right:0;border-left:1px solid var(--line)}
 .card.feat .body{padding:32px 36px;justify-content:center}
 .card.feat h3{font-size:2.4rem}
 .card.feat p{font-size:1.05rem;max-width:44ch}
@@ -73,7 +75,7 @@ footer{font-family:var(--mono);font-size:12px;color:var(--muted);border-top:1px 
 .t-disp{font-family:var(--display);font-weight:800;fill:var(--ink)}
 
 @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:700px){.card.feat{flex-direction:column}.card.feat .art{flex:none;aspect-ratio:4/3;min-height:0;border-right:0;border-bottom:1px solid var(--line)}.card.feat .body{padding:18px 20px 20px}.card.feat h3{font-size:1.7rem}}
+@media (max-width:700px){.card.feat,.card.feat.rev{flex-direction:column}.card.feat.rev .art{border-left:0}.card.feat .art{flex:none;aspect-ratio:4/3;min-height:0;border-right:0;border-bottom:1px solid var(--line)}.card.feat .body{padding:18px 20px 20px}.card.feat h3{font-size:1.7rem}}
 @media (max-width:600px){.grid{grid-template-columns:1fr}.wrap{gap:32px;padding-block:32px 48px}}
 @media (prefers-reduced-motion:reduce){.card,.art svg{transition:none}.card:hover{transform:none}.card:hover .art svg{transform:none}}
 </style>
@@ -120,7 +122,7 @@ footer{font-family:var(--mono);font-size:12px;color:var(--muted);border-top:1px 
         </div>
       </a>
 
-      <a class="card feat" href="projets/livre.html">
+      <a class="card feat rev" href="projets/livre.html">
         <div class="art">
           <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
             <path class="f-sheet s-ink" stroke-width="3" d="M60 70 Q150 52 240 72 L240 252 Q150 232 60 250 Z"/>
