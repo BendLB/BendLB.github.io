@@ -2,6 +2,7 @@
    Isolé dans un shadow DOM pour ne pas hériter des styles de la page. */
 (function () {
   var PROJETS = [
+    ["monkey", "Monkey Memory"],
     ["livre", "(Le Livre)³"],
     ["balance", "Balance énergie"],
     ["calcul", "Calcul mental"],
@@ -13,8 +14,7 @@
     ["fourier", "Fourier Épicycles"],
     ["float", "Anatomie d'un float"],
     ["morse", "Télégraphe Morse"],
-    ["allure", "Convertisseur d'allure"],
-    ["monkey", "Monkey Memory"]
+    ["allure", "Convertisseur d'allure"]
   ];
   var ME = document.currentScript && document.currentScript.src;
   var ROOT = ME ? new URL(".", ME).href : new URL("../", location.href).href;
