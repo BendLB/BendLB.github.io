@@ -135,6 +135,18 @@ p.note strong { color: var(--fg); font-weight: 500; }
 .spec-head button { padding: 6px 10px; font-size: 12px; }
 .kinfo { font-family: var(--mono); font-size: 13px; color: var(--fg); font-variant-numeric: tabular-nums; min-height: 1.4em; margin: 0; }
 .kinfo em { color: var(--x); font-style: normal; }
+
+/* --- Écran large : canevas à gauche, réglages à droite --- */
+@media (min-width: 980px) {
+  .wrap { max-width: 1320px; }
+  .panel:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 1fr); column-gap: 28px; row-gap: 14px; align-items: start; }
+  .panel > * { grid-column: 2; min-width: 0; }
+  #pShape > .stage, #p3d > .stage, #pGame > .g-stage { grid-column: 1; grid-row: 1 / span 12; position: sticky; top: 12px; }
+  #pFunc > #fcv { grid-column: 1; grid-row: 1 / span 12; position: sticky; top: 12px; }
+  #pShape > .stage canvas, #p3d > .stage canvas, #pGame > .g-stage canvas { max-width: min(100%, calc(100vh - 140px)); margin: 0 auto; }
+  #pTrans:not([hidden]) { display: flex; max-width: 920px; margin: 0 auto; width: 100%; }
+}
+
 </style>
 
 <div class="wrap">
@@ -2057,6 +2069,10 @@ p.note strong { color: var(--fg); font-weight: 500; }
   new MutationObserver(() => { if (!panel.hidden) { fit(cv); fit(sp); drawSpectrum(); } }).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   fit(cv); fit(sp);
   loadLevel(0);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => { if (!panel.hidden) { fit(cv); fit(sp); drawSpectrum(); } });
+    ro.observe(cv); ro.observe(sp);
+  }
   requestAnimationFrame(frame);
 })();
 </script>
