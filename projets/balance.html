@@ -1,0 +1,494 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Balance énergie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,750&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<script>
+window.MathJax = {
+  svg: { fontCache: 'local' },
+  startup: { ready: () => { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => { window.__mj = true; renderAllTex(); }); } }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async></script>
+<style>
+/* Layout: one column — equation, balance, one slider, one button; result replaces the controls */
+:root{
+  --bg:#E8ECEF; --panel:#F8FAFB; --ink:#15212B; --muted:#5A6976; --line:#C8D1D8;
+  --brass:#9C6A12; --blue:#2C5C8C; --good:#2D7A4E; --warn:#A86A10; --bad:#B03838;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F161C; --panel:#18222B; --ink:#E5EBF0; --muted:#8E9DAA; --line:#2E3C48;
+  --brass:#DDA845; --blue:#82B1DE; --good:#5EC28A; --warn:#E3A84A; --bad:#EE7A7A; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0F161C; --panel:#18222B; --ink:#E5EBF0; --muted:#8E9DAA; --line:#2E3C48;
+  --brass:#DDA845; --blue:#82B1DE; --good:#5EC28A; --warn:#E3A84A; --bad:#EE7A7A; color-scheme:dark }
+
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:16px 96px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink);font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.ask{margin:0;font-family:var(--f-display);font-weight:500;font-size:1.05rem;color:var(--muted);text-align:center}
+.eq{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}
+.side{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.side .emo{font-size:1.8rem;line-height:1}
+.side .nm{font-weight:700;font-size:.95rem;text-wrap:balance}
+.side.a .nm{color:var(--blue)} .side.b .nm{color:var(--brass)}
+.side .mult{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.eq .op{font-family:var(--f-display);font-size:1.8rem;color:var(--muted)}
+.scale{width:100%;height:auto;display:block}
+.status{text-align:center;font-size:.9rem;color:var(--muted);min-height:1.3em;margin:-6px 0 0}
+.reading{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:1.35rem;min-height:2.4rem}
+.reading .unit{font-size:1rem;color:var(--brass);font-weight:700}
+.ctrl{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--brass);height:32px}
+button{font-family:var(--f-body);font-size:1rem;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;cursor:pointer;min-height:46px}
+button:hover{border-color:var(--brass)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.step{font-family:var(--f-mono);font-size:.9rem;padding:8px 12px}
+button.primary{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:700;width:100%}
+button.primary:hover{background:var(--brass);border-color:var(--brass)}
+.result{display:flex;flex-direction:column;gap:14px}
+.verdict{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.verdict .t{font-family:var(--f-display);font-weight:750;font-size:1.35rem}
+.verdict .t.good{color:var(--good)} .verdict .t.ok{color:var(--blue)} .verdict .t.near{color:var(--warn)} .verdict .t.bad{color:var(--bad)}
+.verdict .p{font-family:var(--f-mono);color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp > div{background:var(--bg);border-radius:10px;padding:10px;text-align:center;min-width:0}
+.lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.cmp .v{font-size:1.15rem;overflow-x:auto}
+.why{display:flex;flex-direction:column;gap:10px;border-top:1px dashed var(--line);padding-top:12px}
+.why .row{min-width:0}
+.why .row b{font-size:.92rem}
+.math{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
+.end h2{font-family:var(--f-display);font-weight:750;font-size:2.4rem;margin:0}
+.end p{margin:0}
+.hist{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:.9rem;font-variant-numeric:tabular-nums}
+.hist span:nth-child(even){font-family:var(--f-mono);text-align:right}
+.rule{font-size:.85rem;color:var(--muted);background:var(--bg);border-radius:10px;padding:10px 12px}
+.rule .math{color:var(--ink)}
+.ladder-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ladder-head h2{font-family:var(--f-display);font-weight:750;font-size:1.2rem;margin:0}
+.ladder-head span{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.ladder{display:flex;flex-direction:column;gap:12px}
+.rung,.axis{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:center}
+.rung .e{font-size:1.4rem;text-align:center}
+.rung .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;min-width:0}
+.rung .top .v{color:var(--muted);flex-shrink:0;font-size:.8rem}
+.rung .badge{font-family:var(--f-mono);font-size:.7rem;color:var(--blue);margin-left:6px}
+.track{position:relative;height:6px;border-radius:3px;margin-top:5px;background:var(--bg);
+  background-image:repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px calc(100% / 15))}
+.track i{position:absolute;top:50%;width:11px;height:11px;border-radius:50%;background:var(--brass);transform:translate(-50%,-50%)}
+.rung.new .track i{background:var(--blue);box-shadow:0 0 0 4px color-mix(in srgb, var(--blue) 25%, transparent)}
+.axis .lab{position:relative;height:1.6rem;font-size:.75rem;color:var(--muted)}
+.axis .lab span{position:absolute;top:0;transform:translateX(-50%)}
+.empty{font-size:.9rem;color:var(--muted);margin:0}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <div class="meta"><span>Manche <b id="rnd">1</b>/10</span><span>Score <b id="score">0</b></span></div>
+
+  <section class="card" id="game">
+    <p class="ask">Combien en faut-il à droite pour équilibrer ?</p>
+    <div class="eq">
+      <div class="side a"><span class="emo" id="eA"></span><span class="nm" id="nA"></span><span class="mult">× 1</span></div>
+      <span class="op">=</span>
+      <div class="side b"><span class="emo" id="eB"></span><span class="nm" id="nB"></span><span class="mult">× ?</span></div>
+    </div>
+
+    <svg class="scale" viewBox="0 0 360 246" role="img" aria-label="Balance à deux plateaux">
+      <path d="M118,232 L242,232 L228,216 L132,216 Z" fill="var(--ink)"/>
+      <rect x="176" y="72" width="8" height="146" fill="var(--ink)"/>
+      <g id="beam"><rect x="36" y="66" width="288" height="8" rx="4" fill="var(--brass)"/></g>
+      <circle cx="180" cy="70" r="7" fill="var(--ink)" stroke="var(--brass)" stroke-width="2"/>
+      <g id="panL">
+        <line x1="0" y1="0" x2="-38" y2="72" stroke="var(--muted)"/><line x1="0" y1="0" x2="38" y2="72" stroke="var(--muted)"/>
+        <text id="emoA" x="0" y="72" text-anchor="middle" font-size="34"></text>
+        <path d="M-48,72 Q0,100 48,72 Z" fill="var(--blue)"/>
+        <text x="0" y="118" text-anchor="middle" font-size="15" font-family="var(--f-mono)" fill="var(--blue)">× 1</text>
+      </g>
+      <g id="panR">
+        <line x1="0" y1="0" x2="-38" y2="72" stroke="var(--muted)"/><line x1="0" y1="0" x2="38" y2="72" stroke="var(--muted)"/>
+        <text id="emoB" x="0" y="72" text-anchor="middle" font-size="30"></text>
+        <path d="M-48,72 Q0,100 48,72 Z" fill="var(--brass)"/>
+        <text id="multB" x="0" y="118" text-anchor="middle" font-size="15" font-family="var(--f-mono)" fill="var(--brass)"></text>
+      </g>
+    </svg>
+    <p class="status" id="status"></p>
+
+    <div id="controls" style="display:flex;flex-direction:column;gap:12px">
+      <div class="reading"><span id="guessTex"></span><span class="unit" id="guessUnit"></span></div>
+      <div class="ctrl">
+        <button class="step" id="div10" aria-label="Diviser par 10">÷10</button>
+        <input type="range" id="slider" min="-16" max="16" step="1" value="0" aria-label="Nombre d'objets à droite">
+        <button class="step" id="mul10" aria-label="Multiplier par 10">×10</button>
+      </div>
+      <button class="primary" id="weigh">Peser</button>
+    </div>
+
+    <div class="result" id="result" hidden>
+      <div class="verdict"><span class="t" id="vt"></span><span class="p" id="vp"></span></div>
+      <div class="cmp">
+        <div><div class="lbl">Votre réponse</div><div class="v" id="yourTex"></div></div>
+        <div><div class="lbl">Bonne réponse</div><div class="v" id="goodTex"></div><div class="math" id="goodExact" style="font-size:.8rem;color:var(--muted)"></div></div>
+      </div>
+      <div class="rule">
+        <div class="lbl">Points</div>
+        <div class="math" id="ptsTex"></div>
+        100 points pour le bon ordre de grandeur, 25 points de moins par puissance de 10 d'écart (dans un sens ou dans l'autre).
+      </div>
+      <div class="why">
+        <div class="lbl">Le calcul</div>
+        <div class="row"><b id="wA"></b><div class="math" id="fA"></div></div>
+        <div class="row"><b id="wB"></b><div class="math" id="fB"></div></div>
+        <div class="row"><b>Rapport</b><div class="math" id="fR"></div></div>
+      </div>
+      <button class="primary" id="next">Manche suivante</button>
+    </div>
+  </section>
+
+  <section class="card end" id="end" hidden>
+    <div class="lbl">Partie terminée</div>
+    <h2 id="final"></h2>
+    <p id="rank"></p>
+    <div class="hist" id="hist"></div>
+    <button class="primary" id="again">Rejouer</button>
+  </section>
+
+  <section class="card">
+    <div class="ladder-head"><h2>Échelle des énergies</h2><span id="found"></span></div>
+    <div class="axis"><span></span><div class="lab"><span id="ax0"></span><span id="ax1"></span><span id="ax2"></span><span id="ax3"></span></div></div>
+    <div class="ladder" id="ladder"></div>
+  </section>
+</div>
+
+<script>
+const R = String.raw;
+const ITEMS_RAW = [
+// --- Microscopique ---
+['🌡️',"molécule d'air agitée à 20 °C",6.1e-21,R`\tfrac{3}{2}k_B T = 1{,}5 \times 1{,}38\times10^{-23} \times 293 \approx 6\times10^{-21}\ \text{J}`],
+['🔋',"molécule d'ATP utilisée par une cellule",5.1e-20,R`\frac{30{,}5\ \text{kJ/mol}}{6{,}02\times10^{23}} \approx 5\times10^{-20}\ \text{J}`],
+['✨',"photon de lumière verte",3.75e-19,R`\frac{h c}{\lambda} = \frac{6{,}63\times10^{-34} \times 3\times10^{8}}{530\times10^{-9}} \approx 3{,}8\times10^{-19}\ \text{J}`],
+['🔗',"liaison chimique C–H rompue",6.9e-19,R`\frac{413\ \text{kJ/mol}}{6{,}02\times10^{23}} \approx 6{,}9\times10^{-19}\ \text{J}`],
+['🩻',"photon de rayons X (10 keV)",1.6e-15,R`10^{4}\ \text{eV} \times 1{,}6\times10^{-19}\ \tfrac{\text{J}}{\text{eV}} = 1{,}6\times10^{-15}\ \text{J}`],
+['🔲',"commutation d'un transistor",1e-16,R`C V^2 \approx 0{,}2\ \text{fF} \times (0{,}7\ \text{V})^2 \approx 10^{-16}\ \text{J}`],
+['☀️',"fusion deutérium–tritium (1 réaction)",2.8e-12,R`17{,}6\ \text{MeV} \times 1{,}6\times10^{-13}\ \tfrac{\text{J}}{\text{MeV}} \approx 2{,}8\times10^{-12}\ \text{J}`],
+['☢️',"fission d'un atome d'uranium",3.2e-11,R`200\ \text{MeV} \times 1{,}6\times10^{-13}\ \tfrac{\text{J}}{\text{MeV}} = 3{,}2\times10^{-11}\ \text{J}`],
+['📶',"bit envoyé en Wi-Fi",1e-8,R`\frac{1\ \text{W}}{10^{8}\ \text{bit/s}} = 10^{-8}\ \text{J}`],
+['🌌',"rayon cosmique « Oh-My-God » (1991)",51,R`3{,}2\times10^{20}\ \text{eV} \times 1{,}6\times10^{-19}\ \tfrac{\text{J}}{\text{eV}} \approx 51\ \text{J}`],
+// --- Petit monde ---
+['🦟',"moustique en vol",3.1e-7,R`\tfrac12 m v^2 = \tfrac12 \times 2{,}5\times10^{-6} \times 0{,}5^2 \approx 3\times10^{-7}\ \text{J}`],
+['🦗',"saut de puce",9.8e-7,R`m g h = 5\times10^{-7} \times 9{,}81 \times 0{,}2 \approx 10^{-6}\ \text{J}`],
+['❄️',"flocon de neige qui tombe",1.5e-6,R`\tfrac12 m v^2 = \tfrac12 \times 3\times10^{-6} \times 1^2 = 1{,}5\times10^{-6}\ \text{J}`],
+['🐜',"fourmi qui grimpe 1 m",2.9e-5,R`m g h = 3\times10^{-6} \times 9{,}81 \times 1 \approx 3\times10^{-5}\ \text{J}`],
+['🗣️',"voix humaine parlant 1 minute (son émis)",6e-4,R`P\,t = 10^{-5}\ \text{W} \times 60\ \text{s} = 6\times10^{-4}\ \text{J}`],
+['🖱️',"clic de souris",3.5e-4,R`F d = 0{,}7\ \text{N} \times 0{,}5\ \text{mm} = 3{,}5\times10^{-4}\ \text{J}`],
+['🔴',"pointeur laser allumé 1 seconde",1e-3,R`P\,t = 1\ \text{mW} \times 1\ \text{s} = 10^{-3}\ \text{J}`],
+['💧',"goutte de pluie qui tombe",1.4e-3,R`\tfrac12 m v^2 = \tfrac12 \times 3{,}4\times10^{-5} \times 9^2 \approx 1{,}4\times10^{-3}\ \text{J}`],
+['⌨️',"frappe de touche de clavier",2.4e-3,R`F d \approx 0{,}6\ \text{N} \times 4\ \text{mm} = 2{,}4\times10^{-3}\ \text{J}`],
+['🖊️',"ressort d'un stylo Bic comprimé",5.4e-3,R`\tfrac12 k x^2 = \tfrac12 \times 300 \times 0{,}006^2 \approx 5\times10^{-3}\ \text{J}`],
+['🪙',"pièce lancée à pile ou face",3.4e-2,R`\tfrac12 m v^2 = \tfrac12 \times 0{,}0075 \times 3^2 \approx 3\times10^{-2}\ \text{J}`],
+// --- Échelle humaine ---
+['❤️',"battement de cœur",0.9,R`p V \approx 13\ \text{kPa} \times 70\ \text{mL} \approx 0{,}9\ \text{J}`],
+['🍎',"pomme tombant de 2 m",2.9,R`m g h = 0{,}15 \times 9{,}81 \times 2 \approx 2{,}9\ \text{J}`],
+['📕',"livre posé sur une étagère à 1 m",9.8,R`m g h = 1 \times 9{,}81 \times 1 \approx 10\ \text{J}`],
+['🐈',"chat qui saute sur une table",39,R`m g h = 4 \times 9{,}81 \times 1 \approx 39\ \text{J}`],
+['📸',"flash d'appareil photo",80,R`\tfrac12 C V^2 = \tfrac12 \times 1{,}5\times10^{-3} \times 330^2 \approx 80\ \text{J}`],
+['🎾',"service de tennis à 200 km/h",88,R`\tfrac12 m v^2 = \tfrac12 \times 0{,}057 \times 55{,}6^2 \approx 88\ \text{J}`],
+['🚶',"pas de marche",160,R`3{,}3\ \tfrac{\text{J}}{\text{kg·m}} \times 70\ \text{kg} \times 0{,}7\ \text{m} \approx 160\ \text{J}`],
+['⚽',"tir de football",190,R`\tfrac12 m v^2 = \tfrac12 \times 0{,}43 \times 30^2 \approx 190\ \text{J}`],
+['🥊',"coup de poing de boxeur",200,R`\tfrac12 m v^2 \approx \tfrac12 \times 4 \times 10^2 = 200\ \text{J}`],
+['🔍',"recherche Google",1.1e3,R`0{,}3\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} \approx 1{,}1\ \text{kJ}`],
+['🎨',"image générée par une IA",1e4,R`2{,}9\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} \approx 10\ \text{kJ}`],
+['🔥',"allumette qui brûle",1.5e3,R`0{,}1\ \text{g} \times 15\ \tfrac{\text{kJ}}{\text{g}} = 1{,}5\ \text{kJ}`],
+['🌞',"soleil sur 1 m² pendant 1 seconde",1361,R`1361\ \tfrac{\text{W}}{\text{m}^2} \times 1\ \text{m}^2 \times 1\ \text{s} = 1361\ \text{J}`],
+['🪫',"pile bouton CR2032",2.4e3,R`3\ \text{V} \times 0{,}22\ \text{Ah} \times 3600 \approx 2{,}4\ \text{kJ}`],
+['🪜',"montée d'un étage à pied",2.1e3,R`m g h = 70 \times 9{,}81 \times 3 \approx 2{,}1\ \text{kJ}`],
+['🧊',"glaçon de 10 g qui fond",3.3e3,R`m\,L_f = 10\ \text{g} \times 334\ \tfrac{\text{J}}{\text{g}} \approx 3{,}3\ \text{kJ}`],
+['🏃',"Usain Bolt en pleine course",7.2e3,R`\tfrac12 m v^2 = \tfrac12 \times 94 \times 12{,}4^2 \approx 7{,}2\ \text{kJ}`],
+['🤸',"saut à la perche à 6 m",4.7e3,R`m g h = 80 \times 9{,}81 \times 6 \approx 4{,}7\ \text{kJ}`],
+['🚒',"sirène de pompiers pendant 1 minute",6e3,R`P\,t \approx 100\ \text{W} \times 60\ \text{s} = 6\ \text{kJ}`],
+['🍬',"Tic Tac",8e3,R`1{,}9\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 8\ \text{kJ}`],
+['🔋',"pile AA",1.35e4,R`1{,}5\ \text{V} \times 2{,}5\ \text{Ah} \times 3600 \approx 13{,}5\ \text{kJ}`],
+['💡',"ampoule LED de 10 W pendant 1 heure",3.6e4,R`P\,t = 10\ \text{W} \times 3600\ \text{s} = 36\ \text{kJ}`],
+['☕',"tasse de café chauffée",5e4,R`m c \Delta T = 0{,}2 \times 4186 \times 60 \approx 50\ \text{kJ}`],
+['📱',"batterie de téléphone pleine",5.4e4,R`15\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} = 54\ \text{kJ}`],
+['🧠',"cerveau humain pendant 1 heure",7.2e4,R`P\,t = 20\ \text{W} \times 3600\ \text{s} = 72\ \text{kJ}`],
+['🚗',"voiture de 1,2 t à 50 km/h",1.16e5,R`\tfrac12 m v^2 = \tfrac12 \times 1200 \times 13{,}9^2 \approx 116\ \text{kJ}`],
+['💻',"batterie d'ordinateur portable",2.2e5,R`60\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} \approx 216\ \text{kJ}`],
+['🛗',"ascenseur montant 10 étages",2.9e5,R`m g h = 1000 \times 9{,}81 \times 30 \approx 290\ \text{kJ}`],
+['🕯️',"bougie allumée 1 heure",2.9e5,R`P\,t \approx 80\ \text{W} \times 3600\ \text{s} \approx 290\ \text{kJ}`],
+['🫖',"litre d'eau porté à ébullition",3.35e5,R`m c \Delta T = 1 \times 4186 \times 80 \approx 335\ \text{kJ}`],
+['🍏',"pomme mangée",4e5,R`95\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 400\ \text{kJ}`],
+['🥐',"croissant",9.6e5,R`230\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 0{,}96\ \text{MJ}`],
+['🍔',"Big Mac",2.3e6,R`550\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 2{,}3\ \text{MJ}`],
+['🏔️',"ascension de l'Everest depuis le camp de base",2.4e6,R`m g h = 70 \times 9{,}81 \times 3500 \approx 2{,}4\ \text{MJ}`],
+['🧺',"cycle de lave-linge",3.6e6,R`1\ \text{kWh} = 3{,}6\ \text{MJ}`],
+['💥',"kilogramme de TNT",4.2e6,R`4{,}2\ \tfrac{\text{MJ}}{\text{kg}} \times 1\ \text{kg} = 4{,}2\ \text{MJ}`],
+['🚴',"étape du Tour de France (effort du coureur)",4.5e6,R`P\,t = 250\ \text{W} \times 5 \times 3600\ \text{s} = 4{,}5\ \text{MJ}`],
+['🏎️',"Ferrari à 300 km/h",5.2e6,R`\tfrac12 m v^2 = \tfrac12 \times 1500 \times 83{,}3^2 \approx 5{,}2\ \text{MJ}`],
+['🍽️',"ration alimentaire d'une journée",8.4e6,R`2000\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 8{,}4\ \text{MJ}`],
+['🚿',"douche chaude de 10 minutes",8.7e6,R`m c \Delta T = 80 \times 4186 \times 26 \approx 8{,}7\ \text{MJ}`],
+['🏅',"marathon couru",1.2e7,R`1\ \tfrac{\text{kcal}}{\text{kg·km}} \times 70 \times 42 \times 4184 \approx 12\ \text{MJ}`],
+['🪵',"kilogramme de bois sec",1.5e7,R`15\ \tfrac{\text{MJ}}{\text{kg}} \times 1\ \text{kg} = 15\ \text{MJ}`],
+['🧂',"kilogramme de sucre",1.7e7,R`4000\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 17\ \text{MJ}`],
+['⚫',"kilogramme de charbon",2.9e7,R`29\ \tfrac{\text{MJ}}{\text{kg}} \times 1\ \text{kg} = 29\ \text{MJ}`],
+['🧈',"kilogramme de beurre",3e7,R`7170\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 30\ \text{MJ}`],
+['⛽',"litre d'essence",3.4e7,R`0{,}75\ \text{kg} \times 46\ \tfrac{\text{MJ}}{\text{kg}} \approx 34\ \text{MJ}`],
+['🔥',"mètre cube de gaz naturel",3.8e7,R`38\ \tfrac{\text{MJ}}{\text{m}^3} \times 1\ \text{m}^3 = 38\ \text{MJ}`],
+['🎸',"concert de rock de 2 heures (sono)",7.2e7,R`P\,t = 10\ \text{kW} \times 7200\ \text{s} = 72\ \text{MJ}`],
+['🎈',"kilogramme d'hydrogène",1.2e8,R`120\ \tfrac{\text{MJ}}{\text{kg}} \times 1\ \text{kg} = 120\ \text{MJ}`],
+['🚙',"batterie de voiture électrique (75 kWh)",2.7e8,R`75\ \text{kWh} \times 3{,}6\ \tfrac{\text{MJ}}{\text{kWh}} = 270\ \text{MJ}`],
+// --- Grandes machines et nature ---
+['🌩️',"éclair",1e9,R`Q V \approx 5\ \text{C} \times 2\times10^{8}\ \text{V} = 10^{9}\ \text{J}`],
+['🌊',"chutes du Niagara pendant 1 seconde",1.4e9,R`m g h = 2{,}8\times10^{6} \times 9{,}81 \times 51 \approx 1{,}4\times10^{9}\ \text{J}`],
+['🚄',"TGV à 320 km/h",1.6e9,R`\tfrac12 m v^2 = \tfrac12 \times 4\times10^{5} \times 88{,}9^2 \approx 1{,}6\times10^{9}\ \text{J}`],
+['🚢',"Titanic à pleine vitesse",2.9e9,R`\tfrac12 m v^2 = \tfrac12 \times 4{,}6\times10^{7} \times 11{,}3^2 \approx 2{,}9\times10^{9}\ \text{J}`],
+['✈️',"avion de ligne en vol de croisière",9.4e9,R`\tfrac12 m v^2 + m g h = 1{,}9\times10^{9} + 7{,}6\times10^{9} \approx 9{,}4\times10^{9}\ \text{J}`],
+['🏠',"électricité d'un foyer pendant 1 an",1.26e10,R`3500\ \text{kWh} \times 3{,}6\times10^{6}\ \tfrac{\text{J}}{\text{kWh}} \approx 1{,}3\times10^{10}\ \text{J}`],
+['🧪',"gramme de deutérium–tritium fusionné",3.4e11,R`\frac{1\ \text{g}}{5\ \text{g/mol}} \times 6{,}02\times10^{23} \times 2{,}8\times10^{-12} \approx 3{,}4\times10^{11}\ \text{J}`],
+['🛰️',"navette spatiale en orbite",3e12,R`\tfrac12 m v^2 = \tfrac12 \times 10^{5} \times 7800^2 \approx 3\times10^{12}\ \text{J}`],
+['🛫',"plein de kérosène d'un A380",1.1e13,R`250\ \text{t} \times 43\ \tfrac{\text{MJ}}{\text{kg}} \approx 1{,}1\times10^{13}\ \text{J}`],
+['🌬️',"éolienne de 2 MW pendant 1 an",1.9e13,R`2\ \text{MW} \times 0{,}3 \times 3{,}15\times10^{7}\ \text{s} \approx 1{,}9\times10^{13}\ \text{J}`],
+['🌋',"séisme de magnitude 6",6.3e13,R`\log_{10} E = 1{,}5 M + 4{,}8 \Rightarrow E = 10^{13{,}8} \approx 6\times10^{13}\ \text{J}`],
+['💣',"bombe d'Hiroshima",6.3e13,R`15\ \text{kt} \times 4{,}18\times10^{12}\ \tfrac{\text{J}}{\text{kt}} \approx 6{,}3\times10^{13}\ \text{J}`],
+['🟢',"kilogramme d'uranium 235 fissionné",8.2e13,R`\frac{1000}{235} \times 6{,}02\times10^{23} \times 3{,}2\times10^{-11} \approx 8{,}2\times10^{13}\ \text{J}`],
+['⛈️',"orage",1e15,R`E \approx 10^{15}\ \text{J}\ \text{(chaleur latente de condensation)}`],
+['🌊',"tsunami de 2004 (énergie des vagues)",5e15,R`E \approx 5\times10^{15}\ \text{J}`],
+['🏭',"centrale nucléaire de 1 GW pendant 1 an",3.15e16,R`P\,t = 10^{9}\ \text{W} \times 3{,}15\times10^{7}\ \text{s} \approx 3\times10^{16}\ \text{J}`],
+['⚛️',"kilogramme de matière (E = mc²)",9e16,R`E = m c^2 = 1 \times (3\times10^{8})^2 = 9\times10^{16}\ \text{J}`],
+['🇧🇪',"électricité de la Belgique pendant 1 an",3.1e17,R`85\ \text{TWh} \times 3{,}6\times10^{15}\ \tfrac{\text{J}}{\text{TWh}} \approx 3\times10^{17}\ \text{J}`],
+['🌋',"éruption du Krakatoa (1883)",8.4e17,R`200\ \text{Mt} \times 4{,}18\times10^{15}\ \tfrac{\text{J}}{\text{Mt}} \approx 8{,}4\times10^{17}\ \text{J}`],
+['🌐',"séisme de magnitude 9",2e18,R`\log_{10} E = 1{,}5 \times 9 + 4{,}8 = 18{,}3 \Rightarrow E \approx 2\times10^{18}\ \text{J}`],
+['🌀',"ouragan pendant 1 jour",5.2e19,R`P\,t \approx 6\times10^{14}\ \text{W} \times 86\,400\ \text{s} \approx 5\times10^{19}\ \text{J}`],
+['🌍',"consommation énergétique mondiale en 1 an",6e20,R`E \approx 600\ \text{EJ} = 6\times10^{20}\ \text{J}`],
+['🌅',"soleil reçu par la Terre en 1 heure",6.3e20,R`1{,}74\times10^{17}\ \text{W} \times 3600\ \text{s} \approx 6{,}3\times10^{20}\ \text{J}`],
+// --- Astronomique ---
+['🦖',"impact de l'astéroïde de Chicxulub",3.2e23,R`\tfrac12 m v^2 = \tfrac12 \times 1{,}6\times10^{15} \times (2\times10^{4})^2 \approx 3\times10^{23}\ \text{J}`],
+['☀️',"Soleil pendant 1 seconde",3.8e26,R`L_\odot \times 1\ \text{s} = 3{,}8\times10^{26}\ \text{J}`],
+['🌎',"rotation de la Terre sur elle-même",2.1e29,R`\tfrac12 I \omega^2 = \tfrac12 \times 8\times10^{37} \times (7{,}3\times10^{-5})^2 \approx 2\times10^{29}\ \text{J}`],
+['🌙',"Lune en orbite autour de la Terre",3.8e28,R`\tfrac12 m v^2 = \tfrac12 \times 7{,}35\times10^{22} \times 1022^2 \approx 3{,}8\times10^{28}\ \text{J}`],
+['🪐',"Terre en orbite autour du Soleil",2.7e33,R`\tfrac12 m v^2 = \tfrac12 \times 6\times10^{24} \times (3\times10^{4})^2 \approx 2{,}7\times10^{33}\ \text{J}`],
+['💫',"supernova",1e44,R`E \approx 10^{44}\ \text{J}\ \text{(lumière et matière éjectée)}`],
+['🕳️',"trou noir de 10 masses solaires (E = mc²)",1.8e48,R`m c^2 = 2\times10^{31} \times (3\times10^{8})^2 \approx 1{,}8\times10^{48}\ \text{J}`],
+['🫧',"énergie du vide dans 1 m³ (énergie noire)",5.4e-10,R`\rho_\Lambda c^2 \approx 6\times10^{-27}\ \tfrac{\text{kg}}{\text{m}^3} \times (3\times10^{8})^2 \approx 5\times10^{-10}\ \text{J}`],
+['🫧',"énergie du vide dans le volume de la Terre",5.8e11,R`1{,}08\times10^{21}\ \text{m}^3 \times 5{,}4\times10^{-10}\ \tfrac{\text{J}}{\text{m}^3} \approx 5{,}8\times10^{11}\ \text{J}`],
+['📡',"photon micro-onde (four à 2,45 GHz)",1.6e-24,R`h f = 6{,}63\times10^{-34} \times 2{,}45\times10^{9} \approx 1{,}6\times10^{-24}\ \text{J}`],
+['🧮',"effacement d'un bit (limite de Landauer)",2.9e-21,R`k_B T \ln 2 = 1{,}38\times10^{-23} \times 300 \times 0{,}693 \approx 2{,}9\times10^{-21}\ \text{J}`],
+['🟣',"photon ultraviolet (10 eV)",1.6e-18,R`10\ \text{eV} \times 1{,}6\times10^{-19}\ \tfrac{\text{J}}{\text{eV}} = 1{,}6\times10^{-18}\ \text{J}`],
+['📺',"électron d'un tube cathodique (25 kV)",4e-15,R`e\,U = 1{,}6\times10^{-19} \times 25\,000 = 4\times10^{-15}\ \text{J}`],
+['⚪',"annihilation électron–positon",1.6e-13,R`2 m_e c^2 = 1{,}022\ \text{MeV} \approx 1{,}6\times10^{-13}\ \text{J}`],
+['🧲',"désintégration alpha (5 MeV)",8e-13,R`5\ \text{MeV} \times 1{,}6\times10^{-13}\ \tfrac{\text{J}}{\text{MeV}} = 8\times10^{-13}\ \text{J}`],
+['🛢️',"réserves mondiales de pétrole",1e22,R`1{,}7\times10^{12}\ \text{barils} \times 6{,}1\times10^{9}\ \tfrac{\text{J}}{\text{baril}} \approx 10^{22}\ \text{J}`],
+['🌞',"soleil reçu par la Terre en 1 an",5.5e24,R`1{,}74\times10^{17}\ \text{W} \times 3{,}15\times10^{7}\ \text{s} \approx 5{,}5\times10^{24}\ \text{J}`],
+['🔆',"éruption solaire géante",6e25,R`E \approx 6\times10^{25}\ \text{J}`],
+['🌏',"énergie de cohésion gravitationnelle de la Terre",2.2e32,R`\tfrac35 \frac{G M^2}{R} = 0{,}6 \times \frac{6{,}67\times10^{-11} \times (6\times10^{24})^2}{6{,}4\times10^{6}} \approx 2{,}2\times10^{32}\ \text{J}`],
+['☀️',"Soleil pendant 1 an",1.2e34,R`3{,}8\times10^{26}\ \text{W} \times 3{,}15\times10^{7}\ \text{s} \approx 1{,}2\times10^{34}\ \text{J}`],
+['🪐',"Jupiter en orbite autour du Soleil",1.6e35,R`\tfrac12 m v^2 = \tfrac12 \times 1{,}9\times10^{27} \times 13\,000^2 \approx 1{,}6\times10^{35}\ \text{J}`],
+['🌌',"Voie lactée pendant 1 seconde",1e37,R`L \approx 2{,}5\times10^{10}\ L_\odot \approx 10^{37}\ \text{W} \;\Rightarrow\; 10^{37}\ \text{J}`],
+['🌟',"nova",1e38,R`E \approx 10^{38}\ \text{J}`],
+['☀️',"Soleil pendant 1 million d'années",1.2e40,R`3{,}8\times10^{26}\ \text{W} \times 3{,}15\times10^{13}\ \text{s} \approx 1{,}2\times10^{40}\ \text{J}`],
+['⭐',"énergie de cohésion gravitationnelle du Soleil",2.3e41,R`\tfrac35 \frac{G M^2}{R} = 0{,}6 \times \frac{6{,}67\times10^{-11} \times (2\times10^{30})^2}{7\times10^{8}} \approx 2{,}3\times10^{41}\ \text{J}`],
+['☀️',"Soleil pendant 1 milliard d'années",1.2e43,R`3{,}8\times10^{26}\ \text{W} \times 3{,}15\times10^{16}\ \text{s} \approx 1{,}2\times10^{43}\ \text{J}`],
+['🎇',"sursaut gamma",1e46,R`E_{\text{iso}} \approx 10^{46}\ \text{J}`],
+['〰️',"fusion de deux trous noirs (ondes gravitationnelles, 2015)",5.4e47,R`\Delta m\, c^2 = 3 \times 2\times10^{30} \times (3\times10^{8})^2 \approx 5{,}4\times10^{47}\ \text{J}`],
+['📶',"photon d'onde millimétrique (100 GHz)",6.6e-23,R`h f = 6{,}63\times10^{-34} \times 10^{11} \approx 6{,}6\times10^{-23}\ \text{J}`],
+['🛂',"photon térahertz (scanner d'aéroport, 1 THz)",6.6e-22,R`h f = 6{,}63\times10^{-34} \times 10^{12} \approx 6{,}6\times10^{-22}\ \text{J}`],
+['☢️',"photon gamma (100 keV)",1.6e-14,R`10^{5}\ \text{eV} \times 1{,}6\times10^{-19}\ \tfrac{\text{J}}{\text{eV}} = 1{,}6\times10^{-14}\ \text{J}`],
+['🌀',"proton du LHC à pleine énergie",1e-6,R`6{,}5\ \text{TeV} \times 1{,}6\times10^{-7}\ \tfrac{\text{J}}{\text{TeV}} \approx 10^{-6}\ \text{J}`],
+['🌑',"impact de Théia (formation de la Lune)",5e30,R`\tfrac12 m v^2 = \tfrac12 \times 6{,}4\times10^{23} \times (4\times10^{3})^2 \approx 5\times10^{30}\ \text{J}`],
+['☀️',"Soleil pendant 1 siècle",1.2e36,R`3{,}8\times10^{26}\ \text{W} \times 3{,}15\times10^{9}\ \text{s} \approx 1{,}2\times10^{36}\ \text{J}`]
+];
+const ITEMS = ITEMS_RAW.map(([emo, sg, E, tex], i) => ({id:'i'+i, emo, sg, E, tex}));
+const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const ROUNDS = 10;
+const $ = id => document.getElementById(id);
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- MathJax ---------- */
+function setTex(el, tex, display){ el.dataset.tex = tex; el.dataset.disp = display ? '1' : ''; renderTex(el); }
+function renderTex(el){
+  if (window.__mj && window.MathJax && MathJax.tex2svg){
+    try { el.replaceChildren(MathJax.tex2svg(el.dataset.tex, {display: !!el.dataset.disp})); return; } catch(e){}
+  }
+  el.textContent = el.dataset.tex.replace(/\\times/g,'×').replace(/\\approx/g,'≈').replace(/\{,\}/g,',').replace(/\\,|\\ /g,' ').replace(/[{}\\]/g,'');
+}
+function renderAllTex(){ document.querySelectorAll('[data-tex]').forEach(renderTex); }
+
+/* ---------- Number formatting ---------- */
+function parts(x){
+  let e = Math.floor(Math.log10(x));
+  if (e >= -2 && e <= 5){
+    const s = Number(x.toPrecision(e >= 2 ? e + 1 : 2)).toLocaleString('fr-FR', {maximumSignificantDigits: 3});
+    return {plain: s};
+  }
+  let m = Math.round(x / Math.pow(10, e) * 10) / 10;
+  if (m >= 10){ m = 1; e++; }
+  return {m: (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)).replace('.', ','), e};
+}
+function numTex(x){
+  if (!(x > 0)) return '0';
+  const p = parts(x);
+  if (p.plain) return p.plain.replace(/,/g, '{,}').replace(/[\s  ]/g, '\\,');
+  const m = p.m.replace(',', '{,}');
+  return m === '1' ? `10^{${p.e}}` : `${m} \\times 10^{${p.e}}`;
+}
+function numSvg(x){
+  const p = parts(x);
+  if (p.plain) return '× ' + p.plain;
+  return `× ${p.m === '1' ? '' : p.m + '·'}10<tspan dy="-7" font-size="10">${p.e}</tspan>`;
+}
+
+/* ---------- Balance ---------- */
+const P = {x:180, y:70}, L = 140;
+function draw(deg){
+  const r = deg * Math.PI / 180;
+  $('beam').setAttribute('transform', `rotate(${deg} ${P.x} ${P.y})`);
+  $('panL').setAttribute('transform', `translate(${P.x - L*Math.cos(r)} ${P.y - L*Math.sin(r)})`);
+  $('panR').setAttribute('transform', `translate(${P.x + L*Math.cos(r)} ${P.y + L*Math.sin(r)})`);
+}
+let anim = null, cur = 0, vel = 0;
+function swingTo(target){
+  cancelAnimationFrame(anim);
+  if (reduce()){ cur = target; draw(target); return; }
+  let last = performance.now();
+  const step = now => {
+    const dt = Math.min(0.033, (now - last) / 1000); last = now;
+    vel += (-60 * (cur - target) - 3.4 * vel) * dt; cur += vel * dt; draw(cur);
+    if (Math.abs(cur - target) > 0.02 || Math.abs(vel) > 0.05) anim = requestAnimationFrame(step);
+    else { cur = target; vel = 0; draw(cur); }
+  };
+  anim = requestAnimationFrame(step);
+}
+/* right-hand object grows with the number entered (log scale) */
+function setRight(n){
+  const t = Math.max(0, Math.min(1, (Math.log10(n) + 16) / 32));
+  $('emoB').setAttribute('font-size', (14 + t * 42).toFixed(1));
+  $('multB').innerHTML = numSvg(n);
+}
+
+/* ---------- Game ---------- */
+let S;
+function pickPairs(){
+  const pairs = [], seen = new Set();
+  let guard = 0;
+  while (pairs.length < ROUNDS && guard++ < 5000){
+    const a = ITEMS[Math.floor(Math.random()*ITEMS.length)];
+    const ok = ITEMS.filter(b => b !== a && Math.abs(Math.log10(a.E / b.E)) >= 0.3 && Math.abs(Math.log10(a.E / b.E)) <= 15.5);
+    if (!ok.length) continue;
+    const b = ok[Math.floor(Math.random()*ok.length)];
+    if (seen.has(a.id) || seen.has(b.id)) continue;
+    seen.add(a.id); seen.add(b.id); pairs.push([a.id, b.id]);
+  }
+  return pairs;
+}
+function newGame(){
+  S = {round:0, total:0, pairs:pickPairs(), hist:[]};
+  $('end').hidden = true; $('game').hidden = false;
+  startRound();
+}
+function startRound(){
+  const [ia, ib] = S.pairs[S.round], A = byId[ia], B = byId[ib];
+  Object.assign(S, {A, B, ans: A.E / B.E});
+  $('rnd').textContent = S.round + 1; $('score').textContent = S.total;
+  $('eA').textContent = A.emo; $('nA').textContent = A.sg;
+  $('eB').textContent = B.emo; $('nB').textContent = B.sg;
+  $('emoA').textContent = A.emo; $('emoB').textContent = B.emo;
+  $('slider').value = 0;
+  $('controls').style.display = 'flex'; $('result').hidden = true;
+  $('status').textContent = 'Réglez le nombre, puis pesez.';
+  cancelAnimationFrame(anim); cur = 0; vel = 0; draw(0);
+  updateGuess();
+}
+const guessVal = () => Math.pow(10, Number($('slider').value));
+function updateGuess(){
+  const g = guessVal(), n = Math.round(Number($('slider').value));
+  setTex($('guessTex'), `10^{${n}}` + (n >= -2 && n <= 5 && n !== 1 ? ` = ${numTex(g)}` : '') + '\\ \\times');
+  $('guessUnit').textContent = S.B.emo + ' ' + S.B.sg;
+  setRight(g);
+}
+$('slider').addEventListener('input', updateGuess);
+$('div10').onclick = () => { $('slider').value = Math.max(-16, Number($('slider').value) - 1); updateGuess(); };
+$('mul10').onclick = () => { $('slider').value = Math.min(16, Number($('slider').value) + 1); updateGuess(); };
+
+/* ---------- Energy ladder (persists in this browser) ---------- */
+let found = [];
+try { found = JSON.parse(localStorage.getItem('be-found-v2') || '[]').filter(id => byId[id]); } catch(e){}
+function discover(ids){
+  const fresh = ids.filter(id => !found.includes(id));
+  found.push(...fresh);
+  try { localStorage.setItem('be-found-v2', JSON.stringify(found)); } catch(e){}
+  renderLadder(fresh);
+}
+function renderLadder(fresh = []){
+  $('found').textContent = found.length + ' / ' + ITEMS.length + ' découverts';
+  const lad = $('ladder');
+  if (!found.length){ lad.innerHTML = '<p class="empty">Pesez votre premier objet pour commencer l\'échelle.</p>'; return; }
+  const list = found.map(id => byId[id]).sort((a, b) => b.E - a.E);
+  lad.innerHTML = list.map(it => {
+    const pos = Math.max(0, Math.min(100, (Math.log10(it.E) + 25) / 75 * 100));
+    return `<div class="rung${fresh.includes(it.id) ? ' new' : ''}"><span class="e">${it.emo}</span><div>
+      <div class="top"><span>${it.sg}${fresh.includes(it.id) ? '<span class="badge">nouveau</span>' : ''}</span><span class="v" data-v="${it.id}"></span></div>
+      <div class="track"><i style="left:${pos}%"></i></div></div></div>`;
+  }).join('');
+  lad.querySelectorAll('[data-v]').forEach(el => setTex(el, numTex(byId[el.dataset.v].E) + '\\ \\text{J}'));
+}
+[-20, 0, 20, 40].forEach((e, i) => { const el = $('ax' + i); el.style.left = ((e + 25) / 75 * 100) + '%'; setTex(el, `10^{${e}}`); });
+renderLadder();
+
+$('weigh').onclick = () => {
+  const n = Math.round(Number($('slider').value)), g = Math.pow(10, n);
+  const target = Math.round(Math.log10(S.ans)), diff = Math.abs(n - target);
+  const lr = n - Math.log10(S.ans), err = diff === 0 ? 0 : diff;
+  const pts = Math.max(0, 100 - 25 * diff);
+  S.total += pts; S.hist.push({A:S.A, B:S.B, pts});
+  $('score').textContent = S.total;
+  $('controls').style.display = 'none';
+
+  swingTo(18 * Math.tanh(lr / 1.5));
+  $('status').textContent = err < Math.log10(2) ? 'La balance est presque à l\'équilibre.' :
+    lr > 0 ? 'Le plateau droit descend : trop d\'objets.' : 'Le plateau gauche descend : pas assez d\'objets.';
+  if (err >= Math.log10(2)) setTimeout(() => {
+    if (S.hist.length !== S.round + 1) return;
+    setRight(S.ans); swingTo(0);
+    $('status').textContent = 'Avec la bonne quantité, la balance s\'équilibre.';
+  }, reduce() ? 1200 : 1800);
+
+  const [cls, txt] = diff === 0 ? ['good','Bon ordre de grandeur'] : diff === 1 ? ['ok','À une puissance de 10 près'] :
+                     diff === 2 ? ['near','Pas loin'] : ['bad','Raté'];
+  $('vt').className = 't ' + cls; $('vt').textContent = txt; $('vp').textContent = '+' + pts + ' pts';
+  setTex($('yourTex'), `10^{${n}}`);
+  setTex($('goodTex'), `10^{${target}}`);
+  $('goodExact').dataset.tex = ''; setTex($('goodExact'), `\\text{valeur exacte} \\approx ${numTex(S.ans)}`);
+  setTex($('ptsTex'), diff >= 4
+    ? `\\text{écart} = ${diff}\\ \\text{puissances de 10} \\;\\Rightarrow\\; 0`
+    : `\\text{écart} = ${diff}\\ \\text{puissance${diff > 1 ? 's' : ''} de 10} \\;\\Rightarrow\\; 100 - 25 \\times ${diff} = ${pts}`);
+  discover([S.A.id, S.B.id]);
+  $('wA').textContent = S.A.emo + ' 1 ' + S.A.sg; setTex($('fA'), S.A.tex);
+  $('wB').textContent = S.B.emo + ' 1 ' + S.B.sg; setTex($('fB'), S.B.tex);
+  setTex($('fR'), `\\frac{${numTex(S.A.E)}\\ \\text{J}}{${numTex(S.B.E)}\\ \\text{J}} \\approx ${numTex(S.ans)}`, true);
+  $('next').textContent = S.round + 1 >= ROUNDS ? 'Voir le résultat' : 'Manche suivante';
+  $('result').hidden = false;
+};
+$('next').onclick = () => {
+  S.round++;
+  if (S.round >= ROUNDS) return endGame();
+  startRound(); window.scrollTo({top:0, behavior: reduce() ? 'auto' : 'smooth'});
+};
+function endGame(){
+  $('game').hidden = true; $('end').hidden = false;
+  $('final').textContent = S.total + ' / 1000';
+  $('rank').textContent = S.total >= 800 ? 'Instinct de physicien : les ordres de grandeur vous obéissent.' :
+    S.total >= 500 ? 'Bonne intuition, quelques puissances de dix vous ont échappé.' : 'Les joules gardent leurs secrets. Une autre partie ?';
+  $('hist').innerHTML = S.hist.map(r => `<span>${r.A.emo} 1 ${r.A.sg} = ${r.B.emo} ?</span><span>${r.pts}</span>`).join('');
+  window.scrollTo({top:0});
+}
+$('again').onclick = newGame;
+newGame();
+</script>
+
+</body></html>

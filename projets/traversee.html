@@ -1,0 +1,932 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Traversée optimale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout : vue de dessus de la chaussée en tête, résultats des 3 stratégies, puis réglages. Univers : signalisation routière. */
+:root{
+  --bg:#eef0f2; --panel:#ffffff; --ink:#1d2329; --muted:#5d6872; --line:#d5dade;
+  --asphalt:#3a4148; --curb:#c9ced3; --stripe:#f4f5f2; --carc:#d8452b;
+  --pA:#b98200; --pB:#2a78d6; --pC:#14a06b; --pD:#eb6834; --danger:#c8332b;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14181c; --panel:#1d2227; --ink:#e8ecef; --muted:#9aa5ae; --line:#2e353c;
+  --asphalt:#2b3137; --curb:#4a525a; --stripe:#dfe2e0; --carc:#ef5a3d;
+  --pA:#c98500; --pB:#3987e5; --pC:#1fa874; --pD:#d95926; --danger:#ef5a52; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14181c; --panel:#1d2227; --ink:#e8ecef; --muted:#9aa5ae; --line:#2e353c;
+  --asphalt:#2b3137; --curb:#4a525a; --stripe:#dfe2e0; --carc:#ef5a3d;
+  --pA:#c98500; --pB:#3987e5; --pC:#1fa874; --pD:#d95926; --danger:#ef5a52; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-weight:700;font-size:2.1rem;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1}
+.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
+canvas{display:block;width:100%;border-radius:6px}
+.play{display:flex;align-items:center;gap:10px;margin-top:10px}
+.play button{font:700 14px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:7px 12px;cursor:pointer;min-width:44px}
+.play button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pB);outline-offset:2px}
+.play input{flex:1;min-width:0}
+.clock{font-family:var(--display);font-size:1.15rem;font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;border-top:4px solid var(--c)}
+.card .hd{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:1.15rem;font-weight:700}
+.tag{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--c);color:#fff;font:700 12px var(--body)}
+.time{font-family:var(--display);font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.time small{font-size:1rem;color:var(--muted);font-weight:500}
+.det{color:var(--muted);font-size:.9rem;margin:0}
+.win{margin-left:auto;font:700 11px var(--body);letter-spacing:.06em;text-transform:uppercase;background:var(--c);color:#fff;border-radius:99px;padding:2px 8px}
+.ko{color:var(--danger);font-weight:700}
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 22px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;color:var(--muted)}
+.ctl label b{color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--pC)}
+select{font:15px var(--body);padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.sweeps{display:flex;flex-direction:column;gap:12px}
+.sw-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.88rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:8px}
+.chart .fx{color:var(--muted);font-size:.8rem;margin:0 0 4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button:focus-visible{outline:2px solid var(--pB);outline-offset:-2px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px 6px;position:relative;min-width:0}
+.chart h3{font:700 .95rem var(--body);margin:0 0 2px}
+.chart svg{display:block;width:100%;height:190px;touch-action:pan-y}
+.xbtn{font:600 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:6px 12px;cursor:pointer}
+.xbtn[aria-expanded="true"]{background:var(--ink);color:var(--panel)}
+.xbtn:focus-visible{outline:2px solid var(--pB);outline-offset:2px}
+.explain{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.explain svg{display:block;width:100%;height:auto}
+.explain .legend svg{display:inline;width:26px;height:8px}
+[hidden]{display:none!important}
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.ex-grid figure{margin:0;min-width:0}
+.ex-grid figcaption{font:700 .9rem var(--body);margin:0 0 2px}
+.zlist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 18px}
+.zlist li{min-width:0}
+.zbtn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:.92rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer}
+.zbtn:hover{border-color:var(--muted)}
+.zbtn.on{border-color:var(--ink)}
+.zbtn:focus-visible{outline:2px solid var(--pB);outline-offset:2px}
+.zbtn .zt{flex:1;min-width:0}
+.zbtn .zgo{flex:none;font-size:.8rem;font-weight:700;color:var(--muted)}
+.zlist .zn{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--muted);background:var(--bg);font:700 12px var(--body);position:relative}
+.zlist .zs{flex:none;width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
+
+.explain .lab{font:12px var(--body);fill:var(--muted)}
+.explain .znum circle{fill:var(--bg);stroke:var(--muted);stroke-width:1}
+.explain .znum text{font:700 12px var(--body);fill:var(--ink)}
+.chart svg .znum circle{fill:var(--bg);stroke:var(--muted);stroke-width:1}
+.chart svg .znum text{fill:var(--ink);font-weight:700}
+.chart svg text{font:11px var(--body);fill:var(--muted);font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--panel);border-radius:6px;padding:6px 8px;font-size:12px;line-height:1.35;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:2}
+.tip b{display:block;margin-bottom:2px}
+.tip i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:5px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{font:600 14px var(--body);border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);padding:8px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pC)}
+.tabs button:focus-visible{outline:2px solid var(--pB);outline-offset:-2px}
+.panel{display:flex;flex-direction:column;gap:18px}
+.doc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;max-width:72ch;display:flex;flex-direction:column;gap:10px}
+.doc h2{margin-top:8px}
+.doc p,.doc li{margin:0;line-height:1.55}
+.doc i{font-family:Georgia,"Times New Roman",serif;font-size:1.05em}
+.defs{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.eq{white-space:nowrap}
+.fig{margin:4px 0;display:flex;flex-direction:column;gap:6px}
+.fig svg{display:block;width:100%;max-width:520px;height:auto;border-radius:8px}
+.fig figcaption{font-size:.85rem;color:var(--muted)}
+.fig .fl{font:12px var(--body);fill:var(--muted)}
+.fig .fv text{font:italic 15px Georgia,"Times New Roman",serif;fill:var(--ink)}
+.fig .ax{font:11px var(--body);fill:var(--muted);font-variant-numeric:tabular-nums}
+.doc math{font-size:1.08em}
+.eqb math{font-size:1.2em}
+.eqb mtd{math-style:normal}
+@media (max-width:480px){.eqb math{font-size:1em}.eqb{padding:8px}}
+.eqb{background:var(--bg);border-radius:6px;padding:8px 12px;overflow-x:auto;font-size:1.02rem;line-height:1.6}
+h2{font-family:var(--display);font-size:1.3rem;margin:0 0 4px;letter-spacing:.02em;text-transform:uppercase}
+.note{color:var(--muted);font-size:.9rem;max-width:68ch;margin:0}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Traverser avant, après ou autour de la voiture&nbsp;?</h1>
+    <p class="sub">Vue de dessus d'un passage piéton. Trois piétons partent en même temps du trottoir du bas : lequel arrive le premier au milieu du passage, en face, sans jamais toucher la voiture, qui roule au milieu de la chaussée&nbsp;?</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tSim" aria-selected="true" aria-controls="pSim">Simulateur</button>
+    <button role="tab" id="tForm" aria-selected="false" aria-controls="pForm">Formules</button>
+  </nav>
+
+  <div id="pSim" role="tabpanel" aria-labelledby="tSim" class="panel">
+
+  <section class="stage">
+    <canvas id="cv" aria-label="Animation de la traversée vue de dessus"></canvas>
+    <div class="play">
+      <button id="bPlay" aria-label="Lecture ou pause">❚❚</button>
+      <button id="bRe" aria-label="Recommencer">↺</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Temps">
+      <span class="clock" id="clock">0,0 s</span>
+    </div>
+  </section>
+
+  <section class="cards" id="cards"></section>
+
+  <section class="controls">
+    <div class="ctl"><label for="v">Ma vitesse <b id="vO"></b></label><input id="v" type="range" min="0.5" max="4" step="0.1" value="1.3"></div>
+    <div class="ctl"><label for="V">Vitesse de la voiture <b id="VO"></b></label><input id="V" type="range" min="5" max="40" step="1" value="19"></div>
+    <div class="ctl"><label for="D">Distance de la voiture au passage <b id="DO"></b></label><input id="D" type="range" min="-10" max="20" step="0.5" value="0"></div>
+    <div class="ctl"><label for="W">Largeur de la chaussée <b id="WO"></b></label><input id="W" type="range" min="2.5" max="14" step="0.5" value="4.5"></div>
+    <div class="ctl"><label for="L">Longueur de la voiture <b id="LO"></b></label><input id="L" type="range" min="2.5" max="18" step="0.5" value="12"></div>
+  </section>
+
+  <section class="sweeps">
+    <div class="sw-head">
+      <h2>Temps de traversée selon chaque réglage</h2>
+      <div class="seg" role="group" aria-label="Ce que montrent les courbes">
+        <button id="mG" aria-pressed="true">Temps perdu vs C</button><button id="mT" aria-pressed="false">Temps total</button>
+      </div>
+      <button id="bExp" class="xbtn" aria-expanded="false" aria-controls="explain">Explication</button>
+    </div>
+    <div class="explain" id="explain" hidden>
+      <p class="note">Graphiques types, sans valeurs : comment se découpent les courbes quand on fait varier chaque réglage. Les numéros et les couleurs désignent les mêmes zones sur les quatre graphiques. Selon les réglages, certaines zones n'apparaissent pas et l'ordre peut changer. Touche une zone dans la liste pour régler le simulateur sur un exemple de cette zone.</p>
+      <div class="ex-grid" id="exGrid"></div>
+      <div class="legend" id="exLegend"></div>
+      <ol class="zlist" id="zList"></ol>
+    </div>
+    <p class="note" id="sweepNote"></p>
+    <div class="legend" id="legend"></div>
+    <div class="grid4" id="sweeps"></div>
+  </section>
+
+  </div>
+
+  <div id="pForm" role="tabpanel" aria-labelledby="tForm" class="panel" hidden>
+    <section class="doc">
+      <h2>Notations</h2>
+      <p>On regarde la chaussée de dessus. L'axe <math><mi>x</mi></math> suit la route, dans le sens de la voiture ; l'axe <math><mi>y</mi></math> traverse la chaussée. Je pars de <math><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></math> et je dois arriver au milieu du passage en face, en <math><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>W</mi><mo stretchy="false">)</mo></math>.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 380 250" role="img" aria-label="Repère et notations vus de dessus">
+          <rect x="0" y="10" width="380" height="40" fill="var(--curb)"/>
+          <rect x="0" y="50" width="380" height="150" fill="var(--asphalt)"/>
+          <rect x="0" y="200" width="380" height="40" fill="var(--curb)"/>
+          <g fill="var(--stripe)" opacity=".55"><rect x="170" y="56" width="40" height="10"/><rect x="170" y="76" width="40" height="10"/><rect x="170" y="96" width="40" height="10"/><rect x="170" y="116" width="40" height="10"/><rect x="170" y="136" width="40" height="10"/><rect x="170" y="156" width="40" height="10"/><rect x="170" y="176" width="40" height="10"/></g>
+          <g stroke="var(--stripe)" stroke-dasharray="4 4" stroke-width="1" opacity=".8"><line x1="0" y1="95" x2="380" y2="95"/><line x1="0" y1="155" x2="380" y2="155"/></g>
+          <rect x="40" y="95" width="100" height="60" rx="8" fill="var(--carc)"/>
+          <text x="90" y="130" text-anchor="middle" class="fl" style="fill:#fff">V →</text>
+          <g stroke="var(--ink)" stroke-width="1.5" fill="none" marker-end="url(#ah)">
+            <line x1="20" y1="200" x2="368" y2="200"/><line x1="190" y1="222" x2="190" y2="28"/>
+          </g>
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker>
+          <marker id="ad" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="var(--pB)"/></marker></defs>
+          <g stroke="var(--pB)" stroke-width="1.5" marker-start="url(#ad)" marker-end="url(#ad)">
+            <line x1="142" y1="80" x2="188" y2="80"/>
+            <line x1="42" y1="170" x2="138" y2="170"/>
+            <line x1="28" y1="97" x2="28" y2="153"/>
+            <line x1="352" y1="52" x2="352" y2="198"/>
+          </g>
+          <g class="fv"><text x="165" y="75" text-anchor="middle">D</text><text x="90" y="186" text-anchor="middle">L</text><text x="18" y="130" text-anchor="middle">ℓ</text><text x="364" y="130" text-anchor="middle">W</text>
+          <text x="330" y="152" text-anchor="end">y₁</text><text x="330" y="92" text-anchor="end">y₂</text>
+          <text x="372" y="216" text-anchor="end">x</text><text x="198" y="34">y</text></g>
+          <circle cx="190" cy="200" r="5" fill="var(--pC)"/><circle cx="190" cy="50" r="5" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <text x="198" y="234" class="fl">départ (0, 0)</text><text x="198" y="24" class="fl">arrivée (0, W)</text>
+        </svg>
+        <figcaption>Vue de dessus au départ (<math><mi>t</mi><mo>=</mo><mn>0</mn></math>). La voiture roule vers la droite, au milieu de la chaussée.</figcaption>
+      </figure>
+      <ul class="defs">
+        <li><math><mi>v</mi></math> : ma vitesse ; <math><mi>V</mi></math> : vitesse de la voiture</li>
+        <li><math><mi>W</mi></math> : largeur de la chaussée ; <math><mi>L</mi></math> : longueur de la voiture ; <math><mi>ℓ</mi><mo>=</mo><mn>1,8</mn><mtext> m</mtext></math> : sa largeur</li>
+        <li><math><mi>D</mi></math> : distance entre l'avant de la voiture et l'axe du passage au départ (négative si l'avant a déjà dépassé le passage)</li>
+        <li>Bords de la voiture : <math><msub><mi>y</mi><mn>1</mn></msub><mo>=</mo><mfrac><mi>W</mi><mn>2</mn></mfrac><mo>−</mo><mfrac><mi>ℓ</mi><mn>2</mn></mfrac></math> (côté départ) et <math><msub><mi>y</mi><mn>2</mn></msub><mo>=</mo><mfrac><mi>W</mi><mn>2</mn></mfrac><mo>+</mo><mfrac><mi>ℓ</mi><mn>2</mn></mfrac></math> (côté arrivée)</li>
+        <li>Position à l'instant <math><mi>t</mi></math> : avant en <math><mi>x</mi><mo>=</mo><mi>V</mi><mi>t</mi><mo>−</mo><mi>D</mi></math>, arrière en <math><mi>x</mi><mo>=</mo><mi>V</mi><mi>t</mi><mo>−</mo><mi>D</mi><mo>−</mo><mi>L</mi></math></li>
+        <li><math><msub><mi>T</mi><mi>B</mi></msub></math>, <math><msub><mi>T</mi><mi>C</mi></msub></math>, <math><msub><mi>T</mi><mi>D</mi></msub></math> : temps total de traversée, du départ à l'arrivée, avec la stratégie B, C ou D</li>
+      </ul>
+
+      <h2>Passer tout droit</h2>
+      <p>Tout droit, la traversée dure</p>
+      <div class="eqb"><math display="block"><mi>T</mi><mo>=</mo><mfrac><mi>W</mi><mi>v</mi></mfrac></math></div>
+      <p>C'est possible dans deux cas. <b>Je passe devant</b> : quand j'atteins le bord lointain <math><msub><mi>y</mi><mn>2</mn></msub></math>, l'avant de la voiture n'a pas encore atteint le passage :</p>
+      <div class="eqb"><math display="block"><mfrac><mrow><mi>V</mi><mspace width="0.15em"/><msub><mi>y</mi><mn>2</mn></msub></mrow><mi>v</mi></mfrac><mo>≤</mo><mi>D</mi></math></div>
+      <p><b>La voiture passe devant</b> : quand j'atteins le bord proche <math><msub><mi>y</mi><mn>1</mn></msub></math>, l'arrière de la voiture a déjà dépassé le passage :</p>
+      <div class="eqb"><math display="block"><mfrac><mrow><mi>V</mi><mspace width="0.15em"/><msub><mi>y</mi><mn>1</mn></msub></mrow><mi>v</mi></mfrac><mo>≥</mo><mi>D</mi><mo>+</mo><mi>L</mi></math></div>
+      <p>Dans ces deux cas, les trois stratégies traversent tout droit et <math><msub><mi>T</mi><mi>B</mi></msub><mo>=</mo><msub><mi>T</mi><mi>C</mi></msub><mo>=</mo><msub><mi>T</mi><mi>D</mi></msub><mo>=</mo><mfrac><mi>W</mi><mi>v</mi></mfrac></math>.</p>
+
+      <h2>B · Attendre</h2>
+      <p>J'avance tout droit jusqu'au bord de la voie <math><msub><mi>y</mi><mn>1</mn></msub></math>, en <math><mfrac><msub><mi>y</mi><mn>1</mn></msub><mi>v</mi></mfrac></math> secondes. L'arrière de la voiture franchit le passage à l'instant <math><mfrac><mrow><mi>D</mi><mo>+</mo><mi>L</mi></mrow><mi>V</mi></mfrac></math>. Je repars au plus tard des deux, puis je termine tout droit. Le temps total de la stratégie B vaut donc :</p>
+      <div class="eqb"><math display="block"><msub><mi>T</mi><mi>B</mi></msub><mo>=</mo><mi>max</mi><mrow><mo>(</mo><mfrac><msub><mi>y</mi><mn>1</mn></msub><mi>v</mi></mfrac><mo>,</mo><mspace width="0.4em"/><mfrac><mrow><mi>D</mi><mo>+</mo><mi>L</mi></mrow><mi>V</mi></mfrac><mo>)</mo></mrow><mo>+</mo><mfrac><mrow><mi>W</mi><mo>−</mo><msub><mi>y</mi><mn>1</mn></msub></mrow><mi>v</mi></mfrac></math></div>
+      <p>Attendre au trottoir ou au bord de la voie donne le même temps : seul compte l'instant où l'on franchit le bord de la voie.</p>
+
+      <h2>D · Ne jamais s'arrêter</h2>
+      <p>Je marche à pleine vitesse, en ligne droite, vers le coin arrière de la voiture côté départ, pour l'atteindre pile quand il passe. Ce coin est en <math><mo stretchy="false">(</mo><mi>V</mi><mi>t</mi><mo>−</mo><mi>D</mi><mo>−</mo><mi>L</mi><mo>,</mo><msub><mi>y</mi><mn>1</mn></msub><mo stretchy="false">)</mo></math>. Je l'atteins à l'instant <math><msub><mi>t</mi><mn>1</mn></msub></math> où la distance qui me sépare de lui est égale à la distance que j'ai parcourue, <math><mi>v</mi><msub><mi>t</mi><mn>1</mn></msub></math> (Pythagore) :</p>
+      <div class="eqb"><math display="block"><msup><mrow><mo stretchy="false">(</mo><mi>V</mi><msub><mi>t</mi><mn>1</mn></msub><mo>−</mo><mi>D</mi><mo>−</mo><mi>L</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mn>1</mn><mn>2</mn></msubsup><mo>=</mo><msup><mrow><mo stretchy="false">(</mo><mi>v</mi><msub><mi>t</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></math></div>
+      <p>En développant, on obtient une équation du second degré en <math><msub><mi>t</mi><mn>1</mn></msub></math> :</p>
+      <div class="eqb"><math display="block"><mi>a</mi><mspace width="0.1em"/><msubsup><mi>t</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><mi>b</mi><mspace width="0.1em"/><msub><mi>t</mi><mn>1</mn></msub><mo>+</mo><mi>c</mi><mo>=</mo><mn>0</mn></math></div>
+      <p>avec</p>
+      <div class="eqb"><math display="block"><mtable columnalign="right left" columnspacing="0.2em" rowspacing="0.5em"><mtr><mtd><mi>a</mi></mtd><mtd><mo>=</mo><msup><mi>V</mi><mn>2</mn></msup><mo>−</mo><msup><mi>v</mi><mn>2</mn></msup></mtd></mtr><mtr><mtd><mi>b</mi></mtd><mtd><mo>=</mo><mo>−</mo><mn>2</mn><mi>V</mi><mo stretchy="false">(</mo><mi>D</mi><mo>+</mo><mi>L</mi><mo stretchy="false">)</mo></mtd></mtr><mtr><mtd><mi>c</mi></mtd><mtd><mo>=</mo><msup><mrow><mo stretchy="false">(</mo><mi>D</mi><mo>+</mo><mi>L</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mn>1</mn><mn>2</mn></msubsup></mtd></mtr></mtable></math></div>
+      <p>dont les racines sont</p>
+      <div class="eqb"><math display="block"><msub><mi>t</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mo>−</mo><mi>b</mi><mo>±</mo><msqrt><mi>Δ</mi></msqrt></mrow><mrow><mn>2</mn><mi>a</mi></mrow></mfrac></math></div>
+      <p>avec le discriminant</p>
+      <div class="eqb"><math display="block"><mi>Δ</mi><mo>=</mo><msup><mi>b</mi><mn>2</mn></msup><mo>−</mo><mn>4</mn><mi>a</mi><mi>c</mi></math></div>
+      <p>On ne garde que les racines positives, et parmi elles celle qui donne l'arrivée la plus rapide. Le graphique montre ce polynôme avec les réglages actuels du simulateur : les racines sont là où la courbe coupe l'axe horizontal.</p>
+      <figure class="fig"><svg id="figQuad" viewBox="0 0 380 240" role="img" aria-label="Polynôme du second degré en t1 avec les réglages actuels"></svg><figcaption id="capQuad"></figcaption></figure>
+      <p>Au coin, je suis en <math><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mi>V</mi><msub><mi>t</mi><mn>1</mn></msub><mo>−</mo><mi>D</mi><mo>−</mo><mi>L</mi></math>. Je repars en ligne droite, toujours à pleine vitesse, vers l'arrivée :</p>
+      <div class="eqb"><math display="block"><msub><mi>T</mi><mi>D</mi></msub><mo>=</mo><msub><mi>t</mi><mn>1</mn></msub><mo>+</mo><mfrac><msqrt><mrow><msubsup><mi>x</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><msup><mrow><mo stretchy="false">(</mo><mi>W</mi><mo>−</mo><msub><mi>y</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></msqrt><mi>v</mi></mfrac></math></div>
+      <p>Si je suis plus rapide que la voiture, cette dernière ligne droite peut rattraper l'arrière de la voiture. Je longe alors l'arrière, sans m'arrêter : j'avance avec la voiture à <math><mi>V</mi></math> dans le sens de la route et je traverse à <math><msqrt><mrow><msup><mi>v</mi><mn>2</mn></msup><mo>−</mo><msup><mi>V</mi><mn>2</mn></msup></mrow></msqrt></math>. Dès que la ligne droite vers l'arrivée est libre, je la prends.</p>
+
+      <h2>C · Trajectoire optimale</h2>
+      <p>On se place dans le repère de la voiture : elle devient un rectangle immobile, et tout le reste recule à la vitesse <math><mi>V</mi></math>, y compris le point d'arrivée. Je marche toujours à <math><mi>v</mi></math> dans la direction que je veux.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 380 230" role="img" aria-label="Le même trajet vu depuis la voiture">
+          <defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+          <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--pC)"/></marker></defs>
+          <rect x="0" y="20" width="380" height="190" fill="var(--asphalt)" opacity=".18"/>
+          <rect x="150" y="90" width="100" height="50" rx="8" fill="var(--carc)"/>
+          <text x="200" y="120" text-anchor="middle" class="fl" style="fill:#fff">voiture immobile</text>
+          <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ag)"><line x1="120" y1="200" x2="70" y2="200"/><line x1="260" y1="200" x2="210" y2="200"/></g>
+          <text x="190" y="224" text-anchor="middle" class="fl">le sol recule à V</text>
+          <line x1="330" y1="36" x2="72" y2="36" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#ag)"/>
+          <circle cx="330" cy="36" r="5" fill="none" stroke="var(--muted)" stroke-width="2"/><text x="330" y="28" text-anchor="middle" class="fl">arrivée à t = 0</text>
+          <circle cx="62" cy="36" r="5" fill="none" stroke="var(--ink)" stroke-width="2"/><text x="62" y="58" text-anchor="middle" class="fl">arrivée quand j'y suis</text>
+          <polyline points="330,190 150,140 62,36" fill="none" stroke="var(--pC)" stroke-width="2.5" marker-end="url(#ac)"/>
+          <circle cx="330" cy="190" r="5" fill="var(--pC)"/><text x="336" y="182" class="fl">départ</text>
+          <circle cx="150" cy="140" r="4" fill="var(--ink)"/><text x="144" y="156" text-anchor="end" class="fl">coin arrière</text>
+        </svg>
+        <figcaption>Dans le repère de la voiture, le chemin le plus rapide est une ligne brisée qui frôle un coin de la voiture.</figcaption>
+      </figure>
+      <p>Pour faire un déplacement <math><mo stretchy="false">(</mo><mi>Δ</mi><mi>x</mi><mo>,</mo><mi>Δ</mi><mi>y</mi><mo stretchy="false">)</mo></math> dans ce repère, il me faut un temps <math><mi>t</mi></math> tel que :</p>
+      <div class="eqb"><math display="block"><msup><mrow><mo stretchy="false">(</mo><mi>Δ</mi><mi>x</mi><mo>+</mo><mi>V</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>Δ</mi><msup><mi>y</mi><mn>2</mn></msup><mo>=</mo><msup><mrow><mo stretchy="false">(</mo><mi>v</mi><mi>t</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></math></div>
+      <p>Le calcul teste tous les enchaînements de coins, en autorisant une pause au dernier coin, et garde le plus rapide. Le plus souvent, cela revient à l'un de ces deux cas.</p>
+      <p><b>Passer derrière la voiture.</b> J'atteins le bord de la voie au point d'abscisse <math><mi>x</mi></math>, à pleine vitesse. Si l'arrière n'est pas encore passé, j'attends. Puis je file vers l'arrivée :</p>
+      <div class="eqb"><math display="block"><mtable columnalign="right left" rowspacing="0.6em"><mtr><mtd><mi>T</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mtd><mtd><mo>=</mo><mi>max</mi><mrow><mo>(</mo><mfrac><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mn>1</mn><mn>2</mn></msubsup></mrow></msqrt><mi>v</mi></mfrac><mo>,</mo><mspace width="0.4em"/><mfrac><mrow><mi>x</mi><mo>+</mo><mi>D</mi><mo>+</mo><mi>L</mi></mrow><mi>V</mi></mfrac><mo>)</mo></mrow></mtd></mtr><mtr><mtd></mtd><mtd><mo>+</mo><mfrac><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="false">(</mo><mi>W</mi><mo>−</mo><msub><mi>y</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></msqrt><mi>v</mi></mfrac></mtd></mtr></mtable></math></div>
+      <p><b>Passer devant la voiture en biais.</b> J'atteins le bord lointain <math><msub><mi>y</mi><mn>2</mn></msub></math> au point d'abscisse <math><mi>x</mi></math>, avant que l'avant de la voiture y arrive, puis je file vers l'arrivée :</p>
+      <div class="eqb"><math display="block"><mtable columnalign="right left" rowspacing="0.6em"><mtr><mtd><mi>T</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mtd><mtd><mo>=</mo><mfrac><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mn>2</mn><mn>2</mn></msubsup></mrow></msqrt><mi>v</mi></mfrac></mtd></mtr><mtr><mtd></mtd><mtd><mo>+</mo><mfrac><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="false">(</mo><mi>W</mi><mo>−</mo><msub><mi>y</mi><mn>2</mn></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></msqrt><mi>v</mi></mfrac></mtd></mtr></mtable></math></div>
+      <p>à condition d'arriver sur le bord lointain avant l'avant de la voiture :</p>
+      <div class="eqb"><math display="block"><mfrac><msqrt><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mn>2</mn><mn>2</mn></msubsup></mrow></msqrt><mi>v</mi></mfrac><mo>≤</mo><mfrac><mrow><mi>x</mi><mo>+</mo><mi>D</mi></mrow><mi>V</mi></mfrac></math></div>
+      <p>On cherche le <math><mi>x</mi></math> qui donne le plus petit <math><mi>T</mi></math> :</p>
+      <div class="eqb"><math display="block"><msub><mi>T</mi><mi>C</mi></msub><mo>=</mo><munder><mi>min</mi><mi>x</mi></munder><mspace width="0.2em"/><mi>T</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math></div>
+      <p>Le graphique montre <math><mi>T</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></math> avec les réglages actuels. B correspond au point <math><mi>x</mi><mo>=</mo><mn>0</mn></math> du passage derrière, et C au point le plus bas. C n'est donc jamais plus lente que B ; D est l'un des chemins testés, donc jamais plus rapide que C non plus.</p>
+      <figure class="fig"><svg id="figTx" viewBox="0 0 380 250" role="img" aria-label="Temps total selon le point de franchissement x, avec les réglages actuels"></svg><figcaption id="capTx"></figcaption></figure>
+
+      <h2>Temps perdu</h2>
+      <p>Les graphiques du simulateur montrent, pour chaque stratégie, le temps perdu par rapport à l'optimal :</p>
+      <div class="eqb"><math display="block"><msub><mtext>perte</mtext><mi>B</mi></msub><mo>=</mo><msub><mi>T</mi><mi>B</mi></msub><mo>−</mo><msub><mi>T</mi><mi>C</mi></msub><mspace width="2em"/><msub><mtext>perte</mtext><mi>D</mi></msub><mo>=</mo><msub><mi>T</mi><mi>D</mi></msub><mo>−</mo><msub><mi>T</mi><mi>C</mi></msub></math></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const CW=1.8;
+const fmt=(x,d=1)=>x.toFixed(d).replace('.',',');
+
+function readParams(){
+  const W=+$('W').value;
+  const p={v:+$('v').value, V:+$('V').value/3.6, D:+$('D').value, W, m:0, L:+$('L').value,
+           laneY: W/2, dir:1};
+  $('vO').textContent=fmt(p.v)+' m/s · '+fmt(p.v*3.6)+' km/h';
+  $('VO').textContent=$('V').value+' km/h';
+  $('DO').textContent=fmt(p.D)+' m';
+  $('WO').textContent=fmt(W)+' m';
+  $('LO').textContent=fmt(p.L)+' m';
+  return p;
+}
+
+/* Temps minimal pour un déplacement (dx,dy) dans le repère voiture (vitesse de dérive -V en X) */
+function segTime(dx,dy,v,V){
+  const a=V*V-v*v, b=2*dx*V, c=dx*dx+dy*dy;
+  if(c<1e-12) return 0;
+  if(Math.abs(a)<1e-9) return b<0? -c/b : Infinity;
+  const disc=b*b-4*a*c; if(disc<0) return Infinity;
+  const s=Math.sqrt(disc), r1=(-b-s)/(2*a), r2=(-b+s)/(2*a);
+  if(a<0) return Math.max(r1,r2);
+  const lo=Math.min(r1,r2); return lo>0?lo:Infinity;
+}
+/* Segment traverse-t-il l'intérieur du rectangle ? (Liang–Barsky) */
+function hits(x0,y0,x1,y1,R){
+  const e=1e-6, dx=x1-x0, dy=y1-y0;
+  const P=[-dx,dx,-dy,dy], Q=[x0-(R.xb+e),(R.xf-e)-x0,y0-(R.yl+e),(R.yh-e)-y0];
+  let t0=0,t1=1;
+  for(let i=0;i<4;i++){
+    if(Math.abs(P[i])<1e-12){ if(Q[i]<0) return false; }
+    else{ const r=Q[i]/P[i];
+      if(P[i]<0){ if(r>t1) return false; if(r>t0) t0=r; }
+      else { if(r<t0) return false; if(r<t1) t1=r; } }
+  }
+  return t1-t0>1e-9;
+}
+
+function solve(p){
+  const {v,V,D,W}=p;
+  const R={xb:-p.L-p.m, xf:p.m,
+    yl:Math.max(p.laneY-CW/2-p.m,0.01), yh:Math.min(p.laneY+CW/2+p.m,W-0.01)};
+  const toGround=(X,t)=> X-D+V*t;          // repère canonique (voiture vers +x)
+  const res={R};
+
+  // A : tout droit tout de suite
+  const sA=W/v;
+  const okA=!hits(D,0,D-V*sA,W,R);
+  res.A={ok:okA, T:sA, keys:[{t:0,x:0,y:0},{t:sA,x:0,y:W}], wait:0, before: okA && (D - V*R.yh/v >= R.xf)};
+  if(!okA){ // instant de collision (entrée dans la bande)
+    res.A.hitT=R.yl/v;
+  }
+  // B : attendre que la voiture soit passée, puis tout droit
+  const tw=Math.max(0,(D-V*R.yl/v-R.xb)/V);
+  // J'avance tout droit jusqu'au bord de la voie, j'attends que l'arrière passe, je finis.
+  const tEdge=R.yl/v, tGo=tEdge+tw;
+  res.B={ok:true, T:tw+W/v, wait:tw, keys:[{t:0,x:0,y:0},{t:tEdge,x:0,y:R.yl},{t:tGo,x:0,y:R.yl},{t:tGo+(W-R.yl)/v,x:0,y:W}]};
+
+  // C : optimum (chemins polygonaux par les coins, dans le repère voiture)
+  const corners=[{X:R.xb,Y:R.yl,n:'back'},{X:R.xf,Y:R.yl,n:'front'},{X:R.xf,Y:R.yh,n:'front'},{X:R.xb,Y:R.yh,n:'back'}];
+  /* Arrivée imposée : milieu du passage en face, point fixe (0, W) sur le sol.
+     Pour le dernier point d'appui (départ ou coin), on cherche aussi le meilleur
+     instant d'y arriver : parfois arriver plus tard rapproche du but. */
+  let best=null;
+  const reach=(dx,dy,dt)=> (dx+V*dt)**2+dy*dy <= (v*dt)**2+1e-9;
+  function tryFinal(pt,tMin,prev,seq,isStart){
+    const step=0.02, span=20;
+    for(let tau=tMin; tau<=tMin+span; tau+=step){
+      if(!isStart && prev && tau>tMin+1e-9 && !reach(pt.X-prev.X,pt.Y-prev.Y,tau-prev.t)) break;
+      if(best && tau>=best.T) break;
+      const gx=pt.X-D+V*tau, L=Math.hypot(gx,W-pt.Y), s=L/v, T=tau+s;
+      if(best && T>=best.T) continue;
+      const Xe=D-V*T;
+      if(hits(pt.X,pt.Y,Xe,W,R)) continue;
+      const nodes = isStart
+        ? [seq[0]].concat(tau>0?[{X:D-V*tau,Y:0,t:tau}]:[])
+        : seq.slice(0,-1).concat([{...seq[seq.length-1],t:tau}]);
+      best={T,seq:[...nodes,{X:Xe,Y:W,t:T}]};
+    }
+  }
+  (function dfs(pt,t,seq,used,prev){
+    if(best && t>=best.T) return;
+    tryFinal(pt,t,prev,seq,seq.length===1);
+    if(seq.length>4) return;
+    corners.forEach((c,i)=>{
+      if(used&(1<<i)) return;
+      const dt=segTime(c.X-pt.X,c.Y-pt.Y,v,V);
+      if(!isFinite(dt)||hits(pt.X,pt.Y,c.X,c.Y,R)) return;
+      dfs({X:c.X,Y:c.Y},t+dt,[...seq,{X:c.X,Y:c.Y,t:t+dt,n:c.n}],used|(1<<i),{X:pt.X,Y:pt.Y,t});
+    });
+  })({X:D,Y:0},0,[{X:D,Y:0,t:0}],0,null);
+
+  if(best){
+    const raw=best.seq.map(q=>({t:q.t,x:toGround(q.X,q.t),y:q.Y}));
+    // Marcher à pleine vitesse puis attendre sur place (même temps total, plus lisible)
+    const keys=[raw[0]];
+    for(let i=1;i<raw.length;i++){
+      const a=raw[i-1], b=raw[i], walk=Math.hypot(b.x-a.x,b.y-a.y)/v;
+      if(walk<b.t-a.t-0.02) keys.push({t:a.t+walk,x:b.x,y:b.y});
+      keys.push(b);
+    }
+    const via=[...best.seq].reverse().find(q=>q.n);
+    res.C={ok:true,T:best.T,keys,via:via?via.n:null};
+  } else res.C={ok:false,T:Infinity,keys:[{t:0,x:0,y:0}]};
+
+  // D : ne jamais s'arrêter. Ligne droite à pleine vitesse jusqu'au coin arrière
+  // de la voiture (côté départ), atteint pile quand il passe, puis ligne droite vers l'arrivée.
+  res.D={ok:false,T:Infinity,keys:[{t:0,x:0,y:0}]};
+  {
+    const cx=R.xb, cy=R.yl, dx=cx-D, dy=cy;
+    const a=V*V-v*v, b=2*dx*V, c=dx*dx+dy*dy, roots=[];
+    if(Math.abs(a)<1e-9){ if(b<0) roots.push(-c/b); }
+    else{ const disc=b*b-4*a*c; if(disc>=0){ const q=Math.sqrt(disc); roots.push((-b-q)/(2*a),(-b+q)/(2*a)); } }
+    roots.filter(t1=>t1>1e-6).forEach(t1=>{
+      if(hits(D,0,cx,cy,R)) return;
+      const gx=cx-D+V*t1;
+      // Depuis un point de l'arrière de la voiture (repère voiture X=cx, ordonnée y, instant t),
+      // ligne droite à pleine vitesse vers l'arrivée : renvoie le temps total si elle ne touche pas la voiture.
+      const finish=(y,t)=>{ const g=cx-D+V*t, s2=Math.hypot(g,W-y)/v, T=t+s2; return hits(cx,y,D-V*T,W,R)?null:T; };
+      let T=finish(cy,t1), keys=[{t:0,x:0,y:0},{t:t1,x:gx,y:cy}], follow=false;
+      if(T==null && v>V){
+        // Trop rapide : je longe l'arrière de la voiture (sans m'arrêter) jusqu'à pouvoir filer vers l'arrivée.
+        const vy=Math.sqrt(v*v-V*V), tMax=(R.yh-cy)/vy;
+        const n=Math.max(1,Math.ceil(tMax/0.005));
+        for(let i=1;i<=n;i++){
+          const tt=tMax*i/n, y=(i===n)?R.yh:cy+vy*tt, Tf=finish(y,t1+tt);
+          if(Tf!=null){ T=Tf; keys.push({t:t1+tt,x:gx+V*tt,y}); follow=true; break; }
+        }
+      }
+      if(T==null) return;
+      keys.push({t:T,x:0,y:W});
+      if(T<res.D.T) res.D={ok:true,T,keys,t1,follow};
+    });
+  }
+  // Si j'ai le temps de passer tout droit devant la voiture, B et D le font.
+  if(res.A.ok){
+    const straight=[{t:0,x:0,y:0},{t:W/v,x:0,y:W}];
+    res.B={ok:true,T:W/v,wait:0,keys:straight,front:true};
+    res.D={ok:true,T:W/v,keys:straight,front:true};
+  }
+  // C est l'optimum : si la recherche par pas de temps est battue de peu par B ou D, on retient leur trajet.
+  ['B','D'].forEach(k=>{ if(res[k].ok && res[k].T < res.C.T){ res.C={ok:true,T:res[k].T,keys:res[k].keys,via:'back'}; } });
+  return res;
+}
+
+function posAt(keys,t){
+  if(t<=keys[0].t) return keys[0];
+  for(let i=1;i<keys.length;i++){
+    const a=keys[i-1], b=keys[i];
+    if(t<=b.t){ const u=(b.t-a.t)<1e-9?1:(t-a.t)/(b.t-a.t); return {x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u}; }
+  }
+  return keys[keys.length-1];
+}
+
+/* ---------- Cartes de résultats ---------- */
+const STR=[
+  {k:'B',c:'--pB',name:'Attendre, puis traverser'},
+  {k:'C',c:'--pC',name:'Trajectoire optimale'},
+  {k:'D',c:'--pD',name:'Ne jamais s\'arrêter'}];
+
+function legText(keys){
+  const out=[];
+  for(let i=1;i<keys.length;i++){
+    const a=keys[i-1], b=keys[i], dt=b.t-a.t; if(dt<0.05) continue;
+    const gx=(b.x-a.x), gy=(b.y-a.y);
+    if(Math.hypot(gx,gy)<0.02){ out.push(`attendre ${fmt(dt)} s`); continue; }
+    const ang=Math.round(Math.abs(Math.atan2(gx,gy))*180/Math.PI);
+    if(ang<3) out.push(`tout droit ${fmt(dt)} s`);
+    else out.push(`en biais ${ang}° ${gx<0?'vers la voiture':'dans le sens de la voiture'} ${fmt(dt)} s`);
+  }
+  return out.join(', puis ');
+}
+
+function renderCards(res){
+  const times=STR.map(s=>res[s.k].ok?res[s.k].T:Infinity);
+  const tmin=Math.min(...times);
+  $('cards').innerHTML=STR.map(s=>{
+    const r=res[s.k], best=r.ok && r.T<=tmin+1e-6;
+    let det='';
+    if(s.k==='B') det=r.front?"J'ai le temps de passer avant la voiture : je traverse tout droit, sans attendre.":r.wait>0.05?`J'avance tout droit jusqu'au bord de la voie, j'attends ${fmt(r.wait)} s que la voiture passe, puis je termine.`:'La voiture est déjà passée : aucune attente.';
+    if(s.k==='D'){
+      det=r.front?"J'ai le temps de passer avant la voiture : je traverse tout droit, sans m'arrêter.":r.ok?`Je vise le coin arrière de la voiture pour l'atteindre pile quand il passe, sans m'arrêter${r.follow?', puis je longe l\'arrière de la voiture':''} : ${legText(r.keys)}.`
+              :'<span class="ko">Impossible</span> : je ne peux pas atteindre le coin arrière de la voiture au bon moment.';
+    }
+    if(s.k==='C'){
+      if(!r.ok) det='<span class="ko">Aucune trajectoire sûre trouvée.</span>';
+      else{
+        const lat=Math.max(...r.keys.map(q=>Math.abs(q.x)));
+        const via=r.via==='back'?'Je contourne par l\'arrière de la voiture : ':r.via==='front'?'Je passe devant la voiture : ':'';
+        det=via+legText(r.keys)+'.'+(lat>0.3?` Décalage latéral max ${fmt(lat)} m.`:'');
+        const gain=res.B.T-r.T; if(gain>0.05) det+=` Gain de ${fmt(gain)} s sur l'attente.`;
+      }
+    }
+    return `<article class="card" style="--c:var(${s.c})">
+      <div class="hd"><span class="tag">${s.k}</span>${s.name}${best?'<span class="win">Le plus rapide</span>':''}</div>
+      <div class="time">${r.ok?fmt(r.T)+' <small>s</small>':'—'}</div>
+      <p class="det">${det}</p></article>`;
+  }).join('');
+}
+
+/* ---------- Dessin ---------- */
+const cv=$('cv'), ctx=cv.getContext('2d');
+let P,RES,Tend=8,t=0,playing=true,last=null,view={};
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function layout(){
+  if($('pSim').hidden) return;
+  const w=cv.clientWidth||cv.parentElement.clientWidth-20;
+  let xr=w<520?6:9;
+  ['B','C','D'].forEach(k=>RES[k].keys.forEach(q=>xr=Math.max(xr,Math.abs(q.x)+1.5)));
+  xr=Math.min(xr,20);
+  const k=w/(2*xr), side=1.4;
+  let h=Math.min(Math.max(230,(P.W+2*side)*k),620);
+  const dpr=window.devicePixelRatio||1;
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const yMid=h/2;
+  view={w,h,k,xr,X:x=>w/2+x*k, Y:y=>yMid+(P.W/2-y)*k};
+}
+
+function draw(){
+  if($('pSim').hidden || !(view.k>0)) return;
+  const {w,h,k,X,Y}=view, W=P.W, d=P.dir;
+  const C={asphalt:col('--asphalt'),curb:col('--curb'),stripe:col('--stripe'),car:col('--carc'),
+    ink:col('--ink'),muted:col('--muted'),A:col('--pA'),B:col('--pB'),Cc:col('--pC'),Dd:col('--pD'),danger:col('--danger'),panel:col('--panel')};
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle=C.curb; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle=C.asphalt; ctx.fillRect(0,Y(W),w,W*k);
+  // ligne médiane
+  ctx.strokeStyle=C.stripe; ctx.globalAlpha=.55; ctx.lineWidth=2; ctx.setLineDash([3*k,3*k]);
+  ctx.beginPath(); ctx.moveTo(0,Y(W/2)); ctx.lineTo(w,Y(W/2)); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+  // zébras (bandes de 0,5 m espacées de 1 m, passage de 4 m)
+  ctx.fillStyle=C.stripe; ctx.globalAlpha=.9;
+  for(let y=0.25;y+0.5<=W;y+=1) ctx.fillRect(X(-2),Y(y+0.5),4*k,0.5*k);
+  ctx.globalAlpha=1;
+  // flèche de sens de circulation
+  ctx.fillStyle=C.stripe; ctx.globalAlpha=.35; ctx.font=`700 ${Math.max(12,k*0.9)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(d>0?'→':'←', X(d>0?-view.xr+1.5:view.xr-1.5), Y(P.laneY)); ctx.globalAlpha=1;
+
+  // voiture
+  const front=d*(-P.D+P.V*t), back=front-d*P.L;
+  const x0=Math.min(front,back), yL=P.laneY-CW/2;
+  ctx.fillStyle=C.car; roundRect(X(x0),Y(yL+CW),P.L*k,CW*k,0.35*k); ctx.fill();
+  ctx.fillStyle=C.asphalt; ctx.globalAlpha=.55;
+  const wsx=front-d*1.6; ctx.fillRect(X(Math.min(wsx,wsx+d*0.7)),Y(yL+CW-0.2),0.7*k,(CW-0.4)*k); ctx.globalAlpha=1;
+  ctx.fillStyle='#fff6c8'; ctx.beginPath(); ctx.arc(X(front),Y(yL+0.35),Math.max(2,0.12*k),0,7); ctx.arc(X(front),Y(yL+CW-0.35),Math.max(2,0.12*k),0,7); ctx.fill();
+  // indicateur voiture hors champ
+  if(X(Math.max(front,back))<0||X(Math.min(front,back))>w){
+    const left=X(Math.max(front,back))<0, dist=Math.abs(left?Math.max(front,back):Math.min(front,back))-view.xr;
+    ctx.fillStyle=C.car; ctx.font='700 13px sans-serif'; ctx.textAlign=left?'left':'right';
+    ctx.fillText((left?'◀ ':'')+'voiture à '+fmt(Math.max(0,dist),0)+' m'+(left?'':' ▶'), left?6:w-6, Y(P.laneY));
+  }
+
+  // trajectoires
+  [['B',C.B],['C',C.Cc],['D',C.Dd]].forEach(([s,c],i)=>{
+    const r=RES[s]; if(!r.keys) return;
+    const off=(i-1)*0.16; // léger décalage pour distinguer les tracés superposés
+    ctx.strokeStyle=c; ctx.lineWidth=2; ctx.setLineDash([5,5]); ctx.globalAlpha=r.ok?.75:.35;
+    ctx.beginPath(); r.keys.forEach((q,j)=>{const px=X(d*q.x+off),py=Y(q.y); j?ctx.lineTo(px,py):ctx.moveTo(px,py);}); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha=1;
+    let tt=t, crashed=false;
+    if(!r.ok && s==='A'){ tt=Math.min(t,r.hitT); crashed=t>=r.hitT; }
+    if(!r.ok && (s==='C'||s==='D')) return;
+    const pp=posAt(r.keys,Math.min(tt,r.T));
+    ctx.fillStyle=crashed?C.danger:c; ctx.strokeStyle=C.panel; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(X(d*pp.x+off),Y(pp.y),Math.max(7,0.33*k),0,7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='700 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(crashed?'✕':s,X(d*pp.x+off),Y(pp.y)+0.5);
+  });
+  // légende trottoirs
+  ctx.fillStyle=C.muted; ctx.font='12px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText('Départ',8,Y(-1.1)); ctx.fillText('Arrivée',8,Y(W+1.1));
+  // cible : milieu du passage en face
+  ctx.strokeStyle=C.ink; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(X(0),Y(W),Math.max(6,0.3*k),0,7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(X(0)-4,Y(W)); ctx.lineTo(X(0)+4,Y(W)); ctx.moveTo(X(0),Y(W)-4); ctx.lineTo(X(0),Y(W)+4); ctx.stroke();
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function update(){
+  P=readParams(); RES=solve(P);
+  Tend=Math.max(...['B','C','D'].map(k=>RES[k].ok?RES[k].T:(RES[k].hitT||0)))+1;
+  renderCards(RES); layout(); t=Math.min(t,Tend); sync(); draw(); scheduleSweeps();
+}
+function sync(){ $('scrub').value=Math.round(t/Tend*1000); $('clock').textContent=fmt(t)+' s'; $('bPlay').textContent=playing?'❚❚':'▶'; }
+function loop(ts){
+  if(playing){
+    if(last!=null){ t+=(ts-last)/1000; if(t>Tend+0.8) t=0; }
+    last=ts; sync(); draw();
+  } else last=null;
+  requestAnimationFrame(loop);
+}
+['v','V','D','W','L'].forEach(id=>$(id).addEventListener('input',()=>{t=0;update();}));
+$('bPlay').onclick=()=>{playing=!playing;sync();};
+$('bRe').onclick=()=>{t=0;playing=true;sync();draw();};
+$('scrub').addEventListener('input',e=>{playing=false;t=e.target.value/1000*Tend;sync();draw();});
+window.addEventListener('resize',()=>{layout();draw();});
+if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) playing=false;
+
+/* ---------- Graphiques de sensibilité ---------- */
+const SER=[
+  {k:'B',c:'--pB',dash:'6 4',w:2,name:'B · Attendre'},
+  {k:'D',c:'--pD',dash:'1.5 3.5',w:2.5,name:'D · Ne jamais s\'arrêter'},
+  {k:'C',c:'--pC',dash:'',w:2.5,name:'C · Optimale'}];
+const SWEEPS=[
+  {id:'v',title:'Selon ma vitesse',unit:'m/s',min:0.5,max:4,set:(p,x)=>{p.v=x}},
+  {id:'V',title:'Selon la vitesse de la voiture',unit:'km/h',min:5,max:40,set:(p,x)=>{p.V=x/3.6}},
+  {id:'L',title:'Selon la longueur de la voiture',unit:'m',min:2.5,max:18,set:(p,x)=>{p.L=x}},
+  {id:'D',title:'Selon la distance de la voiture au passage',unit:'m',min:-10,max:20,set:(p,x)=>{p.D=x}}];
+let sweepData=null, sweepTimer=null, sweepMode='gap';
+const NOTES={
+  gap:"Chaque courbe montre <b>combien de secondes la stratégie perd par rapport à la meilleure (C)</b>. C est donc la ligne du bas, à 0 : plus une courbe monte, plus la stratégie est lente. Une courbe collée à 0 signifie qu'elle fait aussi bien que C. Sur chaque graphique, un seul réglage varie le long de l'axe horizontal ; les autres restent fixés aux valeurs des curseurs. Le trait vertical marque le réglage actuel. Touche un graphique pour lire les temps exacts.",
+  total:"Chaque courbe donne le <b>temps total</b> pour arriver au milieu du passage en face : plus la courbe est basse, plus la stratégie est rapide. L'axe vertical est resserré sur les valeurs atteintes. Sur chaque graphique, un seul réglage varie ; les autres restent fixés aux valeurs des curseurs. Le trait vertical marque le réglage actuel."};
+function setMode(m){ sweepMode=m; $('mG').setAttribute('aria-pressed',m==='gap'); $('mT').setAttribute('aria-pressed',m==='total'); $('sweepNote').innerHTML=NOTES[m]; if(sweepData) renderSweeps(); }
+function showTab(f){
+  $('pSim').hidden=f; $('pForm').hidden=!f;
+  $('tSim').setAttribute('aria-selected',!f); $('tForm').setAttribute('aria-selected',f);
+  if(!f){ layout(); draw(); if(sweepData) renderSweeps(); } else renderFormFigs();
+}
+$('tSim').addEventListener('click',()=>showTab(false));
+$('tForm').addEventListener('click',()=>showTab(true));
+
+$('bExp').addEventListener('click',()=>{ const ex=$('explain'), open=ex.hidden; ex.hidden=!open; $('bExp').setAttribute('aria-expanded',open); });
+$('mG').addEventListener('click',()=>setMode('gap')); $('mT').addEventListener('click',()=>setMode('total'));
+$('sweepNote').innerHTML=NOTES.gap;
+function sval(d,k,i){ const v=d.ys[k][i]; if(v==null) return null; if(sweepMode==='total') return v; const c=d.ys.C[i]; return c==null?null:Math.max(0,v-c); }
+$('legend').innerHTML=SER.map(s=>`<span><svg viewBox="0 0 26 8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(${s.c})" stroke-width="${s.w}" stroke-dasharray="${s.dash}" stroke-linecap="round"/></svg>${s.name}</span>`).join('')
+;
+function niceTicks(lo,hi,n){
+  const span=hi-lo||1, raw=span/n, mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(f=>f*mag).find(s=>s>=raw);
+  const out=[]; for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) out.push(+v.toFixed(6)); return out;
+}
+function fixedText(id){
+  const parts=[];
+  if(id!=='v') parts.push(`moi ${fmt(P.v)} m/s`);
+  if(id!=='V') parts.push(`voiture ${$('V').value} km/h`);
+  if(id!=='L') parts.push(`longueur ${fmt(P.L)} m`);
+  if(id!=='D') parts.push(`distance ${fmt(P.D)} m`);
+  parts.push(`chaussée ${fmt(P.W)} m`);
+  return 'Fixé : '+parts.join(' · ');
+}
+function computeSweeps(){
+  const N=120;
+  return SWEEPS.map(sw=>{
+    const xs=[], ys={A:[],B:[],C:[],D:[]}, reg=[];
+    for(let i=0;i<=N;i++){
+      const x=sw.min+(sw.max-sw.min)*i/N, p={...P}; sw.set(p,x);
+      const r=solve(p); xs.push(x);
+      SER.forEach(({k})=>ys[k].push(r[k].ok&&isFinite(r[k].T)?r[k].T:null));
+      // régime : la voiture passe avant / le piéton passe avant / B meilleur / D meilleur / égalité
+      reg.push(r.A.ok ? (r.A.before?'devant':'apres') : (r.D.T-r.C.T<0.01?'DC':(Math.abs(r.B.T-r.D.T)<0.01?'tie':(r.B.T<r.D.T?'B':'D'))));
+    }
+    return {sw,xs,ys,reg};
+  });
+}
+function renderSweeps(){
+  $('sweeps').innerHTML=SWEEPS.map(sw=>`<div class="chart" id="ch-${sw.id}"><h3>${sw.title}</h3><p class="fx">${fixedText(sw.id)}</p><svg role="img" aria-label="Temps de traversée ${sw.title.toLowerCase()}"></svg><div class="tip" hidden></div></div>`).join('');
+  sweepData.forEach(drawSweep);
+}
+const ZONES={};
+const ZONES_OFF={
+  v:{
+    apres:{fill:'#888780',op:0.25,text:"La voiture passe avant le piéton : les scénarios sont identiques"},
+    devant:{fill:'#6250d6',op:0.10,text:"Le piéton passe avant la voiture : les scénarios sont identiques"},
+    B:{fill:'#2a78d6',op:0.08,text:"À faible vitesse, le détour prend trop de temps (D)"},
+    D:{fill:'#eb6834',op:0.08,text:"À grande vitesse, il vaut mieux ne pas attendre"},
+    DC:{fill:'#14a06b',op:0.10,text:"Ne jamais s'arrêter (D) est la trajectoire optimale"}
+  }
+};
+let _mctx=null;
+function textW(t){ if(!_mctx) _mctx=document.createElement('canvas').getContext('2d'); _mctx.font='12px sans-serif'; return _mctx.measureText(t).width; }
+function wrap(text,maxW){
+  const words=text.split(' '), lines=[]; let cur='';
+  for(const wd of words){ const t=cur?cur+' '+wd:wd; if(textW(t)<=maxW) cur=t; else { if(!cur) return null; lines.push(cur); cur=wd; if(textW(wd)>maxW) return null; } }
+  if(cur) lines.push(cur); return lines;
+}
+/* Découpe l'axe en zones : égalités rattachées à la zone voisine, zones trop étroites fusionnées */
+function buildZones(d){
+  const reg=d.reg.slice(), n=reg.length;
+  for(let i=0;i<n;i++) if(reg[i]==='tie'){ let j=i; while(j>=0&&reg[j]==='tie') j--; if(j>=0) reg[i]=reg[j]; }
+  for(let i=n-1;i>=0;i--) if(reg[i]==='tie'){ let j=i; while(j<n&&reg[j]==='tie') j++; reg[i]=j<n?reg[j]:'apres'; }
+  let runs=[]; reg.forEach((r,i)=>{ if(runs.length&&runs[runs.length-1].k===r) runs[runs.length-1].i1=i; else runs.push({k:r,i0:i,i1:i}); });
+  const minPts=Math.max(2,Math.round(n*0.08));
+  let changed=true;
+  while(changed && runs.length>1){
+    changed=false;
+    let si=-1, best=Infinity;
+    // seules les zones « B meilleur » / « D meilleur » trop étroites sont fusionnées
+    runs.forEach((r,i)=>{ const len=r.i1-r.i0+1; if((r.k==='B'||r.k==='D'||r.k==='DC') && len<minPts && len<best){best=len; si=i;} });
+    if(si>=0){
+      const r=runs[si], L=runs[si-1], R=runs[si+1];
+      const ok=z=>z&&(z.k==='B'||z.k==='D'||z.k==='DC');
+      let into;
+      if(ok(L)&&ok(R)) into=(L.i1-L.i0)>=(R.i1-R.i0)?L:R; else if(ok(L)) into=L; else if(ok(R)) into=R;
+      else into = !L ? R : !R ? L : ((L.i1-L.i0)>=(R.i1-R.i0)?L:R);
+      into.i0=Math.min(into.i0,r.i0); into.i1=Math.max(into.i1,r.i1); runs.splice(si,1); changed=true;
+      for(let i=1;i<runs.length;i++) if(runs[i].k===runs[i-1].k){ runs[i-1].i1=runs[i].i1; runs.splice(i,1); i--; }
+    }
+  }
+  return runs;
+}
+function drawSweep(d){
+  const box=$('ch-'+d.sw.id), svg=box.querySelector('svg');
+  const w=svg.clientWidth||300, m={l:40,r:24,t:18,b:34}, Z=ZONES[d.sw.id];
+  let h=Z?260:190;
+  let ymax=-Infinity, ymin=Infinity;
+  SER.forEach(({k})=>d.xs.forEach((_,i)=>{ const v=sval(d,k,i); if(v!=null){ ymax=Math.max(ymax,v); ymin=Math.min(ymin,v);} }));
+  if(!isFinite(ymax)){ymax=1;ymin=0;}
+  if(sweepMode==='gap'){ ymin=0; ymax=Math.max(ymax*(Z?1.35:1.08),0.2); }
+  else { const pad=Math.max((ymax-ymin)*0.08,0.1); ymin=Math.max(0,ymin-pad); ymax=ymax+pad; }
+  const yt=niceTicks(ymin,ymax,4); ymin=Math.min(ymin,yt[0]); ymax=Math.max(ymax,yt[yt.length-1]);
+  const ydec=(yt[1]-yt[0])<0.1?2:(yt[1]-yt[0])<1?1:0;
+  const xt=niceTicks(d.sw.min,d.sw.max,5);
+  const X=x=>m.l+(x-d.sw.min)/(d.sw.max-d.sw.min)*(w-m.l-m.r), Y=y=>h-m.b-((y-ymin)/(ymax-ymin))*(h-m.t-m.b);
+  const dxs=(d.xs[1]-d.xs[0])/2;
+  let g='';
+  const series=SER.filter(sr=>!(Z && sr.k==='C'));
+  let zoneSvg='', zoneText='', zoneNums='', below=[];
+  if(Z){
+    // positions des courbes (en pixels) pour éviter de poser texte ou numéro dessus
+    const curves=series.map((sr,si)=>{ const off=(si-(series.length-1)/2)*2.5; return d.xs.map((x,i)=>{const v=sval(d,sr.k,i); return v==null?null:[X(x),Y(v)+off];}); });
+    const grid=yt.map(y=>Y(y));
+    const boxes=[];
+    const free=(x1,y1,x2,y2)=>{
+      const pad=4; x1-=pad; x2+=pad; y1-=pad; y2+=pad;
+      if(y1<m.t-2||y2>h-m.b+2) return false;
+      // les lignes de grille sont dessinées par-dessus le texte : elles restent visibles, pas besoin de les éviter
+      if(boxes.some(b=>!(x2<b[0]||x1>b[2]||y2<b[1]||y1>b[3]))) return false;
+      for(const c of curves) for(let i=1;i<c.length;i++){ const a=c[i-1], b=c[i]; if(!a||!b) continue;
+        if(b[0]<x1||a[0]>x2) continue; const lo=Math.min(a[1],b[1]), hi=Math.max(a[1],b[1]); if(hi>=y1&&lo<=y2) return false; }
+      return true;
+    };
+    const runs=buildZones(d);
+    runs.forEach((r,zi)=>{
+      const zx0=X(Math.max(d.sw.min,d.xs[r.i0]-dxs)), zx1=X(Math.min(d.sw.max,d.xs[r.i1]+dxs)), zc=Z[r.k], num=zi+1;
+      zoneSvg+=`<rect x="${zx0}" y="${m.t}" width="${Math.max(0,zx1-zx0)}" height="${h-m.t-m.b}" fill="${zc.fill}" opacity="${zc.op}"/>`;
+      // texte dans la zone si la place existe, sinon sous le graphique
+      let placed=false;
+      for(const f of [1,0.85,0.7,0.55,0.45]){
+        if(placed) break;
+        const lines=wrap(zc.text,(zx1-zx0-12)*f);
+        if(!lines || lines.length>4) continue;
+        const bw=Math.max(...lines.map(textW)), bh=lines.length*15;
+        for(let x=zx0+6; x+bw<=zx1-6 && !placed; x+=6)
+          for(let y=m.t+6; y+bh<=h-m.b-4 && !placed; y+=2){
+            if(free(x,y,x+bw,y+bh)){
+              boxes.push([x-4,y-4,x+bw+4,y+bh+4]);
+              lines.forEach((ln,li)=>{ zoneText+=`<text x="${x}" y="${y+11+li*15}" font-family="sans-serif" font-size="12" fill="#888780">${ln}</text>`; });
+              placed=true;
+            }
+          }
+      }
+      if(!placed) below.push(num+' · '+zc.text);
+      // numéro dans la zone, à un endroit libre
+      const cx=(zx0+zx1)/2; let cy=null;
+      for(let y=m.t+12; y<=h-m.b-12; y+=2){ if(free(cx-9,y-9,cx+9,y+9)){ cy=y; break; } }
+      if(cy==null) cy=(m.t+h-m.b)/2;
+      boxes.push([cx-11,cy-11,cx+11,cy+11]);
+      zoneNums+=`<g class="znum"><circle cx="${cx}" cy="${cy}" r="9"/><text x="${cx}" y="${cy+4}" text-anchor="middle">${num}</text></g>`;
+    });
+  }
+  g+=zoneSvg+zoneText;
+  yt.forEach(y=>{g+=`<line x1="${m.l}" x2="${w-m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l-6}" y="${Y(y)+3.5}" text-anchor="end">${fmt(y,ydec)}</text>`;});
+  xt.forEach(x=>{g+=`<text x="${X(x)}" y="${h-m.b+14}" text-anchor="middle">${fmt(x,x%1?1:0)}</text>`;});
+  g+=`<text x="4" y="11">${sweepMode==='gap'?(Z?'secondes perdues par rapport à l\'optimal':'secondes perdues vs C'):'temps total (s)'}</text>`;
+  g+=`<text x="${w-m.r}" y="${h-4}" text-anchor="end">${d.sw.id==='v'?'ma vitesse':d.sw.id==='V'?'vitesse voiture':d.sw.id==='L'?'longueur voiture':'distance voiture'} (${d.sw.unit})</text>`;
+  const cur=+$(d.sw.id).value;
+  g+=`<line x1="${X(cur)}" x2="${X(cur)}" y1="${m.t}" y2="${h-m.b}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>`;
+  g+=zoneNums;
+  // courbes
+  const ends=[];
+  series.forEach((sr,si)=>{
+    let path='', pen=false, lastI=-1;
+    const off=(si-(series.length-1)/2)*2.5; // léger décalage vertical (px) pour voir les courbes superposées
+    d.xs.forEach((x,i)=>{const v=sval(d,sr.k,i); if(v==null){pen=false;return;} path+=(pen?'L':'M')+X(x).toFixed(1)+','+(Y(v)+off).toFixed(1); pen=true; lastI=i;});
+    g+=`<path d="${path}" fill="none" stroke="var(${sr.c})" stroke-width="${sr.w}" stroke-dasharray="${sr.dash}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    if(lastI===d.xs.length-1) ends.push({k:sr.k,c:sr.c,y:Y(sval(d,sr.k,lastI))});
+  });
+  // étiquettes en bout de courbe, écartées pour ne pas se chevaucher
+  ends.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<11) ends[i].y=ends[i-1].y+11;
+  ends.forEach(e=>{ g+=`<text x="${w-m.r+5}" y="${e.y+4}" style="fill:var(--ink);font-weight:700">${e.k}</text>`; });
+  g+=`<g class="hov" visibility="hidden"><line class="hl" y1="${m.t}" y2="${h-m.b}" stroke="var(--muted)" stroke-width="1"/>`+
+     SER.map(sr=>`<circle class="hd${sr.k}" r="4.5" fill="var(${sr.c})" stroke="var(--panel)" stroke-width="2"/>`).join('')+`</g>`;
+  const drawn=new Set(series.map(sr=>sr.k));
+  g+=`<rect class="hit" x="${m.l}" y="0" width="${w-m.l-m.r}" height="${h}" fill="transparent"/>`;
+  // textes des zones trop étroites, sous le graphique
+  let hh=h;
+  below.forEach(t=>{ const ls=wrap(t,w-8)||[t]; ls.forEach((ln,li)=>{ hh+=14; g+=`<text x="${li?16:4}" y="${hh}">${ln}</text>`; }); });
+  if(below.length) hh+=6;
+  svg.setAttribute('viewBox',`0 0 ${w} ${hh}`); svg.style.height=hh+'px'; svg.innerHTML=g;
+  const tip=box.querySelector('.tip'), hov=svg.querySelector('.hov');
+  const move=e=>{
+    const r=svg.getBoundingClientRect(), px=(e.clientX-r.left)*(w/r.width);
+    const i=Math.max(0,Math.min(d.xs.length-1,Math.round((px-m.l)/(w-m.l-m.r)*(d.xs.length-1))));
+    const xx=X(d.xs[i]); hov.setAttribute('visibility','visible');
+    const hl=hov.querySelector('.hl'); hl.setAttribute('x1',xx); hl.setAttribute('x2',xx);
+    let rows='';
+    ['B','C','D'].forEach(k=>{const c=hov.querySelector('.hd'+k), v=d.ys[k][i], sv=sval(d,k,i);
+      if(v==null||!drawn.has(k)) c.setAttribute('visibility','hidden'); else {c.setAttribute('visibility','visible');c.setAttribute('cx',xx);c.setAttribute('cy',Y(sv));}
+      rows+=`<div style="--c:var(--p${k})"><i></i>${k} : ${v==null?'impossible':fmt(v,2)+' s'+(k!=='C'&&d.ys.C[i]!=null?` (+${fmt(Math.max(0,v-d.ys.C[i]),2)})`:'')}</div>`;});
+    tip.innerHTML=`<b>${d.sw.title.replace('Selon ','').replace(/^l[ae] |^ma /,m=>m)} = ${fmt(d.xs[i],d.sw.id==='V'?0:1)} ${d.sw.unit}</b>${rows}`; tip.hidden=false;
+    const left=(xx/w)*r.width; tip.style.left=Math.min(Math.max(4,left+10),r.width-tip.offsetWidth+8)+'px'; tip.style.top='54px';
+  };
+  const leave=()=>{hov.setAttribute('visibility','hidden'); tip.hidden=true;};
+  const hit=svg.querySelector('.hit');
+  hit.addEventListener('pointermove',move); hit.addEventListener('pointerdown',move); hit.addEventListener('pointerleave',leave);
+}
+function scheduleSweeps(){
+  clearTimeout(sweepTimer);
+  sweepTimer=setTimeout(()=>{ sweepData=computeSweeps(); renderSweeps(); },120);
+}
+window.addEventListener('resize',()=>{ if(sweepData) renderSweeps(); });
+
+/* ---------- Graphiques types (bouton Explication) ---------- */
+const ZT={
+  1:{c:'#6250d6',o:0.10,t:"On passe devant la voiture : tous les scénarios identiques"},
+  2:{c:'#14a06b',o:0.10,t:"D = C"},
+  3:{c:'#2a78d6',o:0.08,t:"Le détour prend trop de temps"},
+  4:{c:'#eb6834',o:0.08,t:"Le détour est pertinent"},
+  5:{c:'#e87ba4',o:0.14,t:"L'optimal passe devant la voiture en biais"},
+  6:{c:'#888780',o:0.25,t:"La voiture passe devant : tous les scénarios identiques"}};
+const EX=[
+  {title:'Selon ma vitesse',axis:'ma vitesse →',
+   zones:[[6,40,70],[3,70,140],[4,140,210],[2,210,270],[5,270,310],[1,310,360]],
+   B:"40,198.5 71,198.5 73,190 140,175 210,155 270,137 274,120 290,96 306,72 309,70 310.5,198.5 360,198.5",
+   D:"40,201.5 72,201.5 85,186 100,170 115,164 128,167 140,175 160,183 180,190 210,197 214,201.5 270,201.5 273,128 290,104 306,80 309,78 310.5,201.5 360,201.5"},
+  {title:'Selon la vitesse de la voiture',axis:'vitesse de la voiture →',
+   zones:[[1,40,90],[5,90,130],[3,130,200],[4,200,260],[2,260,310],[6,310,360]],
+   B:"40,198.5 89.5,198.5 91,72 105,92 118,106 129,116 130.5,182 165,185 200,188 230,190.5 260,193 285,195 309,197 310.5,198.5 360,198.5",
+   D:"40,201.5 89.5,201.5 91,64 105,84 118,98 129,108 130.5,160 150,170 175,180 200,188 220,194 240,198 255,201.5 360,201.5"},
+  {title:'Selon la longueur de la voiture',axis:'longueur de la voiture →',
+   zones:[[6,40,100],[2,100,170],[4,170,250],[3,250,360]],
+   B:"40,198.5 100,198.5 112,186 125,179 140,176 170,175 250,175 360,175",
+   D:"40,201.5 170,201.5 190,199 210,194 230,186 250,175 280,155 310,132 340,107 360,90"},
+  {title:'Selon la distance de la voiture au passage',axis:'distance de la voiture →',
+   zones:[[6,40,90],[2,90,150],[4,150,210],[3,210,290],[5,290,320],[1,320,360]],
+   B:"40,198.5 90,198.5 100,188 112,182 125,179 150,178 210,178 289.5,178 290.5,82 305,72 319,62 320.5,198.5 360,198.5",
+   D:"40,201.5 150,201.5 170,197 190,190 210,178 240,165 270,150 289.5,140 290.5,72 305,62 319,52 320.5,201.5 360,201.5"}];
+function exSvg(e){
+  let g=`<text class="lab" x="4" y="16">temps perdu par rapport à l'optimal</text>`;
+  e.zones.forEach(([z,x0,x1])=>{ g+=`<rect x="${x0}" y="36" width="${x1-x0}" height="164" fill="${ZT[z].c}" opacity="${ZT[z].o}"/>`; });
+  g+=`<g stroke="#888780"><line x1="40" y1="90" x2="360" y2="90" stroke-width="0.5" opacity="0.4"/><line x1="40" y1="145" x2="360" y2="145" stroke-width="0.5" opacity="0.4"/><line x1="40" y1="200" x2="360" y2="200" stroke-width="1"/><line x1="40" y1="36" x2="40" y2="200" stroke-width="1"/></g>`;
+  e.zones.forEach(([z,x0,x1])=>{ const cx=(x0+x1)/2; g+=`<g class="znum"><circle cx="${cx}" cy="52" r="9"/><text x="${cx}" y="56" text-anchor="middle">${z}</text></g>`; });
+  g+=`<polyline points="${e.B}" fill="none" stroke="var(--pB)" stroke-width="2.5" stroke-dasharray="6 4" stroke-linejoin="round"/>`;
+  g+=`<polyline points="${e.D}" fill="none" stroke="var(--pD)" stroke-width="2.5" stroke-dasharray="1.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g+=`<text class="lab" x="360" y="218" text-anchor="end">${e.axis}</text>`;
+  return `<figure><figcaption>${e.title}</figcaption><svg viewBox="0 0 380 226" role="img" aria-label="Graphique type ${e.title.toLowerCase()}">${g}</svg></figure>`;
+}
+$('exGrid').innerHTML=EX.map(exSvg).join('');
+$('exLegend').innerHTML=`<span><svg viewBox="0 0 26 8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--pB)" stroke-width="2.5" stroke-dasharray="6 4"/></svg>B · Attendre</span><span><svg viewBox="0 0 26 8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--pD)" stroke-width="2.5" stroke-dasharray="1.5 3.5" stroke-linecap="round"/></svg>D · Ne jamais s'arrêter</span>`;
+/* Réglages d'exemple pour chaque zone (trouvés par recherche, proches des réglages par défaut) */
+const PRESETS={
+  1:{v:1.5,V:19,D:12,W:4.5,L:12},
+  2:{v:1.3,V:9,D:-6,W:4.5,L:12},
+  3:{v:1.3,V:19,D:2,W:4.5,L:12},
+  4:{v:1.5,V:9,D:0,W:4.5,L:12},
+  5:{v:1.9,V:7,D:2,W:4.5,L:12},
+  6:{v:1.3,V:19,D:-8,W:4.5,L:12}};
+$('zList').innerHTML=[1,2,3,4,5,6].map(z=>`<li><button type="button" class="zbtn" data-z="${z}" aria-label="Régler le simulateur sur la zone ${z}"><span class="zs" style="background:${ZT[z].c};opacity:${Math.min(1,ZT[z].o*4)}"></span><span class="zn">${z}</span><span class="zt">${ZT[z].t}</span><span class="zgo">Voir ▸</span></button></li>`).join('');
+$('zList').addEventListener('click',e=>{
+  const b=e.target.closest('.zbtn'); if(!b) return;
+  const pr=PRESETS[b.dataset.z];
+  Object.entries(pr).forEach(([k,v])=>{ $(k).value=v; });
+  t=0; playing=true; update();
+  document.querySelectorAll('.zbtn').forEach(x=>x.classList.toggle('on',x===b));
+  $('cv').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+});
+
+/* ---------- Figures dynamiques de l'onglet Formules ---------- */
+function axisTicks(lo,hi,n){ return niceTicks(lo,hi,n); }
+function renderFormFigs(){
+  if(!P) return;
+  const {v,V,D,W,L}=P, y1=W/2-CW/2, y2=W/2+CW/2, S=D+L, r=solve(P);
+  const set=`moi ${fmt(v)} m/s · voiture ${$('V').value} km/h · distance ${fmt(D)} m · longueur ${fmt(L)} m · chaussée ${fmt(W)} m`;
+  // --- polynôme de D ---
+  {
+    const a=V*V-v*v, b=-2*V*S, c=S*S+y1*y1, f=t=>a*t*t+b*t+c;
+    let roots=[];
+    if(Math.abs(a)<1e-9){ if(b<0) roots=[-c/b]; }
+    else { const dd=b*b-4*a*c; if(dd>=0){ const q=Math.sqrt(dd); roots=[(-b-q)/(2*a),(-b+q)/(2*a)]; } }
+    roots=roots.filter(t=>t>1e-6).sort((p,q)=>p-q);
+    const kept0=(r.D.ok && r.D.t1!=null && !r.D.front)?r.D.t1:(roots[0]||null);
+    let tmax=roots.length?roots[roots.length-1]*1.35:6;
+    if(kept0!=null && tmax>kept0*3) tmax=kept0*2.5;   // racine lointaine hors champ : on zoome sur la racine utile
+    if(tmax<1) tmax=1;
+    const N=120, pts=[]; let fmin=0,fmax=0;
+    for(let i=0;i<=N;i++){ const t=tmax*i/N, y=f(t); pts.push([t,y]); fmin=Math.min(fmin,y); fmax=Math.max(fmax,y); }
+    const span=(fmax-fmin)||1; fmin-=span*0.08; fmax+=span*0.08;
+    const w=380,h=240,m={l:46,r:14,t:16,b:34};
+    const X=t=>m.l+t/tmax*(w-m.l-m.r), Y=y=>h-m.b-(y-fmin)/(fmax-fmin)*(h-m.t-m.b);
+    let g='';
+    axisTicks(fmin,fmax,4).forEach(y=>{ g+=`<line x1="${m.l}" x2="${w-m.r}" y1="${Y(y)}" y2="${Y(y)}" stroke="var(--line)"/><text class="ax" x="${m.l-6}" y="${Y(y)+4}" text-anchor="end">${fmt(y,Math.abs(y)<10&&y%1?1:0)}</text>`; });
+    axisTicks(0,tmax,5).forEach(t=>{ g+=`<text class="ax" x="${X(t)}" y="${h-m.b+15}" text-anchor="middle">${fmt(t,t%1?1:0)}</text>`; });
+    g+=`<line x1="${m.l}" x2="${w-m.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--ink)" stroke-width="1.2"/>`;
+    g+=`<polyline points="${pts.map(([t,y])=>X(t).toFixed(1)+','+Y(y).toFixed(1)).join(' ')}" fill="none" stroke="var(--pD)" stroke-width="2.5"/>`;
+    const kept=r.D.ok && r.D.t1!=null ? r.D.t1 : null;
+    const shown=roots.filter(t=>t<=tmax), hiddenR=roots.filter(t=>t>tmax);
+    shown.forEach((t,i)=>{
+      const on=kept!=null && Math.abs(t-kept)<1e-6;
+      g+=`<circle cx="${X(t)}" cy="${Y(0)}" r="5.5" fill="${on?'var(--pD)':'var(--panel)'}" stroke="var(--pD)" stroke-width="2"/>`;
+      g+=`<text class="ax" x="${X(t)}" y="${Y(0)-(i%2?-18:10)}" text-anchor="middle" style="fill:var(--ink)">${fmt(t,2)} s</text>`;
+    });
+    g+=`<text class="ax" x="4" y="11">a·t₁² + b·t₁ + c</text><text class="ax" x="${w-m.r}" y="${h-4}" text-anchor="end">t₁ (s)</text>`;
+    $('figQuad').innerHTML=g;
+    let cap=`Réglages actuels : ${set}. Ici a = ${fmt(a,2)}, b = ${fmt(b,2)}, c = ${fmt(c,2)}. `;
+    if(!roots.length) cap+="Aucune racine positive : je ne peux pas atteindre le coin arrière à temps.";
+    else if(kept!=null && !r.D.front) cap+=`Racine retenue (point plein) : t₁ = ${fmt(kept,2)} s.`+(hiddenR.length?` L'autre racine, ${fmt(hiddenR[0],1)} s, est hors du graphique.`:'');
+    else cap+="Avec ces réglages, on peut traverser tout droit : D n'a pas besoin de viser le coin.";
+    $('capQuad').textContent=cap;
+  }
+  // --- T(x) pour C ---
+  {
+    const back=x=>Math.max(Math.hypot(x,y1)/v,(x+S)/V)+Math.hypot(x,W-y1)/v;
+    const front=x=>{ const r1=Math.hypot(x,y2); return r1/v<=(x+D)/V ? (r1+Math.hypot(x,W-y2))/v : null; };
+    let x0=-L-4, x1=4;
+    // élargir si l'optimum est hors champ
+    let best={x:0,T:back(0),k:'back'};
+    for(let x=-60;x<=60;x+=0.02){ const tb=back(x); if(tb<best.T) best={x,T:tb,k:'back'}; const tf=front(x); if(tf!=null&&tf<best.T) best={x,T:tf,k:'front'}; }
+    x0=Math.min(x0,best.x-3); x1=Math.max(x1,best.x+3);
+    const TB=back(0);
+    const N=200, xs=[...Array(N+1)].map((_,i)=>x0+(x1-x0)*i/N);
+    const tmin=best.T, tmaxv=tmin+Math.max(1.5,(TB-tmin)*3);
+    const w=380,h=250,m={l:46,r:14,t:16,b:34};
+    const X=x=>m.l+(x-x0)/(x1-x0)*(w-m.l-m.r), Y=T=>h-m.b-(T-tmin+0.15)/(tmaxv-tmin+0.15)*(h-m.t-m.b);
+    let g=`<defs><clipPath id="cTx"><rect x="${m.l}" y="${m.t}" width="${w-m.l-m.r}" height="${h-m.t-m.b}"/></clipPath></defs>`;
+    axisTicks(tmin-0.15,tmaxv,4).forEach(T=>{ if(T<tmin-0.15) return; g+=`<line x1="${m.l}" x2="${w-m.r}" y1="${Y(T)}" y2="${Y(T)}" stroke="var(--line)"/><text class="ax" x="${m.l-6}" y="${Y(T)+4}" text-anchor="end">${fmt(T,1)}</text>`; });
+    axisTicks(x0,x1,5).forEach(x=>{ g+=`<text class="ax" x="${X(x)}" y="${h-m.b+15}" text-anchor="middle">${fmt(x,x%1?1:0)}</text>`; });
+    g+=`<line x1="${X(0)}" x2="${X(0)}" y1="${m.t}" y2="${h-m.b}" stroke="var(--muted)" stroke-dasharray="2 3"/>`;
+    const path=(fn)=>{ let d='',pen=false; xs.forEach(x=>{ const T=fn(x); if(T==null||!isFinite(T)){pen=false;return;} d+=(pen?'L':'M')+X(x).toFixed(1)+','+Y(T).toFixed(1); pen=true; }); return d; };
+    g+=`<g clip-path="url(#cTx)"><path d="${path(back)}" fill="none" stroke="var(--pC)" stroke-width="2.5"/><path d="${path(front)}" fill="none" stroke="#e87ba4" stroke-width="2.5" stroke-dasharray="5 3"/></g>`;
+    g+=`<circle cx="${X(0)}" cy="${Y(TB)}" r="5.5" fill="var(--pB)" stroke="var(--panel)" stroke-width="2"/><text class="ax" x="${X(0)+8}" y="${Y(TB)-8}" style="fill:var(--ink)">B</text>`;
+    g+=`<circle cx="${X(best.x)}" cy="${Y(best.T)}" r="5.5" fill="var(--pC)" stroke="var(--panel)" stroke-width="2"/><text class="ax" x="${X(best.x)}" y="${Y(best.T)+18}" text-anchor="middle" style="fill:var(--ink)">C</text>`;
+    g+=`<text class="ax" x="4" y="11">T(x) en secondes</text><text class="ax" x="${w-m.r}" y="${h-4}" text-anchor="end">x : point de franchissement (m)</text>`;
+    $('figTx').innerHTML=g;
+    $('capTx').textContent=`Réglages actuels : ${set}. Courbe verte : passer derrière ; courbe rose en tirets : passer devant en biais (seulement là où c'est possible). B (x = 0) : ${fmt(TB,2)} s. C (minimum, x = ${fmt(best.x,1)} m) : ${fmt(best.T,2)} s.`;
+  }
+}
+update(); requestAnimationFrame(loop);
+if(location.hash==='#formules') showTab(true);
+</script>
+
+</body></html>

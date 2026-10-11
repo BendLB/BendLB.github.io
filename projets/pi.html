@@ -1,0 +1,936 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Chasse à π</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: cahier de géométrie à petits carreaux ; en-tête avec lien vers l'histoire, barre d'onglets des méthodes collante, chaque onglet = figure + lecture des décimales (empilé sur mobile) */
+:root{
+  --paper:#edf1f4; --sheet:#f8fafb; --grid:rgba(38,72,120,.07);
+  --ink:#152340; --muted:#5b6880; --line:#cbd4de;
+  --accent:#c4432d; --accent-soft:rgba(196,67,45,.12);
+  --ok:#14766a; --ok-soft:rgba(20,118,106,.13);
+  --wood-a:#dcbf93; --wood-b:#d0ae7c; --seam:#8a6a45;
+  --s1:#2f5fb3; --s2:#7b4fb0; --s3:#14766a; --s4:#c27a12; --s5:#c4432d;
+  --f-display:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f151e; --sheet:#151d29; --grid:rgba(150,180,220,.06);
+    --ink:#dfe7f1; --muted:#93a1b6; --line:#2b3748;
+    --accent:#ff8467; --accent-soft:rgba(255,132,103,.16);
+    --ok:#5fd0bb; --ok-soft:rgba(95,208,187,.14);
+    --wood-a:#5b4733; --wood-b:#4f3d2b; --seam:#2c2016;
+    --s1:#7aa7f5; --s2:#b996ee; --s3:#5fd0bb; --s4:#f0b55a; --s5:#ff8467;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f151e; --sheet:#151d29; --grid:rgba(150,180,220,.06);
+  --ink:#dfe7f1; --muted:#93a1b6; --line:#2b3748;
+  --accent:#ff8467; --accent-soft:rgba(255,132,103,.16);
+  --ok:#5fd0bb; --ok-soft:rgba(95,208,187,.14);
+  --wood-a:#5b4733; --wood-b:#4f3d2b; --seam:#2c2016;
+    --s1:#7aa7f5; --s2:#b996ee; --s3:#5fd0bb; --s4:#f0b55a; --s5:#ff8467;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink)}
+body{
+  font-family:var(--f-body); font-size:15px; line-height:1.55;
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px),linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:22px 22px;
+}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+header.top{padding-block:28px 14px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.glyph{font-family:var(--f-display);font-size:5.2rem;line-height:.8;color:var(--accent);font-style:italic}
+header.top h1{font-family:var(--f-display);font-weight:400;font-size:2.6rem;line-height:1;margin:0;text-wrap:balance}
+header.top p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.ref{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:8px}
+.histlink{margin-top:10px;display:inline-flex;align-items:center;gap:8px;font:italic 1.25rem var(--f-display);color:var(--ink);background:none;border:0;border-bottom:1px solid var(--accent);padding:0 0 2px;cursor:pointer}
+.views{display:flex;flex-wrap:wrap;gap:6px 24px}
+.fam{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.fam button{font:500 .8rem var(--f-body);border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:5px 9px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.fam button[aria-pressed="true"]{border-color:var(--ink);font-weight:600}
+.fam svg{flex:0 0 auto}
+.famrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin-top:6px}
+.famrow .label{min-width:9.5rem}
+.histlink span{font-family:var(--f-body);font-style:normal;font-size:.9rem;color:var(--accent)}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);
+  margin-inline:-16px;padding-inline:16px;padding-block:10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;font:600 .86rem var(--f-body);border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:7px 13px;border-radius:999px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+section.panel{padding-top:22px}
+.kicker{font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:0 0 4px}
+h2{font-family:var(--f-display);font-weight:400;font-size:2.1rem;line-height:1.05;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:400;font-size:1.45rem;margin:0 0 8px}
+.lede{color:var(--muted);max-width:68ch;margin:0 0 18px}
+.grid2{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.grid2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+canvas{display:block;width:100%;max-width:100%}
+.c-square{aspect-ratio:1/1}.c-wide{aspect-ratio:4/3}.c-chart{aspect-ratio:16/8}.c-loupe{aspect-ratio:16/7}.c-pizza{aspect-ratio:16/10}
+
+.formula{padding:12px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);margin:0 0 12px;overflow-x:auto;display:grid;gap:8px}
+math{font-size:1.2rem;color:var(--ink)}
+.formula math[display="block"]{margin:0}
+.how{margin:0 0 14px;font-size:.95rem;max-width:62ch}
+.how .ex{display:block;margin-top:8px;padding:8px 10px;background:var(--ok-soft);border-radius:4px;font-size:.88rem}
+.fsteps{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 14px;align-items:center}
+.fsteps math{font-size:1.15rem}
+.fl{display:grid;gap:2px}
+.m-viz{aspect-ratio:16/7;margin:0 0 14px}
+[hidden]{display:none!important}
+.label{font:600 .72rem var(--f-body);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.digits{font-family:var(--f-mono);font-size:1rem;line-height:1.6;word-break:break-all;margin:4px 0 8px}
+.digits .ok{color:var(--ok);font-weight:600}
+.digits .bad{background:var(--accent);color:var(--sheet);border-radius:2px;padding:0 1px}
+.digits .rest{color:var(--muted);opacity:.75}
+.stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin:6px 0 4px}
+.stat b{display:block;font:600 1.35rem var(--f-mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.note{font-size:.88rem;color:var(--muted);margin:12px 0 0;max-width:62ch}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.chips button{font:500 .88rem var(--f-body);border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:7px 12px;border-radius:4px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
+.ctrl{display:grid;gap:4px;margin:4px 0 12px}
+.ctrl .row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.ctrl output{font:600 .95rem var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.btns button{font:600 .84rem var(--f-body);border:1px solid var(--ink);background:transparent;color:var(--ink);padding:7px 12px;border-radius:4px;cursor:pointer}
+.btns button.primary{background:var(--ink);color:var(--sheet)}
+.btns button.ghost{border-color:var(--line);color:var(--muted)}
+
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+.tscroll{overflow-x:auto;margin-top:6px}
+th{text-align:left;font:600 .68rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:middle}
+td math{font-size:1rem}
+tr.cur td{background:var(--ok-soft)}
+tr.gap td{color:var(--muted);text-align:center;padding:2px}
+td .okd{color:var(--ok);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+
+/* Histoire */
+#view-history{padding-top:8px}
+.back{font:600 .86rem var(--f-body);border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:7px 13px;border-radius:999px;cursor:pointer;margin-bottom:16px}
+.ev{display:grid;grid-template-columns:5.2rem minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.ev .yr{font:600 .95rem var(--f-mono);color:var(--accent);font-variant-numeric:tabular-nums}
+.ev h4{margin:0;font-size:1rem}
+.ev p{margin:2px 0 0;color:var(--muted);font-size:.9rem;max-width:66ch}
+.ev .val{font-family:var(--f-mono);font-size:.82rem;color:var(--ink);margin-top:3px}
+.era{font-family:var(--f-display);font-size:1.4rem;margin:22px 0 2px}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="glyph" aria-hidden="true">π</div>
+    <div style="min-width:0;flex:1">
+      <h1>Chasse à π</h1>
+      <p>Huit façons d'approcher le rapport entre le périmètre d'un cercle et son diamètre. Les décimales exactes s'affichent en vert, la première fausse en rouge.</p>
+      <div class="ref" id="refline"></div>
+      <div class="views" id="viewlinks">
+        <button class="histlink" id="go-compare">Comparer les méthodes <span>→</span></button>
+        <button class="histlink" id="go-history">Histoire de π et de son calcul <span>→</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div id="view-methods">
+  <nav class="tabs" role="tablist" aria-label="Méthodes">
+    <button role="tab" id="t-polygones" data-tab="polygones">Polygones</button>
+    <button role="tab" id="t-pizza" data-tab="pizza">Pizza</button>
+    <button role="tab" id="t-produits" data-tab="produits">Produits &amp; itérations</button>
+    <button role="tab" id="t-series" data-tab="series">Séries</button>
+    <button role="tab" id="t-montecarlo" data-tab="montecarlo">Monte-Carlo</button>
+    <button role="tab" id="t-aiguilles" data-tab="aiguilles">Aiguilles de Buffon</button>
+    <button role="tab" id="t-chocs" data-tab="chocs">Chocs élastiques</button>
+    <button role="tab" id="t-premiers" data-tab="premiers">Entiers premiers entre eux</button>
+  </nav>
+
+  <!-- POLYGONES -->
+  <section class="panel" id="p-polygones" role="tabpanel" aria-labelledby="t-polygones">
+    <p class="kicker">Méthode géométrique · Archimède, vers 250 av. J.-C.</p>
+    <h2>Encadrer le cercle entre deux polygones</h2>
+    <p class="lede">Le périmètre d'un polygone inscrit est plus court que celui du cercle, celui d'un polygone circonscrit plus long. En doublant le nombre de côtés, l'encadrement se resserre. Archimède est parti de l'hexagone et s'est arrêté à 96 côtés.</p>
+    <div class="grid2">
+      <div class="sheet">
+        <canvas id="arch-main" class="c-square" aria-label="Cercle, polygone inscrit et polygone circonscrit"></canvas>
+        <div class="legend"><span><i style="background:var(--ok)"></i>inscrit (borne basse)</span><span><i style="background:var(--accent)"></i>circonscrit (borne haute)</span><span><i style="background:var(--ink)"></i>cercle</span></div>
+        <div class="label" style="margin-top:16px">Encadrement de π selon le nombre de côtés</div>
+        <canvas id="arch-chart" class="c-chart" aria-label="Bornes de π en fonction du nombre de côtés"></canvas>
+        <p class="note">Le graphe prolonge le calcul jusqu'à 1 000 côtés, bien au-delà de ce que le dessin peut montrer.</p>
+      </div>
+      <div class="sheet">
+        <div class="ctrl">
+          <div class="row"><label class="label" for="arch-k">Nombre de côtés</label><output id="arch-n">6</output></div>
+          <input type="range" id="arch-k" min="3" max="24" value="6" step="1">
+        </div>
+        <div class="label">Borne haute (demi-périmètre du polygone circonscrit)</div>
+        <div class="digits" id="arch-hi"></div>
+        <div class="label">Borne basse (demi-périmètre du polygone inscrit)</div>
+        <div class="digits" id="arch-lo"></div>
+        <div class="stats">
+          <div class="stat"><b id="arch-gap">–</b><span>largeur de l'encadrement</span></div>
+          <div class="stat"><b id="arch-ok">–</b><span>décimales garanties</span></div>
+        </div>
+        <div class="label" style="margin-top:12px">Loupe sur un côté (échelle verticale exagérée)</div>
+        <canvas id="arch-loupe" class="c-loupe" aria-label="Agrandissement d'un côté"></canvas>
+        <p class="note">Pour r = 1, les demi-périmètres valent n·sin(π/n) pour le polygone inscrit et n·tan(π/n) pour le circonscrit. Ici, ce calcul utilise donc π lui-même : c'est une illustration. Archimède évitait ce cercle vicieux en doublant les côtés (6, 12, 24, 48, 96) avec la récurrence a′ = 2ab/(a+b), b′ = √(a′b), qui n'a besoin que de √3 au départ.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIZZA -->
+  <section class="panel" id="p-pizza" role="tabpanel" aria-labelledby="t-pizza" hidden>
+    <p class="kicker">Démonstration visuelle · connue depuis l'Antiquité</p>
+    <h2>Découper le disque en parts de pizza</h2>
+    <p class="lede">On coupe le disque en parts égales et on les range tête-bêche. Plus les parts sont fines, plus la figure ressemble à un rectangle de hauteur r et de largeur égale à la moitié du périmètre, πr. Son aire vaut donc πr × r = πr².</p>
+    <div class="grid2">
+      <div class="sheet">
+        <canvas id="pz-canvas" class="c-pizza" aria-label="Parts du disque réarrangées"></canvas>
+        <div class="ctrl" style="margin-top:12px">
+          <div class="row"><label class="label" for="pz-t">Réarrangement</label><output id="pz-tv">100 %</output></div>
+          <input type="range" id="pz-t" min="0" max="100" value="100" step="1">
+        </div>
+        <div class="btns"><button class="primary" id="pz-play">Animer</button></div>
+      </div>
+      <div class="sheet">
+        <div class="ctrl">
+          <div class="row"><label class="label" for="pz-k">Nombre de parts</label><output id="pz-n">16</output></div>
+          <input type="range" id="pz-k" min="0" max="9" value="4" step="1">
+        </div>
+        <div class="label">Largeur de la figure pour r = 1</div>
+        <div class="digits" id="pz-digits"></div>
+        <div class="stats">
+          <div class="stat"><b id="pz-chord">–</b><span>largeur d'une part (corde)</span></div>
+          <div class="stat"><b id="pz-h">–</b><span>hauteur d'une part</span></div>
+        </div>
+        <div class="label" style="margin-top:12px">Largeur de la figure selon le nombre de parts</div>
+        <canvas id="pz-chart" class="c-chart" aria-label="Largeur en fonction du nombre de parts"></canvas>
+        <p class="note">La largeur vaut n/2 cordes. Chaque corde est calculée sans π, en partant du carré (corde √2) ou de l'hexagone (corde 1) et en coupant les parts en deux avec c′ = c / √(2 + √(4 − c²)).</p>
+        <p class="note">Cette méthode donne les mêmes nombres que le polygone inscrit d'Archimède. Son intérêt est ailleurs : elle montre pourquoi le même nombre π sert à la fois pour le périmètre (2πr) et pour l'aire (πr²).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUITS -->
+  <section class="panel" id="p-produits" role="tabpanel" aria-labelledby="t-produits" hidden>
+    <p class="kicker">Méthodes algébriques</p>
+    <h2>Produits infinis et itérations</h2>
+    <p class="lede">Choisissez une méthode. Pour chacune : la formule, ce que l'on calcule concrètement, le calcul étape par étape et la vitesse à laquelle les décimales arrivent.</p>
+    <div id="ex-produits"></div>
+  </section>
+
+  <!-- SERIES -->
+  <section class="panel" id="p-series" role="tabpanel" aria-labelledby="t-series" hidden>
+    <p class="kicker">Sommes convergentes</p>
+    <h2>Additionner une infinité de termes</h2>
+    <p class="lede">Chaque série converge vers π ou vers une expression simple de π, mais à des vitesses très différentes : de quelques décimales pour cent mille termes à quatorze décimales par terme.</p>
+    <div id="ex-series"></div>
+  </section>
+
+  <!-- MONTE CARLO -->
+  <section class="panel" id="p-montecarlo" role="tabpanel" aria-labelledby="t-montecarlo" hidden>
+    <p class="kicker">Méthode probabiliste</p>
+    <h2>Lancer des points au hasard</h2>
+    <p class="lede">On tire des points uniformément dans un carré de côté 1. La proportion de points tombés dans le quart de disque tend vers son aire, π/4. Il faut multiplier les tirages par 100 pour gagner une décimale.</p>
+    <div class="grid2">
+      <div class="sheet"><canvas id="mc-canvas" class="c-square" aria-label="Points dans le carré"></canvas></div>
+      <div class="sheet">
+        <div class="btns">
+          <button data-mc="100">+100</button><button data-mc="1000">+1 000</button><button data-mc="10000">+10 000</button>
+          <button class="primary" id="mc-auto">Lancer en continu</button>
+          <button class="ghost" id="mc-reset">Réinitialiser</button>
+        </div>
+        <div class="label">Estimation 4 × dedans / total</div>
+        <div class="digits" id="mc-digits"></div>
+        <div class="stats">
+          <div class="stat"><b id="mc-n">0</b><span>points tirés</span></div>
+          <div class="stat"><b id="mc-in">0</b><span>dans le quart de disque</span></div>
+          <div class="stat"><b id="mc-sd">–</b><span>incertitude typique</span></div>
+        </div>
+        <div class="label" style="margin-top:12px">Estimation selon le nombre de points</div>
+        <canvas id="mc-chart" class="c-chart" aria-label="Évolution de l'estimation"></canvas>
+        <p class="note">L'incertitude typique vaut environ 1,64/√N : 10 000 points donnent π à ±0,016 près.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUFFON -->
+  <section class="panel" id="p-aiguilles" role="tabpanel" aria-labelledby="t-aiguilles" hidden>
+    <p class="kicker">Buffon, 1733 · publié en 1777</p>
+    <h2>Des aiguilles sur un parquet</h2>
+    <p class="lede">On laisse tomber des aiguilles de longueur ℓ sur un parquet de lames de largeur t (avec ℓ ≤ t). La probabilité qu'une aiguille chevauche une jointure vaut 2ℓ/(πt). En comptant les croisements, on en déduit π ≈ 2ℓN / (tC).</p>
+    <div class="grid2">
+      <div class="sheet">
+        <canvas id="bf-canvas" class="c-wide" aria-label="Parquet et aiguilles"></canvas>
+        <div class="legend"><span><i style="background:var(--accent)"></i>croise une jointure</span><span><i style="background:var(--ink)"></i>ne croise pas</span></div>
+      </div>
+      <div class="sheet">
+        <div class="ctrl">
+          <div class="row"><label class="label" for="bf-ratio">Longueur d'aiguille ℓ / largeur de lame t</label><output id="bf-r">0,80</output></div>
+          <input type="range" id="bf-ratio" min="0.2" max="1" value="0.8" step="0.05">
+        </div>
+        <div class="btns">
+          <button data-bf="10">+10</button><button data-bf="100">+100</button><button data-bf="1000">+1 000</button>
+          <button class="primary" id="bf-auto">Lancer en continu</button>
+          <button class="ghost" id="bf-reset">Réinitialiser</button>
+        </div>
+        <div class="label">Estimation 2ℓN / (tC)</div>
+        <div class="digits" id="bf-digits"></div>
+        <div class="stats">
+          <div class="stat"><b id="bf-n">0</b><span>aiguilles N</span></div>
+          <div class="stat"><b id="bf-c">0</b><span>croisements C</span></div>
+          <div class="stat"><b id="bf-p">–</b><span>proportion observée</span></div>
+        </div>
+        <div class="label" style="margin-top:12px">Estimation selon le nombre d'aiguilles</div>
+        <canvas id="bf-chart" class="c-chart" aria-label="Évolution de l'estimation"></canvas>
+        <p class="note">Ici l'orientation de chaque aiguille est tirée sans utiliser π : on choisit un point au hasard dans un disque unité et on garde sa direction. En 1901, Lazzarini annonça 355/113 après 3 408 lancers ; le résultat, exact à six décimales, est trop beau pour être honnête.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHOCS -->
+  <section class="panel" id="p-chocs" role="tabpanel" aria-labelledby="t-chocs" hidden>
+    <p class="kicker">Gregory Galperin, 2003</p>
+    <h2>Compter les chocs entre deux blocs</h2>
+    <p class="lede">Un petit bloc est au repos entre un mur et un gros bloc qui arrive vers lui. Tout glisse sans frottement et les chocs sont parfaitement élastiques. Si le gros bloc pèse 100ᵈ fois plus que le petit, le nombre total de chocs (entre blocs et contre le mur) donne les d + 1 premiers chiffres de π.</p>
+    <div class="grid2">
+      <div class="sheet">
+        <canvas id="ck-canvas" class="c-loupe" aria-label="Deux blocs, un mur et le sol"></canvas>
+        <div class="stats" style="margin-top:10px">
+          <div class="stat"><b id="ck-count" style="font-size:2rem">0</b><span>chocs comptés</span></div>
+          <div class="stat"><b id="ck-v">–</b><span>vitesses petit / gros bloc</span></div>
+        </div>
+        <div class="label" style="margin-top:14px">π trouvé selon le rapport des masses</div>
+        <canvas id="ck-chart" class="c-chart" aria-label="Estimation de π selon le rapport des masses"></canvas>
+        <p class="note">Estimation = chocs ÷ √(M/m). Les points correspondent aux rapports 1, 10, 100… jusqu'à 10¹². Pour les puissances de 100, √(M/m) est une puissance de 10 : le nombre de chocs se lit alors directement comme les chiffres de π.</p>
+      </div>
+      <div class="sheet">
+        <div class="ctrl">
+          <div class="row"><label class="label" for="ck-d">Rapport des masses M/m</label><output id="ck-ratio">10 000</output></div>
+          <input type="range" id="ck-d" min="0" max="6" value="2" step="1">
+        </div>
+        <div class="btns">
+          <button class="primary" id="ck-go">Lancer</button>
+          <button id="ck-fast">Résultat immédiat</button>
+          <button class="ghost" id="ck-reset">Réinitialiser</button>
+        </div>
+        <div class="label" id="ck-label">Valeur de π : chocs ÷ 100</div>
+        <div class="digits" id="ck-digits"><span class="rest">Lancez la simulation</span></div>
+        <div class="stats"><div class="stat"><b id="ck-ok">–</b><span>décimales exactes</span></div></div>
+        <p class="note">Pourquoi π ? Avec les variables x = √m·v₁ et y = √M·v₂, l'énergie conservée décrit un cercle. Chaque choc entre blocs fait tourner le point d'un angle 2·arctan √(m/M), chaque choc contre le mur le reflète. Les chocs s'arrêtent quand le demi-tour est fait : il y en a environ π / arctan √(m/M), soit π × 10ᵈ quand M/m = 100ᵈ.</p>
+        <p class="note">Chaque chiffre supplémentaire multiplie le nombre de chocs par 10 : avec M/m = 10¹², il faut déjà plus de 3 millions de chocs pour 7 chiffres.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREMIERS ENTRE EUX -->
+  <section class="panel" id="p-premiers" role="tabpanel" aria-labelledby="t-premiers" hidden>
+    <p class="kicker">Théorie des nombres · Euler, Dirichlet</p>
+    <h2>Les entiers premiers entre eux</h2>
+    <p class="lede">Deux entiers sont premiers entre eux s'ils n'ont aucun diviseur commun autre que 1, comme 8 et 15. Parmi tous les couples (a, b), la proportion de couples premiers entre eux tend vers 6/π², environ 61 %. En comptant, on obtient π ≈ √(6 / proportion).</p>
+    <div class="grid2">
+      <div class="sheet">
+        <canvas id="cp-canvas" class="c-square" aria-label="Grille des couples premiers entre eux"></canvas>
+        <div class="legend"><span><i style="background:var(--ok)"></i>a et b premiers entre eux</span><span><i style="background:var(--line)"></i>diviseur commun</span></div>
+      </div>
+      <div class="sheet">
+        <div class="ctrl">
+          <div class="row"><label class="label" for="cp-n">Taille de la grille N × N</label><output id="cp-nv">60</output></div>
+          <input type="range" id="cp-n" min="5" max="400" value="60" step="1">
+        </div>
+        <div class="label">Estimation √(6 / proportion)</div>
+        <div class="digits" id="cp-digits"></div>
+        <div class="stats">
+          <div class="stat"><b id="cp-c">–</b><span>couples premiers entre eux</span></div>
+          <div class="stat"><b id="cp-p">–</b><span>proportion (limite 60,79 %)</span></div>
+        </div>
+        <div class="label" style="margin-top:12px">Estimation selon N, jusqu'à 100 000</div>
+        <canvas id="cp-chart" class="c-chart" aria-label="Estimation selon la taille de la grille"></canvas>
+        <p class="note">Pourquoi π ? Deux nombres pris au hasard sont tous deux pairs avec probabilité 1/4, tous deux multiples de 3 avec probabilité 1/9, etc. La probabilité de n'avoir aucun facteur premier commun est le produit des (1 − 1/p²), qui vaut l'inverse de 1 + 1/4 + 1/9 + … = π²/6 (le problème de Bâle d'Euler).</p>
+        <p class="note">Sur la grille, les cases vertes sont les points visibles depuis l'origine : aucun autre point de la grille ne les masque. On parle du « verger d'Euclide ».</p>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <!-- COMPARAISON (vue séparée) -->
+  <div id="view-compare" hidden>
+    <button class="back" data-back>← Retour aux méthodes</button>
+    <p class="kicker">Toutes les méthodes sur un même graphe</p>
+    <h2>Combien d'opérations pour combien de décimales ?</h2>
+    <p class="lede">Courbes théoriques : pour chaque méthode, le nombre d'opérations de calcul nécessaires (en abscisse) pour obtenir un nombre donné de décimales exactes (en ordonnée). Les deux axes sont en échelle logarithmique.</p>
+    <div class="sheet">
+      <canvas id="cmp-chart" class="c-chart" style="aspect-ratio:16/11" aria-label="Décimales exactes selon le nombre d'opérations"></canvas>
+      <div id="cmp-legend"></div>
+      <p class="note">Touchez une méthode pour la mettre en évidence. Une opération est une addition, une soustraction, une multiplication, une division ou une racine carrée, comme dans la définition du flop. Sur des nombres de plus de 15 chiffres, elle compte pour D/15, où D est le nombre de chiffres manipulés. La précision vient de l'erreur théorique de chaque méthode ; pour Monte-Carlo et Buffon, c'est l'erreur typique. La ligne pointillée marque 15 décimales, la limite des nombres à virgule d'un ordinateur. La Pizza donne les mêmes nombres que les polygones et n'est pas répétée.</p>
+    </div>
+    <div class="grid2" style="margin-top:20px">
+      <div class="sheet"><h3>Ce que montre le graphe</h3>
+        <p class="note" style="margin-top:0">Trois familles se dessinent. Monte-Carlo et Buffon gagnent une décimale chaque fois qu'on multiplie le calcul par 100. Leibniz, Bâle, Wallis, les chocs et les entiers premiers entre eux en gagnent une à chaque facteur 10. Viète, les polygones, Machin, Chudnovsky et Gauss–Legendre ajoutent des décimales à chaque étape et grimpent presque à la verticale.</p>
+        <p class="note">Dans ce modèle simple, Gauss–Legendre passe devant Chudnovsky. En pratique, les records utilisent Chudnovsky : en additionnant ses termes en arbre (binary splitting) et avec des multiplications rapides, il devient le plus efficace pour des milliards de décimales.</p></div>
+      <div class="sheet"><h3>Opérations nécessaires</h3><div class="tscroll"><table id="cmp-table"><thead><tr><th>Méthode</th><th>10 déc.</th><th>100 déc.</th><th>1 000 déc.</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+  </div>
+
+  <!-- HISTOIRE (vue séparée) -->
+  <div id="view-history" hidden>
+    <button class="back" data-back>← Retour aux méthodes</button>
+    <p class="kicker">Quatre mille ans de décimales</p>
+    <h2>Histoire de π et de son calcul</h2>
+    <p class="lede">Des tablettes babyloniennes aux records sur serveurs, chaque époque a trouvé sa méthode. Le graphique montre le nombre de décimales connues depuis le XVe siècle, en échelle logarithmique.</p>
+    <div class="sheet"><canvas id="hist-chart" class="c-chart" aria-label="Décimales connues au fil du temps"></canvas></div>
+    <div id="timeline"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fr=n=>n.toLocaleString('fr-FR');
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sup=n=>String(n).split('').map(c=>SUP[c]).join('');
+function sci(x){ if(!isFinite(x)) return '–'; if(x===0) return '0'; let e=Math.floor(Math.log10(x)); let m=x/10**e; if(m>=9.95){m/=10;e++;} if(e>=-3&&e<=2) return x.toLocaleString('fr-FR',{maximumSignificantDigits:3}); return m.toLocaleString('fr-FR',{maximumFractionDigits:1})+' × 10'+sup(e); }
+const dec=(s,k)=>s.replace('.',',').slice(0,k);
+function hexRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return [n>>16&255,n>>8&255,n&255]; }
+
+/* ---------- MathML ---------- */
+const mn=x=>`<mn>${x}</mn>`, mi=x=>`<mi>${x}</mi>`, mo=x=>`<mo>${x}</mo>`;
+const R=(...a)=>`<mrow>${a.join('')}</mrow>`, F=(a,b)=>`<mfrac>${a}${b}</mfrac>`, SQ=x=>`<msqrt>${x}</msqrt>`, P=(b,e)=>`<msup>${b}${e}</msup>`;
+const SUM=(lo,hi)=>`<munderover><mo>∑</mo>${lo}${hi}</munderover>`, PROD=(lo,hi)=>`<munderover><mo>∏</mo>${lo}${hi}</munderover>`;
+const MB=s=>`<math display="block">${s}</math>`, MI=s=>`<math>${s}</math>`;
+const PI=mi('π'), DOTS=mo('⋯'), K=mi('k'), INF=mi('∞');
+const paren=x=>R(mo('('),x,mo(')'));
+const SB=(v,i)=>`<msub><mi>${v}</mi>${/^[0-9]+$/.test(i)?mn(i):R(...i.split(/([+−-])/).filter(Boolean).map(c=>/[0-9]/.test(c)?mn(c):/[+−-]/.test(c)?mo(c):mi(c)))}</msub>`;
+const FS=rows=>'<div class="fsteps">'+rows.map(([l,m])=>'<span class="label">'+l+'</span><div>'+m+'</div>').join('')+'</div>';
+const FL=(l,m)=>'<div class="fl"><span class="label">'+l+'</span>'+m+'</div>';
+
+/* ---------- Entiers exacts ---------- */
+function isqrt(n){ if(n<2n) return n; let x=1n<<BigInt(Math.ceil(n.toString(2).length/2)); for(;;){ const y=(x+n/x)>>1n; if(y>=x) return x; x=y; } }
+function fx(v,D){ const neg=v<0n; if(neg) v=-v; const s=v.toString().padStart(D+1,'0'); return (neg?'-':'')+s.slice(0,s.length-D)+'.'+s.slice(s.length-D); }
+const REF_D=470;
+const REF=(()=>{ const D=REF_D+12, S=10n**BigInt(D);
+  const at=x=>{ const x2=x*x; let t=S/x,s=0n,k=1n,i=0; while(t){ s+=(i&1?-t:t)/k; t/=x2; k+=2n; i++; } return s; };
+  return fx(16n*at(5n)-4n*at(239n),D).slice(0,2+REF_D); })();
+$('#refline').textContent='π = '+REF.slice(0,80)+'…';
+
+function correct(str){ let i=0; const m=Math.min(str.length,REF.length); while(i<m&&str[i]===REF[i]) i++; return Math.max(0,i-2); }
+function digitsHTML(str,extra=10){
+  const c=correct(str);
+  const okLen = c>0 ? 2+c : (str.startsWith('3.')?2:(str[0]==='3'?1:0));
+  const end=Math.min(str.length, Math.max(okLen+1+extra, 12));
+  const ok=str.slice(0,okLen), bad=str.slice(okLen,okLen+1), rest=str.slice(okLen+1,end);
+  return {c,html:'<span class="ok">'+ok.replace('.',',')+'</span>'+(bad?'<span class="bad">'+bad.replace('.',',')+'</span>':'')+'<span class="rest">'+rest.replace('.',',')+(end<str.length?'…':'')+'</span>'};
+}
+function showDigits(el,str,extra){ const r=digitsHTML(str,extra); el.innerHTML=r.html; return r.c; }
+
+/* ---------- Canvas & graphes ---------- */
+function prep(c){ const dpr=window.devicePixelRatio||1; const w=c.clientWidth,h=c.clientHeight; if(!w||!h) return null;
+  const W=Math.round(w*dpr),H=Math.round(h*dpr); if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
+  const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h}; }
+function niceTicks(a,b,n=5){ const span=b-a; if(span<=0) return [a]; const s0=span/n, mag=10**Math.floor(Math.log10(s0)), r=s0/mag;
+  const st=(r<1.5?1:r<3?2:r<7?5:10)*mag; const out=[]; for(let v=Math.ceil(a/st-1e-9)*st; v<=b+1e-9; v+=st) out.push(+v.toFixed(10)); return out; }
+const pow10Label=v=>{ const e=Math.round(Math.log10(v)); return e<4?fr(v):'10'+sup(e); };
+const oneDec=v=>v.toFixed(1).replace('.',',');
+function chart(c,o){
+  const Pc=prep(c); if(!Pc) return; const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+  const L=46,Rr=12,T=10,B=26, iw=w-L-Rr, ih=h-T-B;
+  const lx=o.logX, ly=o.logY, fxv=v=>lx?Math.log10(v):v, fyv=v=>ly?Math.log10(v):v;
+  const x0=fxv(o.xMin),x1=fxv(o.xMax),y0=fyv(o.yMin),y1=fyv(o.yMax);
+  const X=v=>L+(fxv(v)-x0)/(x1-x0)*iw, Y=v=>T+ih-((o.clip?fyv(v):Math.min(Math.max(fyv(v),y0),y1))-y0)/(y1-y0)*ih;
+  ctx.font='11px '+tok('--f-mono'); ctx.lineWidth=1;
+  const xt = o.xTicks || (lx ? Array.from({length:Math.floor(x1)-Math.ceil(x0)+1},(_,i)=>10**(Math.ceil(x0)+i)).filter((v,i,a)=>a.length<8||i%2===0) : niceTicks(o.xMin,o.xMax,5));
+  const yt = o.yTicks || (ly ? Array.from({length:Math.floor(y1)-Math.ceil(y0)+1},(_,i)=>10**(Math.ceil(y0)+i)).filter((v,i,a)=>a.length<9||i%2===0) : niceTicks(o.yMin,o.yMax,4));
+  ctx.strokeStyle=tok('--line'); ctx.fillStyle=tok('--muted'); ctx.textAlign='right'; ctx.textBaseline='middle';
+  yt.forEach(v=>{ const y=Y(v); ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+iw,y); ctx.stroke(); ctx.fillText(o.yFmt?o.yFmt(v):fr(v),L-6,y); });
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  xt.forEach(v=>{ const x=X(v); ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,T+ih); ctx.stroke(); ctx.fillText(o.xFmt?o.xFmt(v):(lx?pow10Label(v):fr(v)),x,T+ih+6); });
+  if(o.hLine!=null){ ctx.save(); ctx.setLineDash([3,4]); ctx.strokeStyle=tok('--muted'); ctx.beginPath(); ctx.moveTo(L,Y(o.hLine)); ctx.lineTo(L+iw,Y(o.hLine)); ctx.stroke(); ctx.restore(); }
+  if(o.xLabel){ ctx.fillStyle=tok('--muted'); ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText(o.xLabel,L+iw-2,T+ih-3); }
+  if(o.refY!=null){ ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle=tok('--ok'); ctx.beginPath(); ctx.moveTo(L,Y(o.refY)); ctx.lineTo(L+iw,Y(o.refY)); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=tok('--ok'); ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText('π',L+iw-2,Y(o.refY)-2); }
+  if(o.clip){ ctx.save(); ctx.beginPath(); ctx.rect(L-4,T-4,iw+8,ih+8); ctx.clip(); }
+  const list=o.series||[{pts:o.pts,color:'--accent',marker:o.marker}];
+  list.forEach(sr=>{ const pts=sr.pts||[], col=tok(sr.color);
+    ctx.globalAlpha=sr.alpha==null?1:sr.alpha; ctx.setLineDash(sr.dash||[]);
+    if(pts.length){ ctx.strokeStyle=col; ctx.lineWidth=sr.width||1.8; ctx.lineJoin='round'; ctx.beginPath();
+      pts.forEach((p,i)=>{ const x=X(p[0]),y=Y(p[1]); if(i===0) ctx.moveTo(x,y); else if(o.step){ ctx.lineTo(x,Y(pts[i-1][1])); ctx.lineTo(x,y);} else ctx.lineTo(x,y); });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if(o.dots||sr.dots){ ctx.fillStyle=col; pts.forEach(p=>{ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),sr.r||2.6,0,7);ctx.fill();}); } }
+    ctx.globalAlpha=1;
+    if(sr.marker){ const x=X(sr.marker[0]),y=Y(sr.marker[1]); ctx.fillStyle=tok('--sheet'); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,4.5,0,7); ctx.fill(); ctx.stroke(); } });
+  if(o.clip) ctx.restore();
+  if(o.yLabel){ ctx.fillStyle=tok('--muted'); ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(o.yLabel,L+6,T+2); }
+}
+
+/* ---------- Navigation ---------- */
+const tabs=[...document.querySelectorAll('nav.tabs button')];
+const drawers={};
+let view='methods';
+function select(id){
+  tabs.forEach(b=>{ const on=b.dataset.tab===id; b.setAttribute('aria-selected',on); b.tabIndex=on?0:-1; document.getElementById('p-'+b.dataset.tab).hidden=!on; });
+  try{ localStorage.setItem('pi-tab',id); }catch(e){}
+  if(drawers['enter_'+id]) drawers['enter_'+id]();
+  requestAnimationFrame(()=>{ (drawers[id]||[]).forEach(f=>f()); });
+}
+function showView(v){ view=v; $('#view-methods').hidden=v!=='methods'; $('#view-history').hidden=v!=='history'; $('#view-compare').hidden=v!=='compare';
+  $('#viewlinks').hidden=v!=='methods'; window.scrollTo(0,0);
+  if(v==='compare'){ requestAnimationFrame(()=>{ cmpLegend(); cmpChart(); }); } else requestAnimationFrame(redraw); }
+$('#go-history').onclick=()=>showView('history');
+$('#go-compare').onclick=()=>showView('compare');
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showView('methods'));
+tabs.forEach((b,i)=>{ b.addEventListener('click',()=>select(b.dataset.tab));
+  b.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length]; n.focus(); select(n.dataset.tab);} }); });
+function current(){ return (tabs.find(b=>b.getAttribute('aria-selected')==='true')||tabs[0]).dataset.tab; }
+function redraw(){ if(view==='history') histChart(); else if(view==='compare'){ cmpLegend(); cmpChart(); } else (drawers[current()]||[]).forEach(f=>f()); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let rz; window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(redraw,120); });
+
+/* ---------- Polygones ---------- */
+const polyB=n=>({n,hi:n*Math.tan(Math.PI/n),lo:n*Math.sin(Math.PI/n)});
+const POLY_PTS=(()=>{ const ns=[]; for(let n=3;n<=100;n++) ns.push(n); for(let i=1;i<=40;i++) ns.push(Math.round(100*10**(i/40))); return ns.map(polyB); })();
+function archUpdate(){ const r=polyB(+$('#arch-k').value);
+  $('#arch-n').textContent=r.n+' côtés';
+  const ch=showDigits($('#arch-hi'),r.hi.toFixed(15),6), cl=showDigits($('#arch-lo'),r.lo.toFixed(15),6);
+  $('#arch-gap').textContent=sci(r.hi-r.lo); $('#arch-ok').textContent=Math.min(ch,cl); }
+function archDraw(){ const n=+$('#arch-k').value;
+  let Pc=prep($('#arch-main')); if(Pc){ const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+    const ph=Math.PI/n, Rad=Math.min(w,h)/2*Math.min(0.86,0.92*Math.cos(ph)), cx=w/2, cy=h/2;
+    const poly=(rad,off)=>{ ctx.beginPath(); for(let i=0;i<=n;i++){ const t=-Math.PI/2+2*ph*i+off; const x=cx+rad*Math.cos(t), y=cy+rad*Math.sin(t); i?ctx.lineTo(x,y):ctx.moveTo(x,y);} ctx.closePath(); };
+    poly(Rad/Math.cos(ph),ph); ctx.fillStyle=tok('--accent-soft'); ctx.fill(); ctx.strokeStyle=tok('--accent'); ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,Rad,0,7); ctx.fillStyle=tok('--sheet'); ctx.fill();
+    poly(Rad,0); ctx.fillStyle=tok('--ok-soft'); ctx.fill(); ctx.strokeStyle=tok('--ok'); ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,Rad,0,7); ctx.strokeStyle=tok('--ink'); ctx.lineWidth=1.2; ctx.stroke();
+    ctx.fillStyle=tok('--ink'); ctx.beginPath(); ctx.arc(cx,cy,2.5,0,7); ctx.fill();
+    ctx.setLineDash([3,4]); ctx.strokeStyle=tok('--muted'); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Rad,cy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle=tok('--muted'); ctx.font='12px '+tok('--f-mono'); ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('r = 1',cx+Rad/2,cy-4); }
+  Pc=prep($('#arch-loupe')); if(Pc){ const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+    const ph=Math.PI/n, s=Math.sin(ph), cs=Math.cos(ph), vTop=1/cs-1, vBot=-2*Math.sin(ph/2)**2;
+    const span=vTop-vBot, sx=(w*0.46)/s, sy=(h*0.72)/span, vMid=(vTop+vBot)/2;
+    const X=u=>w/2+u*sx, Y=v=>h/2-(v-vMid)*sy;
+    ctx.strokeStyle=tok('--ok'); ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(X(-s),Y(vBot)); ctx.lineTo(X(s),Y(vBot)); ctx.stroke();
+    ctx.strokeStyle=tok('--accent'); ctx.beginPath(); ctx.moveTo(X(-s),Y(vBot)); ctx.lineTo(X(0),Y(vTop)); ctx.lineTo(X(s),Y(vBot)); ctx.stroke();
+    ctx.strokeStyle=tok('--ink'); ctx.lineWidth=1.6; ctx.beginPath();
+    for(let i=0;i<=120;i++){ const d=-ph+2*ph*i/120; const x=X(Math.sin(d)), y=Y(-2*Math.sin(d/2)**2); i?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke();
+    ctx.fillStyle=tok('--muted'); ctx.font='11px '+tok('--f-mono'); ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('écart vertical ≈ '+sci(span)+' r · exagéré ×'+sci(sy/sx),6,4); } }
+function archChart(){ const r=polyB(+$('#arch-k').value);
+  chart($('#arch-chart'),{logX:true,xMin:3,xMax:1000,yMin:2.5,yMax:5.3,refY:Math.PI,xTicks:[3,6,12,24,100,300],xFmt:v=>fr(v),yTicks:[2.5,3,3.5,4,4.5,5],yFmt:v=>v.toLocaleString('fr-FR'),xLabel:'côtés',
+    series:[{pts:POLY_PTS.map(a=>[a.n,a.hi]),color:'--accent',marker:[r.n,r.hi]},{pts:POLY_PTS.map(a=>[a.n,a.lo]),color:'--ok',marker:[r.n,r.lo]}]}); }
+$('#arch-k').addEventListener('input',()=>{ archUpdate(); archDraw(); archChart(); });
+drawers.polygones=[archDraw,archChart];
+
+/* ---------- Pizza ---------- */
+const PZ_N=[4,6,8,12,16,24,32,48,64,96];
+function chordOf(n){ let c,m; if(n%3===0){c=1;m=6;}else{c=Math.SQRT2;m=4;} while(m<n){ c=c/Math.sqrt(2+Math.sqrt(4-c*c)); m*=2; } return c; }
+let PZt=1, PZanim=0;
+function pzUpdate(){ const n=PZ_N[+$('#pz-k').value], c=chordOf(n);
+  $('#pz-n').textContent=n+' parts'; showDigits($('#pz-digits'),(n/2*c).toFixed(15),6);
+  $('#pz-chord').textContent=c.toLocaleString('fr-FR',{maximumFractionDigits:5});
+  $('#pz-h').textContent=Math.sqrt(1-c*c/4).toLocaleString('fr-FR',{maximumFractionDigits:5}); pzDraw(); pzChart(); }
+const PZ_ALL=[4,6,8,12,16,24,32,48,64,96,128,192,256,384,512,768,1024,1536,2048];
+function pzChart(){ const n=PZ_N[+$('#pz-k').value];
+  chart($('#pz-chart'),{pts:PZ_ALL.map(m=>[m,m/2*chordOf(m)]),dots:true,logX:true,xMin:4,xMax:2048,yMin:2.8,yMax:3.2,refY:Math.PI,xTicks:[4,16,64,256,1024],xFmt:v=>fr(v),yTicks:[2.8,2.9,3,3.1,3.2],yFmt:oneDec,xLabel:'parts',marker:[n,n/2*chordOf(n)]}); }
+function pzDraw(){ const Pc=prep($('#pz-canvas')); if(!Pc) return; const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+  const n=PZ_N[+$('#pz-k').value], a=2*Math.PI/n, half=n/2;
+  const Rad=Math.min((h-60)/2,(w-40)/(Math.PI+0.7)), c=2*Rad*Math.sin(a/2), H=Rad*Math.cos(a/2);
+  const cx=w/2, cy=h/2-6, Wd=half*c+c/2, x0=cx-Wd/2, yTop=cy-H/2, yBot=cy+H/2;
+  const t=PZt, e=t<.5?2*t*t:1-2*(1-t)*(1-t);
+  for(let i=0;i<n;i++){
+    const th0=-Math.PI+(i+.5)*a; let ax, ay, th1;
+    if(i<half){ ax=x0+c/2+i*c; ay=yTop; th1=Math.PI/2; } else { const j=i-half; ax=x0+c+j*c; ay=yBot; th1=-Math.PI/2; }
+    th1+=2*Math.PI*Math.round((th0-th1)/(2*Math.PI));
+    const px=cx+(ax-cx)*e, py=cy+(ay-cy)*e, th=th0+(th1-th0)*e;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.arc(px,py,Rad,th-a/2,th+a/2); ctx.closePath();
+    ctx.fillStyle=tok(i<half?'--ok-soft':'--accent-soft'); ctx.fill(); ctx.strokeStyle=tok(i<half?'--ok':'--accent'); ctx.lineWidth=1.2; ctx.stroke(); }
+  if(t>0.98){ ctx.strokeStyle=tok('--ink'); ctx.fillStyle=tok('--ink'); ctx.lineWidth=1; ctx.font='italic 16px '+tok('--f-display'); ctx.textAlign='center'; ctx.textBaseline='top';
+    const yb=yBot+(Rad-H)+10; ctx.beginPath(); ctx.moveTo(x0+c/2,yb); ctx.lineTo(x0+c/2+half*c,yb); ctx.moveTo(x0+c/2,yb-4); ctx.lineTo(x0+c/2,yb+4); ctx.moveTo(x0+c/2+half*c,yb-4); ctx.lineTo(x0+c/2+half*c,yb+4); ctx.stroke();
+    ctx.fillText('≈ π r  (moitié du périmètre)',cx,yb+5);
+    ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.beginPath(); ctx.moveTo(x0-8,yTop); ctx.lineTo(x0-8,yBot); ctx.stroke(); ctx.fillText('r',x0-6+Math.max(0,0),cy); }
+}
+$('#pz-k').addEventListener('input',pzUpdate);
+$('#pz-t').addEventListener('input',e=>{ cancelAnimationFrame(PZanim); PZt=e.target.value/100; $('#pz-tv').textContent=e.target.value+' %'; pzDraw(); });
+$('#pz-play').onclick=()=>{ cancelAnimationFrame(PZanim); const t0=performance.now(), dur=2600, reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const step=now=>{ const k=reduce?1:Math.min(1,(now-t0)/dur); PZt=k; $('#pz-t').value=Math.round(k*100); $('#pz-tv').textContent=Math.round(k*100)+' %'; pzDraw(); if(k<1) PZanim=requestAnimationFrame(step); };
+  PZanim=requestAnimationFrame(step); };
+drawers.pizza=[pzDraw,pzChart];
+
+/* ---------- Explorateur (produits, séries) ---------- */
+function makeExplorer(root, methods){
+  root.innerHTML=`<div class="chips" role="group" aria-label="Méthode"></div>
+  <div class="grid2"><div class="sheet"><p class="kicker m-kick"></p><div class="formula"></div><p class="how"></p><div class="label m-vizl" hidden>a et b se rapprochent</div><canvas class="m-viz" hidden></canvas>
+    <div class="ctrl"><div class="row"><label class="label m-unit" for="${root.id}-s"></label><output></output></div><input type="range" id="${root.id}-s"></div>
+    <div class="label">Estimation de π</div><div class="digits"></div>
+    <div class="stats"><div class="stat"><b class="s-ok">–</b><span>décimales exactes</span></div><div class="stat"><b class="s-err">–</b><span>écart à π</span></div></div>
+    <p class="note m-note"></p></div>
+  <div class="sheet"><div class="label">Le calcul étape par étape</div><div class="tscroll"><table><thead></thead><tbody></tbody></table></div>
+    <div class="label" style="margin-top:16px">Décimales exactes selon le nombre d'étapes</div><canvas class="c-chart"></canvas><p class="note m-speed"></p></div></div>`;
+  const q=s=>root.querySelector(s);
+  const chips=q('.chips'), slider=q('input'), out=q('output'), dig=q('.digits'), cv=q('canvas.c-chart');
+  let cur=0; const cache={};
+  methods.forEach((m,i)=>{ const b=document.createElement('button'); b.textContent=m.name; b.setAttribute('aria-pressed',i===0);
+    b.onclick=()=>{ cur=i; chips.querySelectorAll('button').forEach((x,j)=>x.setAttribute('aria-pressed',j===i)); setup(); }; chips.appendChild(b); });
+  const asStr=v=>typeof v==='string'?v:v.toFixed(15);
+  function build(m){ if(cache[m.name]) return cache[m.name];
+    const log=m.max>200, set=new Set();
+    if(log){ for(let i=0;i<=160;i++) set.add(Math.max(1,Math.round(10**(i/160*Math.log10(m.max))))); } else for(let i=1;i<=m.max;i++) set.add(i);
+    const next=m.gen(), pts=[];
+    for(let n=1;n<=m.max;n++){ const r=next(); if(set.has(n)) pts.push([n,correct(asStr(r.est))]); }
+    return cache[m.name]={pts,log}; }
+  const nNow=m=>build(m).log ? Math.max(1,Math.round(10**(slider.value/1000*Math.log10(m.max)))) : +slider.value;
+  function run(m,n){ const next=m.gen(), rows=[]; let r; for(let k=1;k<=n;k++){ r=next(); if(k<=5||k===n) rows.push([k,r]); } return {r,rows}; }
+  function setup(){ const m=methods[cur], c=build(m);
+    q('.m-kick').textContent=m.kicker; q('.formula').innerHTML=m.formula; q('.how').innerHTML=m.how; q('.m-note').textContent=m.note; q('.m-speed').textContent=m.speed;
+    q('.m-unit').textContent=m.unit; q('.m-viz').hidden=!m.viz; q('.m-vizl').hidden=!m.viz;
+    q('thead').innerHTML='<tr><th>'+m.colK+'</th><th>'+m.colTerm+'</th>'+(m.colPart?'<th>'+m.colPart+'</th>':'')+'<th>π ≈</th><th>Déc.</th></tr>';
+    if(c.log){ slider.min=0; slider.max=1000; slider.step=1; slider.value=Math.round(Math.log10(m.start)/Math.log10(m.max)*1000); }
+    else { slider.min=1; slider.max=m.max; slider.step=1; slider.value=m.start; }
+    update(); }
+  function update(){ const m=methods[cur], n=nNow(m), {r,rows}=run(m,n), s=asStr(r.est);
+    out.textContent=fr(n);
+    const ok=showDigits(dig,s,m.big?12:6); q('.s-ok').textContent=ok;
+    if(typeof r.est==='string') q('.s-err').textContent='≈ 10'+sup(-(ok+1));
+    else { const e=Math.abs(r.est-Math.PI); q('.s-err').textContent=e<1e-15?'< 10⁻¹⁵':sci(e); }
+    let html=''; rows.forEach(([k,rr],i)=>{ if(i===5&&k>6) html+='<tr class="gap"><td colspan="5">⋮</td></tr>';
+      const es=asStr(rr.est), cc=correct(es), shown=es.slice(0,14);
+      const est='<span class="okd">'+shown.slice(0,cc>0?2+cc:1).replace('.',',')+'</span>'+shown.slice(cc>0?2+cc:1).replace('.',',');
+      html+='<tr'+(k===n?' class="cur"':'')+'><td>'+fr(k)+'</td><td>'+m.term(k)+'</td>'+(m.colPart?'<td>'+rr.part+'</td>':'')+'<td>'+est+'</td><td>'+cc+'</td></tr>'; });
+    q('tbody').innerHTML=html; drawChart(); }
+  function drawViz(){ const m=methods[cur]; if(m.viz) m.viz(q('.m-viz'),nNow(m)); }
+  function drawChart(){ drawViz(); const m=methods[cur], c=build(m), n=nNow(m), {r}=run(m,n);
+    const ymax=Math.max(4,...c.pts.map(p=>p[1]));
+    chart(cv,{pts:c.pts,logX:c.log,xMin:1,xMax:m.max,yMin:0,yMax:Math.ceil(ymax*1.1),step:true,marker:[n,correct(asStr(r.est))],yLabel:'décimales'}); }
+  slider.addEventListener('input',update);
+  setup();
+  return drawChart;
+}
+const num=(v,k=10)=>v.toLocaleString('fr-FR',{minimumFractionDigits:k,maximumFractionDigits:k});
+const sgn=k=>k%2?'+':'−';
+const PRODUITS=[
+ {name:'Viète (1593)',kicker:'François Viète, 1593',max:30,start:6,unit:'Nombre de facteurs',colK:'n',colTerm:'facteur multiplié',colPart:'produit P',
+  formula:MB(R(F(mn(2),PI),mo('='),F(SQ(mn(2)),mn(2)),mo('·'),F(SQ(R(mn(2),mo('+'),SQ(mn(2)))),mn(2)),mo('·'),F(SQ(R(mn(2),mo('+'),SQ(R(mn(2),mo('+'),SQ(mn(2)))))),mn(2)),mo('·'),DOTS)),
+  how:'On fabrique des racines emboîtées : a₁ = √2, puis a₂ = √(2 + a₁), a₃ = √(2 + a₂)… On multiplie entre eux les facteurs aₙ/2. Ce produit P tend vers 2/π, donc <b>π ≈ 2 ÷ P</b>.',
+  note:'C\'est le premier produit infini de l\'histoire. Il vient des polygones : chaque facteur correspond au passage d\'un polygone à celui qui a deux fois plus de côtés.',
+  speed:'Échelle linéaire : environ 0,6 décimale par facteur. Les nombres à virgule de l\'ordinateur plafonnent vers 15 décimales.',
+  gen(){ let a=0,p=1; return ()=>{ a=Math.sqrt(2+a); p*=a/2; return {est:2/p,part:num(p)}; }; },
+  term(k){ if(k===1) return MI(F(SQ(mn(2)),mn(2))); if(k===2) return MI(F(SQ(R(mn(2),mo('+'),SQ(mn(2)))),mn(2))); return MI(F(SQ(R(mn(2),mo('+'),SQ(R(mn(2),mo('+'),mo('…'))))),mn(2)))+' <small>('+k+' racines)</small>'; }},
+ {name:'Wallis (1655)',kicker:'John Wallis, 1655',max:100000,start:1000,unit:'Nombre de facteurs',colK:'n',colTerm:'facteur multiplié',colPart:'produit P',
+  formula:MB(R(F(PI,mn(2)),mo('='),F(R(mn(2),mo('·'),mn(2)),R(mn(1),mo('·'),mn(3))),mo('·'),F(R(mn(4),mo('·'),mn(4)),R(mn(3),mo('·'),mn(5))),mo('·'),F(R(mn(6),mo('·'),mn(6)),R(mn(5),mo('·'),mn(7))),mo('·'),DOTS)),
+  how:'On multiplie des fractions dont le numérateur est un nombre pair au carré, et le dénominateur le produit des deux impairs voisins : 2·2/(1·3), puis 4·4/(3·5)… Le produit P tend vers π/2, donc <b>π ≈ 2 × P</b>.',
+  note:'Wallis l\'a obtenu en étudiant des intégrales, sans aucune figure. Chaque facteur est à peine plus grand que 1, d\'où une convergence très lente.',
+  speed:'Échelle horizontale logarithmique : il faut dix fois plus de facteurs pour gagner une décimale.',
+  gen(){ let p=1,k=1; return ()=>{ const q=4*k*k; p*=q/(q-1); k++; return {est:2*p,part:num(p)}; }; },
+  term(k){ const e=2*k; return MI(R(mo('×'),F(R(mn(e),mo('·'),mn(e)),R(mn(e-1),mo('·'),mn(e+1))))); }},
+ {name:'Gauss–Legendre (1976)',kicker:'Gauss, puis Salamin et Brent, 1976',max:7,start:3,big:true,unit:'Nombre d\'itérations',colK:'n',colTerm:'nouvelles valeurs de a et b',
+  formula:FS([['Départ',MI(R(SB('a','0'),mo('='),mn(1),mo(','),mspace(),SB('b','0'),mo('='),F(mn(1),SQ(mn(2))),mo(','),mspace(),SB('t','0'),mo('='),F(mn(1),mn(4)),mo(','),mspace(),SB('p','0'),mo('='),mn(1)))],
+    ['① moyenne',MI(R(SB('a','n+1'),mo('='),F(R(SB('a','n'),mo('+'),SB('b','n')),mn(2))))],
+    ['② moyenne géométrique',MI(R(SB('b','n+1'),mo('='),SQ(R(SB('a','n'),mo('×'),SB('b','n')))))],
+    ['③ correction',MI(R(SB('t','n+1'),mo('='),SB('t','n'),mo('−'),SB('p','n'),mo('×'),P(paren(R(SB('a','n'),mo('−'),SB('a','n+1'))),mn(2))))],
+    ['④ doublement',MI(R(SB('p','n+1'),mo('='),mn(2),mo('×'),SB('p','n')))],
+    ['Résultat',MI(R(PI,mo('≈'),F(P(paren(R(SB('a','n+1'),mo('+'),SB('b','n+1'))),mn(2)),R(mn(4),mo('×'),SB('t','n+1')))))]]),
+  how:'On fait évoluer deux nombres a et b : à chaque étape, a devient leur moyenne habituelle et b leur moyenne géométrique. Ils se rapprochent extrêmement vite. Le nombre t retient les écarts successifs, et π se lit dans le résultat.<br><span class="ex"><b>Étape 1 :</b> a = (1 + 0,7071) ÷ 2 = 0,8536 · b = √(1 × 0,7071) = 0,8409 · t = 0,25 − 1 × (1 − 0,8536)² = 0,2286 · π ≈ (0,8536 + 0,8409)² ÷ (4 × 0,2286) ≈ <b>3,1406</b></span>',
+  viz:glViz,
+  note:'Calcul en entiers exacts avec 440 décimales. C\'est l\'algorithme de la « moyenne arithmético-géométrique » de Gauss.',
+  speed:'Le nombre de décimales double à chaque itération : 2, 7, 18, 40, 83, 170, 344.',
+  gen(){ const D=440,G=10,Pp=D+G,S=10n**BigInt(Pp); let a=S,b=isqrt(S*S/2n),t=S/4n,p=1n;
+    return ()=>{ const an=(a+b)/2n; b=isqrt(a*b); const d=a-an; t-=p*d*d/S; a=an; p*=2n; const s=a+b; return {est:fx(s*s/(4n*t),Pp).slice(0,2+D),a:fx(a,Pp),b:fx(b,Pp)}; }; },
+  term(k){ return '—'; }},
+];
+function mspace(){ return '<mspace width="0.6em"></mspace>'; }
+// le terme de Gauss–Legendre affiche a et b
+PRODUITS[2].term=function(k){ const r=this._rows&&this._rows[k]; return r||''; };
+(function(){ const m=PRODUITS[2], g0=m.gen; m.gen=function(){ const g=g0(); let k=0; m._rows=m._rows||{}; return ()=>{ const r=g(); k++; m._rows[k]='a ≈ '+r.a.slice(0,12).replace('.',',')+'  b ≈ '+r.b.slice(0,12).replace('.',','); return r; }; }; })();
+
+const SERIES=[
+ {name:'Leibniz–Madhava',kicker:'Madhava, vers 1400 · Gregory et Leibniz, 1671–1674',max:100000,start:1000,unit:'Nombre de termes',colK:'n',colTerm:'terme ajouté',colPart:'somme S',
+  formula:FL('Forme développée',MB(R(F(PI,mn(4)),mo('='),mn(1),mo('−'),F(mn(1),mn(3)),mo('+'),F(mn(1),mn(5)),mo('−'),F(mn(1),mn(7)),mo('+'),F(mn(1),mn(9)),mo('−'),DOTS)))+FL('Forme compacte',MB(R(F(PI,mn(4)),mo('='),SUM(R(K,mo('='),mn(0)),INF),F(P(paren(R(mo('−'),mn(1))),K),R(mn(2),K,mo('+'),mn(1)))))),
+  how:'On ajoute puis on retire, en alternance, les inverses des nombres impairs : 1, 1/3, 1/5, 1/7… La somme S tend vers π/4, donc <b>π ≈ 4 × S</b>.',
+  note:'L\'erreur reste de l\'ordre de 1/n : mille termes ne donnent que deux ou trois décimales.',
+  speed:'Échelle horizontale logarithmique. Les marches irrégulières viennent des oscillations de part et d\'autre de π.',
+  gen(){ let s=0,k=0; return ()=>{ s+=(k&1?-1:1)/(2*k+1); k++; return {est:4*s,part:num(s)}; }; },
+  term(k){ return MI(R(k===1?'':mo(k%2?'+':'−'),F(mn(1),mn(2*k-1)))); }},
+ {name:'Nilakantha',kicker:'Nilakantha Somayaji, Kerala, XVe siècle',max:20000,start:50,unit:'Nombre de termes',colK:'n',colTerm:'terme ajouté',
+  formula:MB(R(PI,mo('='),mn(3),mo('+'),F(mn(4),R(mn(2),mo('·'),mn(3),mo('·'),mn(4))),mo('−'),F(mn(4),R(mn(4),mo('·'),mn(5),mo('·'),mn(6))),mo('+'),F(mn(4),R(mn(6),mo('·'),mn(7),mo('·'),mn(8))),mo('−'),DOTS)),
+  how:'On part de 3, puis on ajoute et on retire en alternance 4 divisé par le produit de trois entiers consécutifs : 2·3·4, puis 4·5·6, puis 6·7·8… <b>La somme tend directement vers π.</b>',
+  note:'L\'erreur décroît comme 1/n³ : beaucoup plus rapide que Leibniz, mais encore modeste.',
+  speed:'Échelle logarithmique : environ trois décimales de plus quand on multiplie les termes par 10.',
+  gen(){ let s=3,k=1; return ()=>{ const d=2*k; s+=(k&1?4:-4)/(d*(d+1)*(d+2)); k++; return {est:s}; }; },
+  term(k){ const d=2*k; return MI(R(mo(k%2?'+':'−'),F(mn(4),R(mn(d),mo('·'),mn(d+1),mo('·'),mn(d+2))))); }},
+ {name:'Bâle (Euler, 1735)',kicker:'Leonhard Euler, 1735',max:100000,start:1000,unit:'Nombre de termes',colK:'n',colTerm:'terme ajouté',colPart:'somme S',
+  formula:FL('Forme développée',MB(R(F(P(PI,mn(2)),mn(6)),mo('='),mn(1),mo('+'),F(mn(1),mn(4)),mo('+'),F(mn(1),mn(9)),mo('+'),F(mn(1),mn(16)),mo('+'),F(mn(1),mn(25)),mo('+'),DOTS)))+FL('Forme compacte',MB(R(F(P(PI,mn(2)),mn(6)),mo('='),SUM(R(K,mo('='),mn(1)),INF),F(mn(1),P(K,mn(2)))))),
+  how:'On additionne les inverses des carrés : 1, 1/4, 1/9, 1/16… La somme S tend vers π²/6, donc <b>π ≈ √(6 × S)</b>.',
+  note:'Ce « problème de Bâle » avait résisté aux frères Bernoulli. Les termes restants valent environ 1/n : la convergence est aussi lente que celle de Leibniz.',
+  speed:'Échelle logarithmique.',
+  gen(){ let s=0,k=1; return ()=>{ s+=1/(k*k); k++; return {est:Math.sqrt(6*s),part:num(s)}; }; },
+  term(k){ return MI(R(k===1?'':mo('+'),F(mn(1),P(mn(k),mn(2))))); }},
+ {name:'Machin (1706)',kicker:'John Machin, 1706',max:140,start:10,big:true,unit:'Nombre de termes de chaque arctan',colK:'n',colTerm:'terme ajouté',
+  formula:FL('Formule de Machin',MB(R(F(PI,mn(4)),mo('='),mn(4),mi('arctan'),'<mo>&#x2061;</mo>',F(mn(1),mn(5)),mo('−'),mi('arctan'),'<mo>&#x2061;</mo>',F(mn(1),mn(239)))))+FL('Série de l\'arctangente, utilisée pour x = 1/5 et x = 1/239',MB(R(mi('arctan'),'<mo>&#x2061;</mo>',mi('x'),mo('='),mi('x'),mo('−'),F(P(mi('x'),mn(3)),mn(3)),mo('+'),F(P(mi('x'),mn(5)),mn(5)),mo('−'),F(P(mi('x'),mn(7)),mn(7)),mo('+'),DOTS))),
+  how:'On calcule arctan(1/5) et arctan(1/239) avec la série x − x³/3 + x⁵/5 − …, puis <b>π = 16 × arctan(1/5) − 4 × arctan(1/239)</b>. Comme 1/5 et 1/239 sont petits, leurs puissances deviennent vite minuscules.',
+  note:'Avec cette formule, Machin a calculé 100 décimales à la main. Ici le calcul se fait en entiers exacts, sans arrondi.',
+  speed:'Échelle linéaire : environ 1,4 décimale par terme.',
+  gen(){ const G=8,Pp=200+G,S=10n**BigInt(Pp); let t5=S/5n,t2=S/239n,a=0n,b=0n,k=1n,i=0;
+    return ()=>{ if(i&1){a-=t5/k;b-=t2/k;}else{a+=t5/k;b+=t2/k;} t5/=25n; t2/=57121n; k+=2n; i++; return {est:fx(16n*a-4n*b,Pp).slice(0,202)}; }; },
+  term(k){ const e=2*k-1; return MI(R(mo(k%2?'+':'−'),F(mn(16),R(mn(e),mo('·'),P(mn(5),mn(e)))),mo(k%2?'−':'+'),F(mn(4),R(mn(e),mo('·'),P(mn(239),mn(e)))))); }},
+ {name:'Chudnovsky (1988)',kicker:'David et Gregory Chudnovsky, 1988',max:30,start:3,big:true,unit:'Nombre de termes',colK:'n',colTerm:'terme ajouté',
+  formula:MB(R(F(mn(1),PI),mo('='),mn(12),SUM(R(K,mo('='),mn(0)),INF),F(R(P(paren(R(mo('−'),mn(1))),K),paren(R(mn(6),K)),mo('!'),paren(R(mn(13591409),mo('+'),mn(545140134),K))),R(paren(R(mn(3),K)),mo('!'),P(paren(R(K,mo('!'))),mn(3)),P(mn(640320),R(mn(3),K,mo('+'),F(mn(3),mn(2)))))))),
+  how:'Chaque terme est une fraction de très grands entiers : factorielles et puissances de 640 320. On additionne les termes pour obtenir une somme S, puis <b>π = 426 880 × √10 005 ÷ S</b>.',
+  note:'Inspirée des formules de Ramanujan (1914), c\'est elle que le logiciel y-cruncher utilise pour tous les records récents.',
+  speed:'Échelle linéaire : environ 14 décimales de plus à chaque terme.',
+  gen(){ const G=10,Pp=440+G,S=10n**BigInt(Pp), sq=isqrt(10005n*S*S); let k=0n,M=1n,Kk=6n,L=13591409n,X=1n,sum=0n;
+    return ()=>{ if(k>0n){ M=M*(Kk**3n-16n*Kk)/(k**3n); Kk+=12n; L+=545140134n; X*=-262537412640768000n; } sum+=S*M*L/X; k++; return {est:fx(426880n*sq*S/sum,Pp).slice(0,442)}; }; },
+  term(k){ return 'k = '+(k-1)+'  <small>(≈ 10'+sup(-14*(k-1))+')</small>'; }},
+];
+function glViz(cv,n){ const Pc=prep(cv); if(!Pc) return; const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+  const Pp=60, S=10n**BigInt(Pp); let a=S,b=isqrt(S*S/2n); const rows=[[a,b]]; for(let i=0;i<n;i++){ const an=(a+b)/2n; b=isqrt(a*b); a=an; rows.push([a,b]); }
+  const toN=v=>Number(v)/1e60, gapTxt=g=>{ if(g<=0n) return '< 10⁻⁶⁰'; const s=g.toString(), e=s.length-1-Pp; return e>-3?(Number(g)/1e60).toLocaleString('fr-FR',{maximumSignificantDigits:2}):s[0]+','+s[1]+' × 10'+sup(e); };
+  const L=34, Rr=w-150, x0=0.68, x1=1.02, X=v=>L+(v-x0)/(x1-x0)*(Rr-L);
+  const rh=Math.min(24,(h-34)/rows.length);
+  ctx.font='11px '+tok('--f-mono'); ctx.textBaseline='middle';
+  ctx.strokeStyle=tok('--line'); ctx.fillStyle=tok('--muted'); ctx.textAlign='center';
+  [0.7,0.8,0.9,1].forEach(v=>{ ctx.beginPath(); ctx.moveTo(X(v),6); ctx.lineTo(X(v),h-20); ctx.stroke(); ctx.fillText(v.toLocaleString('fr-FR'),X(v),h-10); });
+  rows.forEach(([A,B],i)=>{ const y=14+i*rh, xa=X(toN(A)), xb=X(toN(B));
+    ctx.fillStyle=tok('--muted'); ctx.textAlign='left'; ctx.fillText(String(i),6,y);
+    ctx.strokeStyle=tok('--ink'); ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xb,y); ctx.lineTo(xa,y); ctx.stroke();
+    ctx.fillStyle=tok('--ok'); ctx.beginPath(); ctx.arc(xb,y,4.5,0,7); ctx.fill();
+    ctx.fillStyle=tok('--accent'); ctx.beginPath(); ctx.arc(xa,y,4.5,0,7); ctx.fill();
+    ctx.fillStyle=tok('--ink'); ctx.fillText('écart '+gapTxt(A-B),Rr+12,y); });
+  ctx.fillStyle=tok('--muted'); ctx.textAlign='left'; ctx.fillText('étape',2,h-10);
+  ctx.textAlign='right'; ctx.fillStyle=tok('--accent'); ctx.fillText('● a',w-40,h-10); ctx.fillStyle=tok('--ok'); ctx.fillText('● b',w-6,h-10); }
+const exP=makeExplorer($('#ex-produits'),PRODUITS);
+const exS=makeExplorer($('#ex-series'),SERIES);
+drawers.produits=[exP]; drawers.series=[exS];
+
+/* ---------- Monte-Carlo ---------- */
+const MC={n:0,inside:0,pts:[],hist:[],auto:false};
+const MC_KEEP=40000;
+function mcAdd(k){ const np=[]; for(let i=0;i<k;i++){ const x=Math.random(),y=Math.random(),inn=x*x+y*y<=1; MC.n++; if(inn) MC.inside++; if(MC.pts.length<MC_KEEP){ const p=[x,y,inn]; MC.pts.push(p); np.push(p);} }
+  MC.hist.push([MC.n,4*MC.inside/MC.n]); mcPaint(np); mcStats(); }
+function mcFrame(){ const Pc=prep($('#mc-canvas')); if(!Pc) return null; const {ctx,w,h}=Pc; return {ctx,s:Math.min(w,h)-20,o:10}; }
+function mcBase(){ const F_=mcFrame(); if(!F_) return; const {ctx,s,o}=F_; ctx.clearRect(0,0,s+2*o,s+2*o);
+  ctx.strokeStyle=tok('--line'); ctx.lineWidth=1; ctx.strokeRect(o,o,s,s);
+  ctx.strokeStyle=tok('--ink'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(o,o+s,s,-Math.PI/2,0); ctx.stroke(); mcPaint(MC.pts); }
+function mcPaint(list){ const F_=mcFrame(); if(!F_) return; const {ctx,s,o}=F_; const r=MC.pts.length>5000?1.1:1.8, okc=tok('--ok'), bad=tok('--accent');
+  list.forEach(p=>{ ctx.fillStyle=p[2]?okc:bad; ctx.fillRect(o+p[0]*s-r/2,o+(1-p[1])*s-r/2,r,r); }); }
+function mcStats(){ $('#mc-n').textContent=fr(MC.n); $('#mc-in').textContent=fr(MC.inside);
+  if(MC.n){ showDigits($('#mc-digits'),(4*MC.inside/MC.n).toFixed(8),4); $('#mc-sd').textContent='± '+sci(1.642/Math.sqrt(MC.n)); }
+  else { $('#mc-digits').innerHTML='<span class="rest">Ajoutez des points</span>'; $('#mc-sd').textContent='–'; } mcChart(); }
+function mcChart(){ chart($('#mc-chart'),{pts:MC.hist,logX:true,xMin:10,xMax:Math.max(1e5,10**Math.ceil(Math.log10(Math.max(10,MC.n)))),yMin:2.9,yMax:3.4,refY:Math.PI,yTicks:[2.9,3,3.1,3.2,3.3,3.4],yFmt:oneDec}); }
+document.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>mcAdd(+b.dataset.mc));
+function mcLoop(){ if(!MC.auto) return; mcAdd(MC.n<2000?50:MC.n<50000?400:2000); requestAnimationFrame(mcLoop); }
+$('#mc-auto').onclick=()=>{ MC.auto=!MC.auto; $('#mc-auto').textContent=MC.auto?'Pause':'Lancer en continu'; if(MC.auto) mcLoop(); };
+$('#mc-reset').onclick=()=>{ MC.auto=false; $('#mc-auto').textContent='Lancer en continu'; Object.assign(MC,{n:0,inside:0,pts:[],hist:[]}); mcBase(); mcStats(); };
+drawers.montecarlo=[mcBase,mcChart];
+
+/* ---------- Buffon ---------- */
+const BF={n:0,c:0,ndl:[],hist:[],auto:false,ratio:0.8};
+const BF_W=8, BF_H=6, BF_KEEP=4000;
+function bfThrow(k){ const L=BF.ratio, add=[];
+  for(let i=0;i<k;i++){ let dx,dy,r2; do{ dx=Math.random()*2-1; dy=Math.random()*2-1; r2=dx*dx+dy*dy; }while(r2>1||r2<1e-12);
+    const r=Math.sqrt(r2); dx/=r; dy/=r; const cx=Math.random()*BF_W, cy=Math.random()*BF_H;
+    const y1=cy-dy*L/2, y2=cy+dy*L/2, cr=Math.floor(y1)!==Math.floor(y2);
+    BF.n++; if(cr) BF.c++; if(BF.ndl.length<BF_KEEP){ const nd=[cx-dx*L/2,y1,cx+dx*L/2,y2,cr]; BF.ndl.push(nd); add.push(nd);} }
+  if(BF.c) BF.hist.push([BF.n,2*L*BF.n/BF.c]); bfPaint(add); bfStats(); }
+function bfFrame(){ const Pc=prep($('#bf-canvas')); if(!Pc) return null; const {ctx,w,h}=Pc; const sc=Math.min(w/BF_W,h/BF_H); return {ctx,sc,ox:(w-BF_W*sc)/2,oy:(h-BF_H*sc)/2,w,h}; }
+function bfBase(){ const F_=bfFrame(); if(!F_) return; const {ctx,sc,ox,oy,w,h}=F_; ctx.clearRect(0,0,w,h);
+  for(let j=0;j<BF_H;j++){ ctx.fillStyle=tok(j%2?'--wood-b':'--wood-a'); ctx.fillRect(ox,oy+j*sc,BF_W*sc,sc);
+    ctx.strokeStyle=tok('--seam'); ctx.globalAlpha=.35; ctx.lineWidth=1; const off=(j*2.7)%3.2; for(let x=off;x<BF_W;x+=3.2){ ctx.beginPath(); ctx.moveTo(ox+x*sc,oy+j*sc); ctx.lineTo(ox+x*sc,oy+(j+1)*sc); ctx.stroke(); } ctx.globalAlpha=1; }
+  ctx.strokeStyle=tok('--seam'); ctx.lineWidth=2; for(let j=0;j<=BF_H;j++){ ctx.beginPath(); ctx.moveTo(ox,oy+j*sc); ctx.lineTo(ox+BF_W*sc,oy+j*sc); ctx.stroke(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(ox,oy,BF_W*sc,BF_H*sc); ctx.clip(); bfPaintRaw(ctx,F_,BF.ndl); ctx.restore(); }
+function bfPaintRaw(ctx,F_,list){ const {sc,ox,oy}=F_; ctx.lineWidth=BF.ndl.length>1500?0.9:1.6; ctx.lineCap='round'; const a=tok('--accent'), k=tok('--ink');
+  list.forEach(n=>{ ctx.strokeStyle=n[4]?a:k; ctx.globalAlpha=n[4]?1:.75; ctx.beginPath(); ctx.moveTo(ox+n[0]*sc,oy+n[1]*sc); ctx.lineTo(ox+n[2]*sc,oy+n[3]*sc); ctx.stroke(); }); ctx.globalAlpha=1; }
+function bfPaint(list){ const F_=bfFrame(); if(!F_) return; const {ctx,sc,ox,oy}=F_; ctx.save(); ctx.beginPath(); ctx.rect(ox,oy,BF_W*sc,BF_H*sc); ctx.clip(); bfPaintRaw(ctx,F_,list); ctx.restore(); }
+function bfStats(){ $('#bf-n').textContent=fr(BF.n); $('#bf-c').textContent=fr(BF.c);
+  if(BF.c){ showDigits($('#bf-digits'),(2*BF.ratio*BF.n/BF.c).toFixed(8),4); $('#bf-p').textContent=(BF.c/BF.n).toLocaleString('fr-FR',{maximumFractionDigits:4})+' (théorie '+(2*BF.ratio/Math.PI).toLocaleString('fr-FR',{maximumFractionDigits:4})+')'; }
+  else { $('#bf-digits').innerHTML='<span class="rest">Lancez des aiguilles</span>'; $('#bf-p').textContent='–'; } bfChart(); }
+function bfChart(){ chart($('#bf-chart'),{pts:BF.hist,logX:true,xMin:10,xMax:Math.max(1e4,10**Math.ceil(Math.log10(Math.max(10,BF.n)))),yMin:2.6,yMax:3.7,refY:Math.PI,yTicks:[2.8,3,3.2,3.4,3.6],yFmt:oneDec}); }
+function bfReset(){ Object.assign(BF,{n:0,c:0,ndl:[],hist:[]}); bfBase(); bfStats(); }
+document.querySelectorAll('[data-bf]').forEach(b=>b.onclick=()=>bfThrow(+b.dataset.bf));
+$('#bf-reset').onclick=()=>{ BF.auto=false; $('#bf-auto').textContent='Lancer en continu'; bfReset(); };
+$('#bf-ratio').addEventListener('input',e=>{ BF.ratio=+e.target.value; $('#bf-r').textContent=BF.ratio.toFixed(2).replace('.',','); bfReset(); });
+function bfLoop(){ if(!BF.auto) return; bfThrow(BF.n<500?5:BF.n<5000?40:300); requestAnimationFrame(bfLoop); }
+$('#bf-auto').onclick=()=>{ BF.auto=!BF.auto; $('#bf-auto').textContent=BF.auto?'Pause':'Lancer en continu'; if(BF.auto) bfLoop(); };
+drawers.aiguilles=[bfBase,bfChart];
+
+/* ---------- Chocs (Galperin) ---------- */
+const CK={d:2,run:false,done:false,count:0,t:0,x1:1.5,x2:3.5,v1:0,v2:-1,raf:0};
+const CK_W1=0.4, CK_XMAX=8;
+function ckCount(ratio){ const m1=1,m2=ratio; let x1=1,x2=3,v1=0,v2=-1,c=0;
+  for(;;){ const db=v1>v2?Math.max(0,(x2-(x1+0.3))/(v1-v2)):Infinity, dw=v1<0?Math.max(0,x1/(-v1)):Infinity, dt=Math.min(db,dw); if(dt===Infinity) return c;
+    x1+=v1*dt; x2+=v2*dt; if(db<=dw){ const a=((m1-m2)*v1+2*m2*v2)/(m1+m2), b=((m2-m1)*v2+2*m1*v1)/(m1+m2); v1=a; v2=b; x1=x2-0.3; } else { v1=-v1; x1=0; } c++; } }
+let CK_CURVE=null;
+function ckCurve(){ if(!CK_CURVE) CK_CURVE=Array.from({length:13},(_,j)=>{ const r=10**j, n=ckCount(r); return [r,n/Math.sqrt(r),n]; }); return CK_CURVE; }
+const ckM2=()=>100**CK.d, ckSize2=()=>0.4+0.22*CK.d;
+function ckReset(){ cancelAnimationFrame(CK.raf); Object.assign(CK,{run:false,done:false,count:0,t:0,x1:1.5,x2:3.5,v1:0,v2:-1});
+  $('#ck-go').textContent='Lancer'; ckStats(); ckDraw(); }
+function ckNext(){ const db=CK.v1>CK.v2?Math.max(0,(CK.x2-(CK.x1+CK_W1))/(CK.v1-CK.v2)):Infinity, dw=CK.v1<0?Math.max(0,CK.x1/(-CK.v1)):Infinity; return db<=dw?{dt:db,type:1}:{dt:dw,type:2}; }
+function ckApply(type){ const m1=1,m2=ckM2();
+  if(type===1){ const a=((m1-m2)*CK.v1+2*m2*CK.v2)/(m1+m2), b=((m2-m1)*CK.v2+2*m1*CK.v1)/(m1+m2); CK.v1=a; CK.v2=b; CK.x1=CK.x2-CK_W1; }
+  else { CK.v1=-CK.v1; CK.x1=0; } CK.count++; }
+function ckAdvance(dt){ const tEnd=CK.t+dt;
+  for(let guard=0;guard<4e6;guard++){ const ev=ckNext(); if(ev.dt===Infinity) CK.done=true;
+    if(ev.dt===Infinity||CK.t+ev.dt>tEnd){ const r=tEnd-CK.t; CK.x1+=CK.v1*r; CK.x2+=CK.v2*r; CK.t=tEnd; return; }
+    CK.x1+=CK.v1*ev.dt; CK.x2+=CK.v2*ev.dt; CK.t+=ev.dt; ckApply(ev.type); } }
+function ckLoop(){ if(!CK.run) return; ckAdvance(1.6/60); ckStats(); ckDraw();
+  if(CK.done && ((CK.x1>CK_XMAX && CK.x2>CK_XMAX) || CK.t>60)){ CK.run=false; $('#ck-go').textContent='Relancer'; return; }
+  CK.raf=requestAnimationFrame(ckLoop); }
+function ckStats(){ $('#ck-count').textContent=fr(CK.count);
+  $('#ck-v').textContent=CK.v1.toLocaleString('fr-FR',{maximumFractionDigits:3})+' / '+CK.v2.toLocaleString('fr-FR',{maximumFractionDigits:3});
+  const div=10**CK.d; $('#ck-label').textContent='Valeur de π : chocs ÷ '+fr(div)+(CK.done?'':' (en cours)');
+  if(!CK.count){ $('#ck-digits').innerHTML='<span class="rest">Lancez la simulation</span>'; $('#ck-ok').textContent='–'; ckChart(); return; }
+  const s=String(CK.count), str=s.length>CK.d? s.slice(0,s.length-CK.d)+(CK.d?'.'+s.slice(s.length-CK.d):'') : (CK.count/div).toFixed(CK.d);
+  const c=showDigits($('#ck-digits'),str,0); $('#ck-ok').textContent=CK.done?c:'…'; ckChart(); }
+function ckChart(){ if(!$('#ck-chart').clientWidth) return; const cv=ckCurve(), r=ckM2(), here=cv[2*CK.d];
+  chart($('#ck-chart'),{pts:cv.map(p=>[p[0],p[1]]),dots:true,logX:true,xMin:1,xMax:1e12,yMin:2.4,yMax:3.4,refY:Math.PI,xTicks:[1,1e2,1e4,1e6,1e8,1e10,1e12],xFmt:v=>v<1e3?fr(v):'10'+sup(Math.round(Math.log10(v))),yTicks:[2.4,2.6,2.8,3,3.2,3.4],yFmt:oneDec,marker:CK.done?[r,here[1]]:null}); }
+function ckDraw(){ const Pc=prep($('#ck-canvas')); if(!Pc) return; const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+  const wallX=26, floorY=h-30, sc=(w-wallX-10)/CK_XMAX;
+  ctx.fillStyle=tok('--line'); ctx.fillRect(0,floorY,w,2); ctx.fillStyle=tok('--ink'); ctx.fillRect(wallX-6,10,6,floorY-8);
+  ctx.strokeStyle=tok('--muted'); ctx.lineWidth=1; for(let y=16;y<floorY;y+=10){ ctx.beginPath(); ctx.moveTo(wallX-6,y); ctx.lineTo(wallX-14,y+8); ctx.stroke(); }
+  for(let x=wallX;x<w;x+=10){ ctx.beginPath(); ctx.moveTo(x,floorY+2); ctx.lineTo(x-8,floorY+10); ctx.stroke(); }
+  const s1=CK_W1*sc, s2=Math.min(ckSize2()*sc,floorY-20), bx1=wallX+CK.x1*sc, bx2=wallX+CK.x2*sc;
+  ctx.fillStyle=tok('--accent'); ctx.fillRect(bx2,floorY-s2,s2,s2); ctx.fillStyle=tok('--ok'); ctx.fillRect(bx1,floorY-s1,s1,s1);
+  ctx.font='600 11px '+tok('--f-mono'); ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillStyle=tok('--ink');
+  if(bx1<w) ctx.fillText('m',bx1+s1/2,floorY-s1-4);
+  if(bx2<w) ctx.fillText('M = '+(CK.d?'100'+(CK.d>1?sup(CK.d):'')+' m':'m'),Math.min(bx2+s2/2,w-50),floorY-s2-4); }
+$('#ck-d').addEventListener('input',e=>{ CK.d=+e.target.value; $('#ck-ratio').textContent=fr(100**CK.d); ckReset(); });
+$('#ck-go').onclick=()=>{ if(CK.run){ CK.run=false; $('#ck-go').textContent='Reprendre'; return; } if(CK.done) ckReset(); CK.run=true; $('#ck-go').textContent='Pause'; ckLoop(); };
+$('#ck-fast').onclick=()=>{ ckReset(); while(!CK.done) ckAdvance(1e6); CK.x1=CK_XMAX+1; CK.x2=CK_XMAX+1; ckStats(); ckDraw(); $('#ck-go').textContent='Relancer'; };
+$('#ck-reset').onclick=ckReset;
+drawers.chocs=[ckDraw,ckChart];
+
+/* ---------- Entiers premiers entre eux ---------- */
+let CP=null;
+function cpData(){ if(CP) return CP; const N=100000, phi=new Float64Array(N+1); for(let i=0;i<=N;i++) phi[i]=i;
+  for(let i=2;i<=N;i++) if(phi[i]===i) for(let j=i;j<=N;j+=i) phi[j]-=phi[j]/i;
+  const cum=new Float64Array(N+1); for(let k=1;k<=N;k++) cum[k]=cum[k-1]+phi[k];
+  const pts=[]; for(let i=0;i<=150;i++){ const n=Math.max(2,Math.round(10**(i/150*5))); pts.push([n,Math.sqrt(6*n*n/(2*cum[n]-1))]); }
+  return CP={cum,pts}; }
+const gcd=(a,b)=>{ while(b){ [a,b]=[b,a%b]; } return a; };
+function cpUpdate(){ const n=+$('#cp-n').value, d=cpData(), C=2*d.cum[n]-1, p=C/(n*n);
+  $('#cp-nv').textContent=n+' × '+n; $('#cp-c').textContent=fr(C)+' / '+fr(n*n); $('#cp-p').textContent=(100*p).toLocaleString('fr-FR',{maximumFractionDigits:2})+' %';
+  showDigits($('#cp-digits'),Math.sqrt(6/p).toFixed(10),4); cpDraw(); cpChart(); }
+function cpDraw(){ const Pc=prep($('#cp-canvas')); if(!Pc) return; const {ctx,w,h}=Pc; ctx.clearRect(0,0,w,h);
+  const n=+$('#cp-n').value, pad=22, s=Math.min(w,h)-pad-6, cell=s/n, ox=pad, oy=6;
+  const ok=tok('--ok'), off=tok('--line');
+  if(n<=80){ const g=cell>6?1:0; for(let a=1;a<=n;a++) for(let b=1;b<=n;b++){ ctx.fillStyle=gcd(a,b)===1?ok:off; ctx.fillRect(ox+(a-1)*cell+g/2,oy+(n-b)*cell+g/2,cell-g,cell-g); } }
+  else { const img=new ImageData(n,n), A=hexRgb(ok), Bc=hexRgb(off);
+    for(let a=1;a<=n;a++) for(let b=1;b<=n;b++){ const c=gcd(a,b)===1?A:Bc, idx=((n-b)*n+(a-1))*4; img.data[idx]=c[0]; img.data[idx+1]=c[1]; img.data[idx+2]=c[2]; img.data[idx+3]=255; }
+    const oc=document.createElement('canvas'); oc.width=n; oc.height=n; oc.getContext('2d').putImageData(img,0,0); ctx.imageSmoothingEnabled=false; ctx.drawImage(oc,ox,oy,s,s); }
+  ctx.fillStyle=tok('--muted'); ctx.font='11px '+tok('--f-mono'); ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('a →',ox+s/2,oy+s+4);
+  ctx.save(); ctx.translate(10,oy+s/2); ctx.rotate(-Math.PI/2); ctx.textBaseline='middle'; ctx.fillText('b →',0,0); ctx.restore(); }
+function cpChart(){ const d=cpData(), n=+$('#cp-n').value, C=2*d.cum[n]-1;
+  chart($('#cp-chart'),{pts:d.pts,logX:true,xMin:2,xMax:1e5,xTicks:[10,100,1000,1e4,1e5],yMin:2.9,yMax:3.3,refY:Math.PI,yTicks:[2.9,3,3.1,3.2,3.3],yFmt:oneDec,marker:[n,Math.sqrt(6*n*n/C)]}); }
+$('#cp-n').addEventListener('input',cpUpdate);
+drawers.premiers=[cpDraw,cpChart];
+
+drawers.enter_premiers=()=>{ if(!CP) cpUpdate(); };
+drawers.enter_chocs=()=>{ ckStats(); };
+
+/* ---------- Comparaison (courbes théoriques) ---------- */
+const FAMS=[{name:'Géométrie',c:'--s1'},{name:'Produits & itérations',c:'--s2'},{name:'Séries',c:'--s3'},{name:'Hasard',c:'--s4'},{name:'Curiosités',c:'--s5'}];
+const L10=Math.log10, PI3=Math.PI**3, LOG4=Math.log10(4), wcost=D=>Math.max(1,D/15);
+const GL_DIG=[2,7,18,40,83,170,344,700,1410,2830,5660,11300,22600];
+const CMP_METHODS=[
+ {name:'Polygones',fam:0,dash:[],ops:5,lin:[0,40000],y:k=>L10(108/PI3)+k*LOG4},
+ {name:'Viète',fam:1,dash:[],ops:3,lin:[1,40000],y:k=>L10(6/PI3)+(k+1)*LOG4},
+ {name:'Wallis',fam:1,dash:[6,4],ops:4,log:true,y:N=>L10(4*N/Math.PI),ye:e=>e+L10(4/Math.PI)},
+ {name:'Gauss–Legendre',fam:1,dash:[2,3],ops:10,lin:[1,13],dots:true,y:k=>GL_DIG[k-1]},
+ {name:'Leibniz',fam:2,dash:[],ops:3,log:true,y:N=>L10(N),ye:e=>e},
+ {name:'Nilakantha',fam:2,dash:[6,4],ops:6,log:true,y:N=>L10(4)+3*L10(N),ye:e=>L10(4)+3*e},
+ {name:'Bâle',fam:2,dash:[2,3],ops:3,log:true,y:N=>L10(N/0.95),ye:e=>e-L10(0.95)},
+ {name:'Machin',fam:2,dash:[10,3,2,3],ops:8,lin:[1,16000],y:N=>L10(2*N+1)+(2*N+1)*L10(5)-L10(16)},
+ {name:'Chudnovsky',fam:2,dash:[1,3],ops:15,lin:[1,1600],y:N=>14.18*N-1.2},
+ {name:'Monte-Carlo',fam:3,dash:[],ops:5,log:true,y:N=>L10(Math.sqrt(N)/1.64),ye:e=>e/2-L10(1.64)},
+ {name:'Buffon',fam:3,dash:[6,4],ops:10,log:true,y:N=>L10(Math.sqrt(N)/3.08),ye:e=>e/2-L10(3.08)},
+ {name:'Chocs élastiques',fam:4,dash:[],ops:10,log:true,y:N=>L10(N/Math.PI),ye:e=>e-L10(Math.PI)},
+ {name:'Premiers entre eux',fam:4,dash:[6,4],opsF:N=>N*(2+Math.log(Math.log(N))),log:true,y:N=>L10(2*N/(Math.PI*Math.log(N))),ye:e=>L10(2/Math.PI)+e-L10(e*Math.LN10),opsL:e=>e+L10(2+Math.log(e*Math.LN10))},
+];
+function cmpCurve(m,eMax){ const out=[], push=N=>{ const y=m.y(N); if(!(y>=1)) return; out.push([(m.opsF?m.opsF(N):m.ops*N)*wcost(y+5),y]); };
+  if(m.log){ for(let e=0.3;e<=eMax;e+=0.05) push(10**e); }
+  else { const [a,b]=m.lin; if(b-a<=40){ for(let k=a;k<=b;k++) push(k); } else { let last=-1; for(let i=0;i<=320;i++){ const k=Math.round(Math.max(a,1)*(b/Math.max(a,1))**(i/320)); if(k!==last){ push(k); last=k; } } } }
+  return out; }
+CMP_METHODS.forEach(m=>{ m.pts=cmpCurve(m,18); if(!m.log) m.full=cmpCurve(m,0); });
+const CMP={focus:-1};
+function cmpChart(){ if(view!=='compare') return;
+  const series=CMP_METHODS.map((m,mi)=>{ const f=CMP.focus, on=f<0||f===mi; return {pts:m.pts,color:FAMS[m.fam].c,dash:m.dash,alpha:on?1:0.15,width:f===mi?3:2,dots:m.dots,r:3}; });
+  if(CMP.focus>=0) series.push(series.splice(CMP.focus,1)[0]);
+  chart($('#cmp-chart'),{series,clip:true,logX:true,logY:true,xMin:1,xMax:1e15,yMin:1,yMax:1e4,hLine:15,xTicks:[1,1e3,1e6,1e9,1e12,1e15],yTicks:[1,10,100,1000,10000],
+    xFmt:pow10Label,yFmt:v=>fr(v),yLabel:'décimales exactes',xLabel:"nombre d'opérations"}); }
+function swatch(m){ const c=tok(FAMS[m.fam].c); return '<svg width="22" height="8" aria-hidden="true"><line x1="1" y1="4" x2="21" y2="4" stroke="'+c+'" stroke-width="2.5" stroke-dasharray="'+(m.dash.join(' ')||'none')+'"/></svg>'; }
+function cmpLegend(){ let html=''; FAMS.forEach((f,fi)=>{ html+='<div class="famrow"><span class="label">'+f.name+'</span><div class="fam">';
+    CMP_METHODS.forEach((m,mi)=>{ if(m.fam===fi) html+='<button data-mi="'+mi+'" aria-pressed="'+(CMP.focus===mi)+'">'+swatch(m)+m.name+'</button>'; }); html+='</div></div>'; });
+  $('#cmp-legend').innerHTML=html;
+  $('#cmp-legend').querySelectorAll('button').forEach(b=>b.onclick=()=>{ const mi=+b.dataset.mi; CMP.focus=CMP.focus===mi?-1:mi; cmpLegend(); cmpChart(); }); }
+function opsFor(m,target){ if(m.log){ let lo=0.3,hi=20000; for(let i=0;i<200;i++){ const mid=(lo+hi)/2; if(m.ye(mid)>=target) hi=mid; else lo=mid; }
+    return (m.opsL?m.opsL(hi):L10(m.ops)+hi)+L10(wcost(target+5)); }
+  const p=m.full; for(let i=0;i<p.length;i++) if(p[i][1]>=target){ if(i===0) return L10(p[0][0]); const [x0,y0]=p[i-1],[x1,y1]=p[i]; return L10(x0)+(L10(x1)-L10(x0))*(target-y0)/(y1-y0); } return Infinity; }
+function opsTxt(lv){ if(!isFinite(lv)) return '–'; if(lv<3) return '≈ '+Math.max(1,Math.round(10**lv)); let e=Math.floor(lv), m=Math.round(10**(lv-e)); if(m>=10){m=1;e++;} return '≈ '+(m<=1?'':m+' × ')+'10'+sup(e); }
+function cmpTable(){ const rows=CMP_METHODS.map(m=>({m,a:opsFor(m,10),b:opsFor(m,100),c:opsFor(m,1000)})).sort((x,y)=>x.a-y.a);
+  $('#cmp-table tbody').innerHTML=rows.map(r=>'<tr><td style="font-family:var(--f-body)">'+swatch(r.m)+' '+r.m.name+'</td><td>'+opsTxt(r.a)+'</td><td>'+opsTxt(r.b)+'</td><td>'+opsTxt(r.c)+'</td></tr>').join(''); }
+cmpLegend(); cmpTable();
+
+/* ---------- Histoire ---------- */
+const EVENTS=[
+ {era:'Antiquité'},
+ {y:'≈ −1900',t:'Babylone',d:'Une tablette retrouvée à Suse compare le périmètre d\'un hexagone à celui du cercle et revient à prendre π = 25/8.',v:'3,125'},
+ {y:'≈ −1650',t:'Égypte, papyrus Rhind',d:'Le scribe Ahmès calcule l\'aire d\'un disque comme celle d\'un carré de côté 8/9 du diamètre, soit π = (16/9)².',v:'≈ 3,1605'},
+ {y:'≈ −250',t:'Archimède',d:'Avec des polygones de 96 côtés, il démontre que π est compris entre 3 + 10/71 et 3 + 1/7. C\'est la première méthode qui permet, en principe, une précision arbitraire.',v:'3,1408 < π < 3,1429'},
+ {y:'≈ 150',t:'Ptolémée',d:'L\'Almageste utilise 377/120, tiré de ses tables de cordes.',v:'≈ 3,14167'},
+ {y:'263',t:'Liu Hui',d:'Le mathématicien chinois améliore la méthode des polygones et atteint 3072 côtés.',v:'3,14159'},
+ {y:'≈ 480',t:'Zu Chongzhi',d:'Il encadre π entre 3,1415926 et 3,1415927 et propose la fraction 355/113. Ce record tiendra près de mille ans.',v:'355/113 ≈ 3,1415929'},
+ {era:'Des polygones aux séries'},
+ {y:'≈ 1400',t:'Madhava de Sangamagrama',d:'L\'école du Kerala découvre la série de l\'arctangente et des termes correctifs pour accélérer sa convergence.',v:'11 décimales'},
+ {y:'1424',t:'al-Kashi',d:'À Samarcande, il pousse les polygones jusqu\'à 3 × 2²⁸ côtés.',v:'16 décimales'},
+ {y:'1593',t:'François Viète',d:'Premier produit infini exact de l\'histoire des mathématiques.',v:'9 décimales'},
+ {y:'1610',t:'Ludolph van Ceulen',d:'Une vie de calcul par polygones. Ses 35 décimales furent gravées sur sa tombe à Leyde ; en Allemagne, π s\'est longtemps appelé « nombre de Ludolph ».',v:'35 décimales'},
+ {y:'1655',t:'John Wallis',d:'Produit infini obtenu par interpolation d\'intégrales.',v:''},
+ {y:'1671–1674',t:'Gregory et Leibniz',d:'Redécouverte en Europe de la série de l\'arctangente : π/4 = 1 − 1/3 + 1/5 − …',v:''},
+ {y:'1706',t:'John Machin et William Jones',d:'Machin combine deux arctangentes et calcule 100 décimales. La même année, Jones emploie la lettre π ; Euler la popularisera à partir de 1737.',v:'100 décimales'},
+ {y:'1735',t:'Leonhard Euler',d:'Il résout le problème de Bâle : la somme des 1/k² vaut π²/6. On en déduira la probabilité 6/π² que deux entiers soient premiers entre eux.',v:''},
+ {y:'1761',t:'Johann Heinrich Lambert',d:'Démonstration que π est irrationnel : ses décimales ne se répètent jamais.',v:''},
+ {y:'1777',t:'Buffon',d:'Le problème de l\'aiguille, posé en 1733, paraît dans son Essai d\'arithmétique morale : π surgit d\'une expérience de hasard.',v:''},
+ {y:'1873',t:'William Shanks',d:'Quinze ans de calcul à la main pour 707 décimales. En 1945, Ferguson découvre une erreur à la 528ᵉ.',v:'527 décimales exactes'},
+ {y:'1882',t:'Ferdinand von Lindemann',d:'π est transcendant : la quadrature du cercle à la règle et au compas est impossible.',v:''},
+ {y:'1914',t:'Srinivasa Ramanujan',d:'Publie des séries d\'une rapidité inédite, qui inspireront les algorithmes modernes.',v:''},
+ {era:'L\'ère des machines'},
+ {y:'1949',t:'ENIAC',d:'Premier calcul sur ordinateur électronique, en 70 heures, avec la formule de Machin.',v:'2 037 décimales'},
+ {y:'1973',t:'Guilloud et Bouyer',d:'Le premier million de décimales, sur un CDC 7600.',v:'1 million'},
+ {y:'1976',t:'Salamin et Brent',d:'Algorithme fondé sur la moyenne arithmético-géométrique de Gauss : le nombre de décimales double à chaque étape.',v:''},
+ {y:'1989',t:'Frères Chudnovsky',d:'Avec leur série publiée en 1988, ils dépassent le milliard de décimales sur une machine assemblée chez eux.',v:'1 milliard'},
+ {y:'2002',t:'Yasumasa Kanada',d:'Formules de type Machin sur supercalculateur.',v:'1 240 milliards'},
+ {y:'2003',t:'Gregory Galperin',d:'Montre que le nombre de chocs entre deux blocs et un mur, pour un rapport de masses 100ᵈ, donne les chiffres de π.',v:''},
+ {y:'2009',t:'Fabrice Bellard',d:'Record battu sur un simple ordinateur de bureau.',v:'2 700 milliards'},
+ {y:'2019',t:'Emma Haruka Iwao',d:'Calcul de 121 jours dans le cloud de Google avec y-cruncher.',v:'31 400 milliards'},
+ {y:'2022',t:'Emma Haruka Iwao',d:'Nouveau record après 157 jours de calcul.',v:'100 000 milliards'},
+ {y:'2024',t:'StorageReview',d:'Deux records successifs, en mars puis en juin.',v:'202 000 milliards'},
+ {y:'2025',t:'Linus Media Group, puis StorageReview',d:'300 000 milliards en mai, puis 314 000 milliards annoncés en décembre 2025 : le record en vigueur.',v:'314 000 milliards'},
+];
+$('#timeline').innerHTML=EVENTS.map(e=>e.era?'<div class="era">'+e.era+'</div>':'<div class="ev"><div class="yr">'+e.y+'</div><div><h4>'+e.t+'</h4><p>'+e.d+'</p>'+(e.v?'<div class="val">'+e.v+'</div>':'')+'</div></div>').join('');
+const HIST=[[1400,11],[1424,16],[1593,9],[1610,35],[1706,100],[1873,527],[1949,2037],[1973,1e6],[1989,1e9],[2002,1.24e12],[2009,2.7e12],[2019,3.14e13],[2022,1e14],[2024,2.02e14],[2025,3.14e14]];
+function histChart(){ chart($('#hist-chart'),{pts:HIST,dots:true,logY:true,xMin:1400,xMax:2030,yMin:1,yMax:1e15,xTicks:[1400,1500,1600,1700,1800,1900,2000],xFmt:v=>String(v),yFmt:pow10Label,yLabel:'décimales connues'}); }
+
+/* ---------- Démarrage ---------- */
+archUpdate(); pzUpdate(); mcStats(); bfStats(); ckReset();
+mcAdd(2000); bfThrow(200);
+const h0=(location.hash||'').slice(1);
+let start='polygones';
+if(tabs.some(b=>b.dataset.tab===h0)) start=h0;
+else { try{ const s=localStorage.getItem('pi-tab'); if(s&&tabs.some(b=>b.dataset.tab===s)) start=s; }catch(e){} }
+select(start);
+if(h0==='histoire') showView('history'); if(h0==='comparer') showView('compare');
+</script>
+
+</body></html>

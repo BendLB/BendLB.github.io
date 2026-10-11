@@ -1,0 +1,1534 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>L'échelle de l'improbable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: une colonne étroite — simulateur en haut, échelle des probabilités dessous */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --ink:#1b2430; --muted:#5d6876; --line:#d5dbe2;
+  --brass:#b8862b; --brass-soft:#f3e6c8; --tails:#8a94a3; --ok:#2e7d4f; --ko:#b2453a;
+  --r0:#dde3ea; --r1:#e3a62f; --r2:#7a1430;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2c3642;
+  --brass:#e0b154; --brass-soft:#3a3020; --tails:#5f6a78; --ok:#5fbf86; --ko:#e2776b;
+  --r0:#2a333f; --r1:#c98a2a; --r2:#ffd9a0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --surface:#1b222b; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2c3642;
+  --brass:#e0b154; --brass-soft:#3a3020; --tails:#5f6a78; --ok:#5fbf86; --ko:#e2776b;
+  --r0:#2a333f; --r1:#c98a2a; --r2:#ffd9a0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:28px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,7vw,3rem);line-height:1;margin:0;text-wrap:balance;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--brass)}
+h2{font-family:var(--display);font-weight:800;font-size:1.35rem;margin:0 0 4px;text-wrap:balance}
+.lede{color:var(--muted);margin:10px 0 0;max-width:60ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:18px}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.nrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.nbig{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;min-width:2ch;font-variant-numeric:tabular-nums}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--brass)}
+.odds{font-family:var(--mono);font-size:.95rem}
+.coins{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
+.coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:.8rem;border:2px solid var(--line);color:var(--muted);transition:transform .25s}
+.coin.P{background:var(--brass);border-color:var(--brass);color:var(--surface)}
+.coin.F{background:transparent;border-color:var(--tails);color:var(--tails)}
+.coin.flip{transform:rotateY(180deg)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button{font:600 .95rem var(--body);padding:10px 16px;border-radius:10px;border:1px solid var(--brass);background:var(--brass);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+button:disabled{opacity:.5;cursor:default}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{border-top:1px solid var(--line);padding-top:8px}
+.stat b{display:block;font-family:var(--mono);font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.msg{margin:0;min-height:1.5em}
+.msg.ok{color:var(--ok)} .msg.ko{color:var(--ko)}
+.ladder{display:grid;gap:8px}
+.rung{display:grid;grid-template-columns:minmax(0,11rem) 1fr;gap:10px;align-items:center}
+.rung .name{font-size:.88rem;line-height:1.25}
+.rung .name small{display:block;color:var(--muted);font-family:var(--mono);font-size:.75rem}
+.track{height:12px;background:var(--bg);border-radius:6px;position:relative}
+.fill{height:100%;border-radius:6px;background:var(--tails)}
+.rung.loto .fill{background:var(--ko)}
+.rung.you .fill{background:var(--brass)}
+.rung.you .name{font-weight:600}
+.note{color:var(--muted);font-size:.85rem;margin:0}
+.carpet{width:100%}
+.carpet canvas{display:block;width:100%;border-radius:6px;background:var(--bg)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.78rem;color:var(--muted);align-items:center}
+.scale{display:flex;align-items:center;gap:8px}
+.ramp{display:inline-block;width:90px;height:10px;border-radius:3px;background:linear-gradient(90deg,var(--r0),var(--r1),var(--r2))}
+.curve svg{display:block;width:100%;height:auto;overflow:visible}
+.curve .ax{stroke:var(--line);stroke-width:1}
+.curve text{fill:var(--muted);font:11px var(--mono)}
+.curve .obs{fill:none;stroke:var(--ko);stroke-width:2.5;stroke-linejoin:round}
+.curve .obsdot{fill:var(--ko)}
+.curve .th{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:5 4;opacity:.55}
+.curve .area{fill:var(--ko);opacity:.12}
+.sw{display:flex;align-items:center;gap:6px}
+.sw .miss{display:inline-block;width:10px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--tails) 55%,var(--surface))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{font-size:.78rem;padding:5px 10px;border-radius:999px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.chips button[aria-pressed="true"]{background:var(--brass-soft);border-color:var(--brass)}
+.pickrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pickrow input{width:9rem;font:500 1rem var(--mono);padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.cups{display:flex;flex-wrap:wrap;gap:10px 6px;justify-content:center;padding-top:16px}
+.cupbox{position:relative;width:46px;height:56px;border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px}
+.cupbox .ball{position:absolute;left:50%;bottom:2px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--ok);opacity:0}
+.cupbox svg{position:absolute;inset:0;width:100%;height:100%;transition:transform .35s}
+.cupbox .num{position:absolute;inset:auto 0 -2px 0;font:600 .62rem var(--mono);color:var(--surface);text-align:center;transition:transform .35s;pointer-events:none}
+.cupbox.up svg,.cupbox.up .num{transform:translateY(-22px)}
+.cupbox.has .ball{opacity:1}
+.cupbox.chosen svg path{fill:var(--brass)}
+.cupbox:not(.up):hover svg path{fill:var(--brass)}
+.cupbox.empty svg,.cupbox.empty .num{opacity:.35}
+.dense{display:grid;gap:6px}
+.pager{display:grid;gap:8px;margin-bottom:14px}
+.pager canvas{display:block;width:100%;cursor:pointer;border-radius:6px;background:var(--bg)}
+.pnav{display:flex;align-items:center;gap:8px}
+.pnav{flex-wrap:wrap}
+.pnav input{width:7.5rem;font:500 1rem var(--mono);padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tabs button{flex:1 0 auto;white-space:nowrap;background:transparent;color:var(--muted);border:0;border-radius:9px;padding:10px 12px}
+.tabs button[aria-selected="true"]{background:var(--brass);color:var(--surface)}
+.tabpanel{display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
+.wrap,.panel{grid-template-columns:minmax(0,1fr)}
+.tabs{min-width:0}
+.formula mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+.euro{max-width:100%;text-align:left}
+.hand{display:flex;flex-wrap:wrap;gap:8px;min-height:78px}
+.card{width:52px;height:76px;border-radius:7px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;align-content:center;font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1.05;transition:transform .18s}
+.card .s{font-size:1.1rem}
+.card.back{background:repeating-linear-gradient(45deg,var(--brass) 0 4px,var(--brass-soft) 4px 8px);border-color:var(--brass)}
+.card.red{color:var(--ko)}
+.card.good{box-shadow:0 0 0 2px var(--ok)}
+.card.bad{box-shadow:0 0 0 2px var(--ko)}
+.card.flip{transform:scaleX(.1)}
+.dice{display:flex;flex-wrap:wrap;gap:8px}
+.die{width:48px;height:48px}
+.die rect{fill:var(--surface);stroke:var(--line);stroke-width:4}
+.die circle{fill:var(--ink)}
+.die text{fill:var(--ink);font:800 44px var(--display)}
+.euro{display:inline-block;font-size:.8rem;padding:6px 12px;border-radius:999px;background:var(--brass-soft);color:var(--ink);border:1px dashed var(--brass);margin-top:8px}
+.die.six rect{fill:var(--brass-soft);stroke:var(--brass)}
+.die.miss{opacity:.55}
+.stats.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:460px){.stats.four{grid-template-columns:1fr 1fr}}
+.lockbox{display:grid;justify-items:center;padding-top:8px}
+.shackle{width:120px;height:70px;border:14px solid var(--tails);border-bottom:0;border-radius:60px 60px 0 0;transition:transform .5s;transform-origin:85% 100%}
+.lockbox.open .shackle{transform:translateY(-18px) rotate(-14deg);border-color:var(--ok)}
+.lockbody{background:var(--brass);border-radius:14px;padding:14px 12px;max-width:100%}
+.wheels{display:flex;gap:5px}
+.wheel{display:grid;justify-items:center;background:var(--surface);border-radius:8px;padding:2px 0;width:34px}
+.wbtn{background:transparent;border:0;color:var(--muted);padding:4px 8px;font-size:.75rem}
+.wd{font:600 1.35rem var(--mono);color:var(--ink)}
+.lockbox.open .lockbody{background:var(--ok)}
+.calwrap{overflow-x:auto}
+.cal{display:grid;grid-template-columns:2.6rem repeat(31,minmax(7px,1fr));gap:2px;min-width:300px}
+.mlab{font:.62rem var(--mono);color:var(--muted);align-self:center}
+.day{aspect-ratio:1;border-radius:2px;background:var(--bg);font:600 .55rem var(--mono);font-style:normal;color:var(--surface);display:grid;place-items:center}
+.day.none{background:transparent}
+.day.one{background:color-mix(in srgb,var(--tails) 55%,var(--surface))}
+.day.dup{background:var(--ok)}
+.curve .bcurve{fill:none;stroke:var(--brass);stroke-width:2.5}
+.curve .pobs{fill:none;stroke:var(--brass);stroke-width:2.5;stroke-linejoin:round}
+.curve .bdot{fill:var(--ok);stroke:var(--surface);stroke-width:2}
+.formula{color:var(--ink);overflow-x:auto;margin-top:6px;min-height:2.6em}
+.linkbtn{background:none;border:0;padding:0;color:var(--ok);font-family:var(--body);font-size:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.dense canvas{display:block;width:100%;cursor:crosshair;border-radius:6px;background:var(--bg)}
+.sw .win{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ok)}
+.hrow{display:grid;grid-template-columns:5.5rem 1fr;gap:8px;align-items:center;font-family:var(--mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.dots{display:flex;flex-wrap:wrap;gap:3px}
+.d{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--tails)}
+.d.P{background:var(--brass);border-color:var(--brass)}
+.d.F{background:var(--ko);border-color:var(--ko)}
+.d.x{opacity:.3}
+.hrow.win{color:var(--ok);font-weight:600}
+.gap{font-family:var(--mono);font-size:.75rem;color:var(--muted);text-align:center;padding:4px 0;border-block:1px dashed var(--line)}
+.empty{color:var(--muted);font-size:.85rem}
+.fails{display:grid;gap:5px}
+.frow{display:grid;grid-template-columns:7rem 1fr 6.5rem;gap:8px;align-items:center;font-size:.82rem}
+.frow .c{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.frow .fill{background:var(--ko)}
+.frow.win .fill{background:var(--ok)}
+@media (max-width:460px){.rung{grid-template-columns:minmax(0,8.5rem) 1fr}.stats{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.coin{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>L'échelle de <em>l'improbable</em></h1>
+    <p class="lede">Gagner à l'EuroMillions, c'est 1 chance sur 139 838 160. Pour sentir ce que ça veut dire, on part de jeux simples et on monte la difficulté jusqu'à atteindre les mêmes chances.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Jeux">
+    <button role="tab" id="t-coin" aria-controls="tab-coin" aria-selected="true">Pile ou face</button>
+    <button role="tab" id="t-cups" aria-controls="tab-cups" aria-selected="false">Gobelets</button>
+    <button role="tab" id="t-cards" aria-controls="tab-cards" aria-selected="false">As et rois</button>
+    <button role="tab" id="t-dice" aria-controls="tab-dice" aria-selected="false">Dés</button>
+    <button role="tab" id="t-lock" aria-controls="tab-lock" aria-selected="false">Cadenas</button>
+    <button role="tab" id="t-bday" aria-controls="tab-bday" aria-selected="false">Anniversaires</button>
+    <button role="tab" id="t-panini" aria-controls="tab-panini" aria-selected="false">Album Panini</button>
+  </div>
+
+  <div class="tabpanel" id="tab-coin" role="tabpanel" aria-labelledby="t-coin">
+  <section class="panel" aria-labelledby="sim-t">
+    <div>
+      <h2 id="sim-t">Le simulateur</h2>
+      <p class="note">Une tentative = lancer la pièce N fois. Elle réussit seulement si les N lancers donnent pile.</p>
+    </div>
+    <div>
+      <div class="label">Piles d'affilée</div>
+      <div class="nrow">
+        <span class="nbig" id="nOut">3</span>
+        <input type="range" id="n" min="1" max="30" value="3" aria-label="Nombre de piles d'affilée">
+      </div>
+      <div class="odds" id="odds"></div>
+      <button class="euro" id="nEuro">≈ EuroMillions : 27 piles d'affilée (1 sur 134 217 728)</button>
+    </div>
+    <div class="coins" id="coins" aria-live="polite"></div>
+    <div class="btns">
+      <button id="once">Lancer une tentative</button>
+      <button id="hundred" class="ghost">100 tentatives</button>
+      <button id="until" class="ghost">Jusqu'à réussir</button>
+      <button id="reset" class="ghost">Remettre à zéro</button>
+    </div>
+    <p class="msg" id="msg"></p>
+    <div class="stats">
+      <div class="stat"><span class="label">Tentatives</span><b id="sTries">0</b></div>
+      <div class="stat"><span class="label">Réussites</span><b id="sWins">0</b></div>
+      <div class="stat"><span class="label">À 1 tentative/s</span><b id="sTime">—</b></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="hist-t">
+    <div>
+      <h2 id="hist-t">Le tapis des tentatives</h2>
+      <p class="note">Chaque case est une tentative, dans l'ordre, de gauche à droite puis ligne par ligne. La couleur suit l'échelle ci-dessous : gris pour un face dès le début, ambre à mi-chemin, et l'extrémité de l'échelle pour une tentative ratée tout près du but. La case verte est la réussite.</p>
+    </div>
+    <div class="carpet"><canvas id="grid" role="img" aria-label="Grille de toutes les tentatives"></canvas></div>
+    <div class="legend">
+      <span class="scale"><span>face au 1<sup>er</sup> lancer</span><i class="ramp"></i><span id="lgMax">face au dernier</span></span>
+      <span class="sw"><i class="win"></i>réussite</span>
+    </div>
+    <p class="note" id="blk"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="fail-t">
+    <div>
+      <h2 id="fail-t">Où ça casse</h2>
+      <p class="note">Toutes les tentatives, classées selon le lancer qui a donné face. La moitié des échecs arrive dès le premier lancer.</p>
+    </div>
+    <div class="fails" id="fails"></div>
+  </section>
+
+  </div>
+
+  <div class="tabpanel" id="tab-cups" role="tabpanel" aria-labelledby="t-cups" hidden>
+  <section class="panel" aria-labelledby="cup-t">
+    <div>
+      <h2 id="cup-t">Le jeu des gobelets</h2>
+      <p class="note">Une bille est cachée sous un des gobelets. Soulevez les gobelets un par un jusqu'à trouver la bille. Chaque gobelet vide retiré améliore un peu la chance au suivant. Montez jusqu'à 139 838 160 gobelets, les chances de l'EuroMillions.</p>
+    </div>
+    <div>
+      <div class="label">Nombre de gobelets</div>
+      <div class="nrow">
+        <span class="nbig" id="mOut">3</span>
+        <input type="range" id="m" min="0" max="1000" value="0" aria-label="Nombre de gobelets (échelle logarithmique)">
+      </div>
+      <div class="chips" id="presets"></div>
+      <div class="odds" id="mOdds"></div>
+      <button class="euro" id="mEuro">≈ EuroMillions : 139 838 160 gobelets (exactement)</button>
+    </div>
+    <div id="cupsArea"></div>
+    <div class="pickrow">
+      <label class="label" for="pick">Gobelet n°</label>
+      <input type="number" id="pick" min="1" value="1" inputmode="numeric">
+      <button id="lift">Soulever</button>
+      <button id="rand" class="ghost">Au hasard</button>
+      <button id="creset" class="ghost">Nouvelle partie</button>
+    </div>
+    <p class="msg" id="cmsg"></p>
+    <div class="stats">
+      <div class="stat"><span class="label">Gobelets soulevés</span><b id="cTries">0</b></div>
+      <div class="stat"><span class="label">Encore cachés</span><b id="cLeft">—</b></div>
+      <div class="stat"><span class="label">Chance au prochain</span><b id="cNext">—</b></div>
+    </div>
+  </section>
+
+  </div>
+
+  <div class="tabpanel" id="tab-cards" role="tabpanel" aria-labelledby="t-cards" hidden>
+  <section class="panel" aria-labelledby="card-t">
+    <div>
+      <h2 id="card-t">As et rois</h2>
+      <p class="note">On tire des cartes d'un jeu de 52, face cachée, et on les retourne une à une. La donne s'arrête à la première carte qui ne convient pas. Chaque niveau ajoute un as ou un roi à obtenir.</p>
+    </div>
+    <div>
+      <div class="label">Objectif</div>
+      <div class="chips" id="levels"></div>
+      <div class="odds" id="kOdds"></div>
+      <button class="euro" id="kEuro">≈ EuroMillions : 4 as + 3 rois imposés (1 sur 133 784 560)</button>
+      <div class="formula" id="kFormula"></div>
+    </div>
+    <div class="hand" id="hand" aria-live="polite"></div>
+    <p class="note" id="kStep"></p>
+    <div class="btns">
+      <button id="kOne">Retourner une carte</button>
+      <button id="kAll" class="ghost">Tout retourner</button>
+      <button id="kUntil" class="ghost">Distribuer jusqu'à réussir</button>
+      <button id="kNew" class="ghost">Nouvelle donne</button>
+      <button id="kReset" class="ghost">Remettre à zéro</button>
+    </div>
+    <p class="msg" id="kMsg"></p>
+    <div class="stats">
+      <div class="stat"><span class="label">Donnes</span><b id="kTries">0</b></div>
+      <div class="stat"><span class="label">Réussites</span><b id="kWins">0</b></div>
+      <div class="stat"><span class="label">À 1 donne/s</span><b id="kTime">—</b></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="khist-t">
+    <div>
+      <h2 id="khist-t">Le tapis des donnes</h2>
+      <p class="note">Chaque case est une donne, dans l'ordre, de gauche à droite puis ligne par ligne. La couleur indique jusqu'où la donne est allée : gris pour une donne ratée dès la première carte, ambre à mi-chemin, et l'extrémité de l'échelle pour une donne ratée tout près du but.</p>
+    </div>
+    <div class="carpet"><canvas id="kgrid" role="img" aria-label="Grille de toutes les donnes"></canvas></div>
+    <div class="legend">
+      <span class="scale"><span>ratée à la 1<sup>re</sup> carte</span><i class="ramp"></i><span id="kLgMax">ratée à la dernière</span></span>
+      <span class="sw"><i class="win"></i>réussite</span>
+    </div>
+    <p class="note" id="kBlk"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="kfail-t">
+    <div>
+      <h2 id="kfail-t">Où ça casse</h2>
+      <p class="note">Toutes les donnes ratées, classées selon la carte qui ne convenait pas. La plupart s'arrêtent dès la première carte : seules 4 ou 8 cartes sur 52 conviennent.</p>
+    </div>
+    <div class="fails" id="kFails"></div>
+  </section>
+  </div>
+
+  <div class="tabpanel" id="tab-dice" role="tabpanel" aria-labelledby="t-dice" hidden>
+  <section class="panel" aria-labelledby="dice-t">
+    <div>
+      <h2 id="dice-t">Que des six</h2>
+      <p class="note">On lance tous les dés d'un coup. Le lancer gagne seulement si chaque dé tombe sur six. Chaque dé de plus divise la chance par six.</p>
+    </div>
+    <div>
+      <div class="label">Nombre de dés</div>
+      <div class="nrow"><span class="nbig" id="dOut">3</span>
+        <input type="range" id="dN" min="1" max="12" value="3" aria-label="Nombre de dés"></div>
+      <div class="odds" id="dOdds"></div>
+      <button class="euro" id="dEuro">≈ EuroMillions : 10 dés (1 sur 60 466 176, le réglage le plus proche)</button>
+    </div>
+    <div class="dice" id="dice" aria-live="polite"></div>
+    <div class="btns">
+      <button id="dRoll">Lancer</button>
+      <button id="dUntil" class="ghost">Lancer jusqu'à réussir</button>
+      <button id="dReset" class="ghost">Remettre à zéro</button>
+    </div>
+    <p class="msg" id="dMsg"></p>
+    <div class="stats four">
+      <div class="stat"><span class="label">Lancers</span><b id="dTries">0</b></div>
+      <div class="stat"><span class="label">Réussites</span><b id="dWins">0</b></div>
+      <div class="stat"><span class="label">Meilleur lancer</span><b id="dBest">—</b></div>
+      <div class="stat"><span class="label">À 1 lancer/s</span><b id="dTime">—</b></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="dhist-t">
+    <div>
+      <h2 id="dhist-t">Le tapis des lancers</h2>
+      <p class="note">Chaque case est un lancer, dans l'ordre. La couleur indique combien de six sont sortis : gris pour aucun, ambre à mi-chemin, et l'extrémité de l'échelle pour un lancer raté d'un seul dé.</p>
+    </div>
+    <div class="carpet"><canvas id="dgrid" role="img" aria-label="Grille de tous les lancers"></canvas></div>
+    <div class="legend">
+      <span class="scale"><span>aucun six</span><i class="ramp"></i><span id="dLgMax"></span></span>
+      <span class="sw"><i class="win"></i>réussite</span>
+    </div>
+    <p class="note" id="dBlk"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="dfail-t">
+    <div>
+      <h2 id="dfail-t">Où ça casse</h2>
+      <p class="note">Tous les lancers ratés, classés selon le nombre de six obtenus. Avec beaucoup de dés, la plupart des lancers n'en ont qu'un ou deux.</p>
+    </div>
+    <div class="fails" id="dFails"></div>
+  </section>
+  </div>
+
+  <div class="tabpanel" id="tab-lock" role="tabpanel" aria-labelledby="t-lock" hidden>
+  <section class="panel" aria-labelledby="lock-t">
+    <div>
+      <h2 id="lock-t">Le cadenas à code</h2>
+      <p class="note">Un code secret ferme le cadenas. Tournez les molettes et essayez des codes jusqu'à l'ouvrir. Chaque chiffre de plus divise la chance par dix. À 8 chiffres, c'est 1 chance sur 100 millions, presque l'EuroMillions.</p>
+    </div>
+    <div>
+      <div class="label">Longueur du code</div>
+      <div class="nrow"><span class="nbig" id="lOut">4</span>
+        <input type="range" id="lDr" min="1" max="9" value="4" aria-label="Nombre de chiffres du code"></div>
+      <div class="odds" id="lOdds"></div>
+      <button class="euro" id="lEuro">≈ EuroMillions : code à 8 chiffres (1 sur 100 000 000)</button>
+    </div>
+    <div class="lockbox" id="lockBox">
+      <div class="shackle" aria-hidden="true"></div>
+      <div class="lockbody"><div class="wheels" id="wheels"></div></div>
+    </div>
+    <div class="btns">
+      <button id="lTry">Essayer ce code</button>
+      <button id="lRand" class="ghost">Code au hasard</button>
+      <button id="lGive" class="ghost">Abandonner</button>
+      <button id="lNew" class="ghost">Nouveau cadenas</button>
+    </div>
+    <p class="msg" id="lMsg"></p>
+    <div class="stats">
+      <div class="stat"><span class="label">Codes essayés</span><b id="lTries">0</b></div>
+      <div class="stat"><span class="label">Codes restants</span><b id="lLeft">—</b></div>
+      <div class="stat"><span class="label">Chance au prochain</span><b id="lNext">—</b></div>
+    </div>
+  </section>
+  </div>
+
+  <div class="tabpanel" id="tab-bday" role="tabpanel" aria-labelledby="t-bday" hidden>
+  <section class="panel" aria-labelledby="bday-t">
+    <div>
+      <h2 id="bday-t">Le paradoxe des anniversaires</h2>
+      <p class="note">Dans un groupe, quelle est la chance qu'au moins deux personnes soient nées le même jour ? Ici, l'improbable devient vite probable : dès 23 personnes, c'est plus d'une chance sur deux.</p>
+    </div>
+    <div>
+      <div class="label">Taille du groupe</div>
+      <div class="nrow"><span class="nbig" id="bOut">23</span>
+        <input type="range" id="bN" min="2" max="150" value="23" aria-label="Taille du groupe"></div>
+      <div class="odds" id="bOdds"></div>
+      <button class="euro" id="bEuro">≈ EuroMillions : aucun anniversaire commun parmi 111 personnes (1 sur 135 949 526)</button>
+      <div class="formula" id="bFormula"></div>
+    </div>
+    <div id="bCurve"></div>
+    <div class="btns">
+      <button id="bOne">Former un groupe</button>
+      <button id="bHundred" class="ghost">Former 100 groupes</button>
+      <button id="bReset" class="ghost">Remettre à zéro</button>
+    </div>
+    <p class="msg" id="bMsg"></p>
+    <div class="calwrap" id="bCal"></div>
+    <div class="legend">
+      <span class="sw"><i class="miss"></i>une personne née ce jour</span>
+      <span class="sw"><i class="win"></i>anniversaire commun</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="label">Groupes formés</span><b id="bGroups">0</b></div>
+      <div class="stat"><span class="label">Avec un doublon</span><b id="bHits">0</b></div>
+      <div class="stat"><span class="label">Fréquence observée</span><b id="bFreq">—</b></div>
+    </div>
+  </section>
+  </div>
+
+  <div class="tabpanel" id="tab-panini" role="tabpanel" aria-labelledby="t-panini" hidden>
+  <section class="panel" aria-labelledby="pan-t">
+    <div>
+      <h2 id="pan-t">L'album Panini</h2>
+      <p class="note">Chaque vignette achetée est tirée au hasard parmi toutes les cases de l'album. Les premières se collent vite, puis les doubles s'accumulent : il faut bien plus de vignettes que de cases pour finir.</p>
+    </div>
+    <div>
+      <div class="label">Cases dans l'album</div>
+      <div class="nrow"><span class="nbig" id="pOut">640</span>
+        <input type="range" id="pNr" min="10" max="700" value="640" aria-label="Nombre de cases dans l'album"></div>
+      <div class="label">Achat</div>
+      <div class="chips" id="pSizes"></div>
+      <div class="odds" id="pOdds"></div>
+      <div class="formula" id="pFormula"></div>
+      <button class="euro" id="pEuro">≈ EuroMillions : album de 21 cases complété avec 21 vignettes, sans aucun double (1 sur 114 356 611)</button>
+    </div>
+    <div class="carpet"><canvas id="pAlbum" role="img" aria-label="Cases de l'album, remplies ou vides"></canvas></div>
+    <div class="legend">
+      <span class="sw"><i class="miss"></i>case vide</span>
+      <span class="sw"><i style="background:var(--brass)"></i>collée</span>
+      <span class="sw"><i class="win"></i>nouvelle au dernier achat</span>
+    </div>
+    <div class="btns">
+      <button id="pOne">Acheter</button>
+      <button id="pTen" class="ghost">Acheter ×10</button>
+      <button id="pFin" class="ghost">Acheter jusqu'à finir</button>
+      <button id="pRes" class="ghost">Nouvel album</button>
+    </div>
+    <p class="msg" id="pMsg"></p>
+    <div class="stats four">
+      <div class="stat"><span class="label">Achats</span><b id="pPacks">0</b></div>
+      <div class="stat"><span class="label">Collées</span><b id="pHave">0</b></div>
+      <div class="stat"><span class="label">Doubles</span><b id="pDup">0</b></div>
+      <div class="stat"><span class="label">Chance qu'une vignette soit neuve</span><b id="pNext">—</b></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="phist-t">
+    <div>
+      <h2 id="phist-t">Nouvelles vignettes par achat</h2>
+      <p class="note">Chaque case est un achat, dans l'ordre. Plus la couleur est vive, plus l'achat a apporté de vignettes neuves. Au début presque tout est neuf, à la fin presque tout est double.</p>
+    </div>
+    <div class="carpet"><canvas id="pgrid" role="img" aria-label="Grille de tous les achats"></canvas></div>
+    <div class="legend">
+      <span class="scale"><span>aucune neuve</span><i class="ramp"></i><span id="pLgMax">toutes neuves</span></span>
+    </div>
+    <p class="note" id="pBlk"></p>
+    <div id="pRate"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="pcur-t">
+    <div>
+      <h2 id="pcur-t">La longue traîne</h2>
+      <p class="note">Le nombre de vignettes collées selon les achats. La courbe monte vite, puis s'aplatit : les dernières cases coûtent autant que tout le reste.</p>
+    </div>
+    <div id="pCurve"></div>
+  </section>
+  </div>
+
+  <section class="panel" aria-labelledby="lad-t">
+    <div>
+      <h2 id="lad-t">L'échelle des chances</h2>
+      <p class="note">Longueur de barre = nombre de piles d'affilée équivalent. Chaque cran de plus divise la chance par deux.</p>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <p class="note">Grilles simples, rang 1 (jackpot). Lotto belge : 6 numéros sur 45. Loto FDJ : 5 sur 49 + 1 numéro chance sur 10. EuroMillions : 5 sur 50 + 2 étoiles sur 12.</p>
+  </section>
+</div>
+
+<script>window.MathJax={svg:{fontCache:'global'},startup:{typeset:false,pageReady:()=>MathJax.startup.defaultPageReady().then(()=>{ if (window.typesetAll) typesetAll(); })}};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+<script>
+const fmt = n => Math.round(n).toLocaleString('fr-FR');
+var curTab = 'coin';
+const refs = [
+  {name:"Pile une fois", odds:2},
+  {name:"Un 6 au dé", odds:6},
+  {name:"Double six", odds:36},
+  {name:"Carré servi au poker", odds:4165},
+  {name:"Lotto belge", odds:8145060, loto:true},
+  {name:"Loto FDJ", odds:19068840, loto:true},
+  {name:"EuroMillions", odds:139838160, loto:true},
+];
+const $ = id => document.getElementById(id);
+let N = 3, tries = 0, wins = 0, busy = false;
+let failAt = [];        // failAt[i] = échecs au lancer i+1
+// Tapis : une case = blk tentatives ; valeur = meilleure progression (nb de piles avant face), 255 = réussite
+const COLS = 100, MAXC = 6000, WIN = 255;
+let cells = [], blk = 1, reveal = 0, anim = null;
+
+function clearAll(){ tries=0; wins=0; cells=[]; blk=1; reveal=0; failAt=Array(N).fill(0); $('msg').textContent=''; }
+function qge(j){ return j>=N ? 0 : (2**-j - 2**-N)/(1 - 2**-N); } // P(progression ≥ j | échec)
+function sampleMax(m){ // meilleure progression parmi m échecs
+  const u = Math.random();
+  for (let j=0;j<N-1;j++){ const F = Math.exp(m*Math.log1p(-qge(j+1))); if (u<=F) return j; }
+  return N-1;
+}
+function compact(){
+  const n=[]; for (let i=0;i<cells.length;i+=2) n.push(i+1<cells.length ? Math.max(cells[i],cells[i+1]) : cells[i]);
+  cells=n; blk*=2;
+}
+function room(extra){ while (Math.ceil((tries+extra)/blk) > MAXC) compact(); }
+function lastFill(){ return cells.length ? tries-(cells.length-1)*blk : blk; }
+function addOne(v){ // une tentative de progression v (ou WIN)
+  room(1);
+  if (lastFill()<blk) cells[cells.length-1] = Math.max(cells[cells.length-1], v); else cells.push(v);
+  tries++;
+}
+function addFails(m){ // m échecs d'un coup
+  room(m);
+  if (cells.length && lastFill()<blk && m>0){ const t=Math.min(blk-lastFill(),m); cells[cells.length-1]=Math.max(cells[cells.length-1],sampleMax(t)); m-=t; tries+=t; }
+  while (m>0){ const t=Math.min(blk,m); cells.push(sampleMax(t)); m-=t; tries+=t; }
+}
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function drawGrid(){
+  const cv=$('grid'), W=cv.clientWidth||600, dpr=devicePixelRatio||1, cs=W/COLS;
+  const rows=Math.max(12, Math.ceil(cells.length/COLS)), H=rows*cs;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const ok=css('--ok'), gap=cs>4?1:0, top=Math.max(1,N-1);
+  const stops=[css('--r0'),css('--r1'),css('--r2')].map(h=>{h=h.replace('#','');return [0,2,4].map(k=>parseInt(h.slice(k,k+2),16));});
+  const ramp=t=>{ const s=t<.5?0:1, u=t<.5?t*2:(t-.5)*2, a=stops[s], b=stops[s+1];
+    return `rgb(${a.map((c,i)=>Math.round(c+(b[i]-c)*u)).join(',')})`; };
+  const n=Math.min(reveal,cells.length);
+  for (let i=0;i<n;i++){
+    const v=cells[i], x=(i%COLS)*cs, y=Math.floor(i/COLS)*cs;
+    if (v===WIN){ g.globalAlpha=1; g.fillStyle=ok; g.fillRect(x-cs*.4,y-cs*.4,cs*1.8,cs*1.8); continue; }
+    g.globalAlpha=1; g.fillStyle=ramp(N>1?v/top:0); g.fillRect(x,y,cs-gap,cs-gap);
+  }
+  g.globalAlpha=1;
+  $('lgMax').textContent = N>1 ? `face au ${N}ᵉ lancer` : 'face';
+  $('blk').textContent = !cells.length ? 'Le tapis se remplit au fil des tentatives.' :
+    blk===1 ? `1 case = 1 tentative · ${fmt(tries)} tentatives affichées.` :
+    `1 case = ${fmt(blk)} tentatives (on garde la couleur de la meilleure) · ${fmt(tries)} tentatives au total.`;
+}
+function animateFrom(start){
+  cancelAnimationFrame(anim);
+  const end=cells.length, t0=performance.now(), dur=reduce?0:Math.min(1800, 200+(end-start)*.6);
+  const step=t=>{ const k=dur?Math.min(1,(t-t0)/dur):1; reveal=Math.round(start+(end-start)*k); drawGrid(); if(k<1) anim=requestAnimationFrame(step); };
+  anim=requestAnimationFrame(step);
+}
+function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function binom(n,p){
+  if (n<60){ let c=0; for(let i=0;i<n;i++) if(Math.random()<p) c++; return c; }
+  return Math.min(n,Math.max(0,Math.round(n*p+Math.sqrt(n*p*(1-p))*gauss())));
+}
+function failIndex(res){ return res.indexOf('F'); }
+function renderFails(){
+  const lost = failAt.reduce((a,b)=>a+b,0);
+  if (!lost){ $('fails').innerHTML='<p class="empty">La courbe se dessine au fil des tentatives.</p>'; return; }
+  const W=640, H=240, L=56, R=14, T=14, B=34, pw=W-L-R, ph=H-T-B;
+  const th = failAt.map((_,i)=>lost*2**-(i+1)/(1-2**-N));
+  const max = Math.max(...failAt, ...th);
+  const x = i => L + (N>1 ? i/(N-1)*pw : pw/2);
+  const y = v => T + ph - v/max*ph;
+  const pts = failAt.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`);
+  const thp = th.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(' ');
+  const yt = [0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(max*f)}" y2="${y(max*f)}" opacity="${f?0.5:1}"/>
+    <text x="${L-6}" y="${y(max*f)+4}" text-anchor="end">${fmt(max*f)}</text>`).join('');
+  const step = Math.ceil(N/10);
+  const xt = failAt.map((_,i)=> (i%step===0||i===N-1) ? `<text x="${x(i)}" y="${H-B+16}" text-anchor="middle">${i+1}</text>`:'').join('');
+  const dots = N<=30 ? failAt.map((c,i)=>`<circle class="obsdot" cx="${x(i)}" cy="${y(c)}" r="3.5"/>`).join('') : '';
+  $('fails').innerHTML = `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Nombre d'échecs selon le lancer qui a donné face">
+    ${yt}
+    <polygon class="area" points="${x(0)},${y(0)} ${pts.join(' ')} ${x(N-1)},${y(0)}"/>
+    <polyline class="th" points="${thp}"/>
+    <polyline class="obs" points="${pts.join(' ')}"/>
+    ${dots}${xt}
+    <text x="${L+pw/2}" y="${H-2}" text-anchor="middle">lancer où tombe le face</text>
+  </svg></div>
+  <div class="legend"><span class="sw"><i style="background:var(--ko)"></i>échecs observés (${fmt(lost)})</span>
+  <span class="sw"><i style="background:var(--ink);opacity:.55;height:2px"></i>attendu en théorie</span>
+  <span class="sw"><i class="win"></i>réussites : ${fmt(wins)}</span></div>`;
+}
+
+function duration(sec){
+  if (sec < 60) return fmt(sec)+" s";
+  if (sec < 3600) return fmt(sec/60)+" min";
+  if (sec < 86400) return fmt(sec/3600)+" h";
+  if (sec < 86400*365) return fmt(sec/86400)+" jours";
+  return fmt(sec/(86400*365.25))+" ans";
+}
+function renderCoins(res){
+  const box = $('coins'); box.innerHTML = '';
+  for (let i=0;i<N;i++){
+    const c = document.createElement('div');
+    c.className = 'coin' + (res ? ' '+res[i] : '');
+    c.textContent = res ? res[i] : '?';
+    box.appendChild(c);
+  }
+}
+function fmtBig(bits){
+  const l=bits*Math.LOG10E*Math.LN2;
+  if (l<15) return fmt(10**l);
+  const e=Math.floor(l), m=(10**(l-e)).toFixed(1).replace('.',',');
+  const sup=String(e).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+  return `${m} × 10${sup}`;
+}
+function renderLadder(){
+  const X = {coin:{name:`${N} pile${N>1?'s':''} d'affilée`, odds:2**N}};
+  if (typeof M==='number') X.cups={name:`${fmt(M)} gobelets`, odds:M};
+  if (typeof LEVELS!=='undefined' && LEVELS) X.cards={name:LEVELS[lvl].lab, odds:LEVELS[lvl].odds};
+  if (typeof dN==='number') X.dice={name:`${dN} six avec ${dN} dé${dN>1?'s':''}`, odds:6**dN};
+  if (typeof lD==='number') X.lock={name:`Code à ${lD} chiffre${lD>1?'s':''}`, odds:10**lD};
+  if (typeof bN==='number' && typeof bProb==='function') X.bday = bProb(bN)<0.5 ? {name:`Anniversaire commun parmi ${bN} personnes`, odds:1/bProb(bN)} : {name:`Aucun anniversaire commun parmi ${bN} personnes`, odds:1/bQ(bN)};
+  if (typeof pN==='number' && typeof pNoDupBits==='function') X.panini={name:`Album de ${fmt(pN)} cases complété sans aucun double`, bits:pNoDupBits(pN)};
+  const rows = refs.map(r=>({...r}));
+  if (X[curTab]) rows.push({...X[curTab], you:true});
+  rows.forEach(r=>{ if (r.bits==null) r.bits=Math.log2(r.odds); });
+  rows.sort((a,b)=>a.bits-b.bits);
+  const max = Math.min(40, Math.max(...rows.map(r=>r.bits)));
+  $('ladder').innerHTML = rows.map(r=>{
+    const lab = r.bits<3.33 ? (2**r.bits).toLocaleString('fr-FR',{maximumFractionDigits:2}) : fmtBig(r.bits);
+    return `<div class="rung ${r.loto?'loto':''} ${r.you?'you':''}">
+      <div class="name">${r.name}<small>1 sur ${lab} · ≈ ${r.bits<100?r.bits.toFixed(1).replace('.',','):fmt(r.bits)} piles</small></div>
+      <div class="track"><div class="fill" style="width:${Math.min(100,Math.max(2,r.bits/max*100))}%"></div></div></div>`;
+  }).join('');
+}
+function update(){
+  $('nOut').textContent = N;
+  $('odds').textContent = `Chance par tentative : 1 sur ${fmt(2**N)}`;
+  $('sTries').textContent = fmt(tries);
+  $('sWins').textContent = fmt(wins);
+  $('sTime').textContent = tries ? duration(tries) : '—';
+  renderLadder(); renderFails();
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+async function show(res){
+  renderCoins(null);
+  const els = [...$('coins').children];
+  const step = reduce ? 0 : Math.max(20, 300/N);
+  for (let i=0;i<N;i++){
+    els[i].classList.add('flip'); await sleep(step);
+    els[i].classList.remove('flip');
+    els[i].className = 'coin '+res[i]; els[i].textContent = res[i];
+    if (res[i]==='F'){ for (let j=i+1;j<N;j++){ els[j].style.opacity=.35; } break; }
+  }
+}
+function lose(){ // une tentative ratée, tirée au hasard sachant l'échec
+  const res = [];
+  for (let i=0;i<N;i++){ const p = Math.random()<.5 ? 'P':'F'; res.push(p); if (p==='F'){ while(res.length<N) res.push('F'); return res; } }
+  return lose(); // tout pile par hasard : on retire
+}
+async function once(){
+  if (busy) return; busy = true; setBtns();
+  const res = Array.from({length:N},()=>Math.random()<.5?'P':'F');
+  const ok = res.every(x=>x==='P');
+  const before = cells.length ? cells.length-1 : 0;
+  if (ok) wins++; else failAt[failIndex(res)]++;
+  addOne(ok ? WIN : failIndex(res));
+  animateFrom(Math.min(before, Math.floor((tries-1)/blk)));
+  await show(res);
+  $('msg').className = 'msg '+(ok?'ok':'ko');
+  $('msg').textContent = ok ? `Gagné ! ${N} pile${N>1?'s':''} d'affilée.` :
+    `Raté, face au lancer ${res.indexOf('F')+1}.`;
+  update(); busy = false; setBtns();
+}
+async function until(){
+  if (busy) return; busy = true; setBtns();
+  const p = 2**-N;
+  const k = p>=1 ? 1 : 1 + Math.floor(Math.log(1-Math.random()) / Math.log1p(-p));
+  // répartition des k-1 échecs selon le lancer fautif
+  let rem = k-1;
+  for (let i=0;i<N && rem>0;i++){
+    const c = i===N-1 ? rem : binom(rem, .5);
+    failAt[i]+=c; rem-=c;
+  }
+  const prev = tries;
+  addFails(k-1);
+  addOne(WIN); wins++;
+  animateFrom(Math.floor(prev/blk));
+  if (k>1){ update(); await show(lose()); await sleep(reduce?0:250); }
+  await show(Array(N).fill('P'));
+  $('msg').className = 'msg ok';
+  $('msg').textContent = `Réussi après ${fmt(k)} tentative${k>1?'s':''} (${fmt(k*N)} lancers). En moyenne il en faut ${fmt(2**N)}.` +
+    (k>1 ? ` À une tentative par seconde : ${duration(k)}.` : '');
+  update(); busy = false; setBtns();
+}
+function setBtns(){ ['once','hundred','until','reset'].forEach(id=>$(id).disabled=busy); }
+$('n').addEventListener('input', e=>{ N=+e.target.value; clearAll(); renderCoins(null); update(); drawGrid(); });
+$('once').addEventListener('click', once);
+$('nEuro').addEventListener('click', ()=>{ if (busy) return; $('n').value=27; $('n').dispatchEvent(new Event('input')); });
+$('until').addEventListener('click', until);
+$('reset').addEventListener('click', ()=>{ clearAll(); renderCoins(null); update(); drawGrid(); });
+$('hundred').addEventListener('click', ()=>{
+  if (busy) return;
+  const prev = tries; let w=0;
+  for (let t=0;t<100;t++){
+    let j=0; while (j<N && Math.random()<.5) j++;
+    if (j===N){ addOne(WIN); wins++; w++; } else { addOne(j); failAt[j]++; }
+  }
+  animateFrom(Math.floor(prev/blk));
+  $('msg').className='msg '+(w?'ok':'ko');
+  $('msg').textContent = w ? `100 tentatives : ${w} réussite${w>1?'s':''}.` : '100 tentatives : aucune réussite.';
+  update();
+});
+addEventListener('resize', ()=>{ reveal=cells.length; drawGrid(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawGrid);
+new MutationObserver(drawGrid).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+clearAll(); renderCoins(null); update(); drawGrid();
+
+/* ---------- Jeu des gobelets ---------- */
+const EURO = 139838160, MMIN = 2;
+const presets = [
+  {lab:'3', m:3}, {lab:'6 · dé', m:6}, {lab:'36 · double six', m:36}, {lab:'1 000', m:1000},
+  {lab:'Lotto belge', m:8145060}, {lab:'Loto FDJ', m:19068840}, {lab:'EuroMillions', m:EURO}];
+var M = 3;
+let ball = 0, lifted = new Set(), pageCount = new Map(), found = false, lastPick = -1;
+const DOM_MAX = 60, PS = 10000;
+let page = 0;
+const nPages = () => Math.ceil(M/PS);
+const sliderToM = t => Math.max(MMIN, Math.round(Math.exp(Math.log(MMIN)+t/1000*(Math.log(EURO)-Math.log(MMIN)))));
+const mToSlider = m => Math.round((Math.log(m)-Math.log(MMIN))/(Math.log(EURO)-Math.log(MMIN))*1000);
+function km(m){ const d=m*0.08; return d<1000 ? fmt(d)+' m' : fmt(d/1000)+' km'; }
+
+function newRound(){
+  ball = Math.floor(Math.random()*M); lifted = new Set(); pageCount = new Map();
+  found = false; lastPick = -1; $('cmsg').textContent = '';
+}
+function renderPresets(){
+  $('presets').innerHTML = presets.map((p,i)=>`<button data-i="${i}" aria-pressed="${p.m===M}">${p.lab}</button>`).join('');
+}
+function renderCups(){
+  const area = $('cupsArea');
+  if (M <= DOM_MAX){
+    area.innerHTML = '<div class="cups">' + Array.from({length:M},(_,i)=>{
+      const cls = ['cupbox'];
+      if (lifted.has(i)) cls.push('up', i===ball ? 'has' : 'empty');
+      if (i===lastPick) cls.push('chosen');
+      return `<button class="${cls.join(' ')}" data-i="${i}" aria-label="Gobelet ${i+1}${lifted.has(i)?(i===ball?', bille':', vide'):''}">
+        <span class="ball"></span>
+        <svg viewBox="0 0 46 56"><path d="M9 4h28l6 48H3z" fill="var(--tails)"/><path d="M3 52h40" stroke="var(--line)" stroke-width="2"/></svg>
+        <span class="num">${i+1}</span></button>`;
+    }).join('') + '</div>';
+    return;
+  }
+  const pages = nPages();
+  page = Math.min(page, pages-1);
+  area.innerHTML = (pages>1 ? `
+    <div class="pager">
+      <div class="label">Vue d'ensemble · ${fmt(pages)} pages de ${fmt(PS)} gobelets</div>
+      <canvas id="ovcv" aria-label="Vue d'ensemble des pages, touchez-en une"></canvas>
+      <div class="pnav">
+        <label class="label" for="pg">Aller à la page</label>
+        <input type="number" id="pg" min="1" max="${pages}" value="${page+1}" inputmode="numeric">
+        <span class="note">/ ${fmt(pages)}</span>
+      </div>
+      <p class="note" id="pinfo"></p>
+    </div>` : '') + `
+    <div class="dense"><canvas id="cupcv" aria-label="Gobelets de la page, touchez-en un"></canvas>
+    <p class="note">Touchez un point pour soulever ce gobelet. Les cercles vides sont déjà soulevés.${pages>1?` Alignés, les ${fmt(M)} gobelets s'étendraient sur environ <b>${km(M)}</b>.`:''}</p></div>`;
+  drawDense();
+}
+function setPage(p){
+  page = Math.max(0, Math.min(nPages()-1, p));
+  if ($('pg')) $('pg').value = page+1;
+  drawDense();
+}
+function denseGeom(){
+  const cv=$('cupcv'), W=cv.clientWidth||600, start=page*PS, count=Math.min(PS, M-start);
+  const cols=Math.min(100,Math.ceil(Math.sqrt(count*2.2))), cs=W/cols, rows=Math.ceil(count/cols);
+  return {cv,W,cols,cs,rows,start,count};
+}
+function ovGeom(){
+  const cv=$('ovcv'), W=cv.clientWidth||600, pages=nPages(), cols=Math.min(140,Math.ceil(Math.sqrt(pages*2.2))), cs=W/cols;
+  return {cv,W,cols,cs,rows:Math.ceil(pages/cols),pages};
+}
+function drawOverview(){
+  if (!$('ovcv')) return;
+  const {cv,W,cols,cs,rows,pages}=ovGeom(), dpr=devicePixelRatio||1, H=rows*cs;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const gap=cs>4?1:0;
+  g.fillStyle=css('--tails'); g.globalAlpha=.35;
+  for(let i=0;i<pages;i++) g.fillRect((i%cols)*cs,Math.floor(i/cols)*cs,cs-gap,cs-gap);
+  const mark=(i,col,grow)=>{ const x=(i%cols)*cs, y=Math.floor(i/cols)*cs, e=Math.max(0,(grow-cs)/2); g.fillStyle=col; g.fillRect(x-e,y-e,Math.max(cs,grow),Math.max(cs,grow)); };
+  g.globalAlpha=1;
+  for (const [p] of pageCount) mark(p, css('--brass'), 5);
+  if (found) mark(Math.floor(ball/PS), css('--ok'), 9);
+  const x=(page%cols)*cs, y=Math.floor(page/cols)*cs, s=Math.max(cs,8), e=(s-cs)/2;
+  g.strokeStyle=css('--ink'); g.lineWidth=2; g.strokeRect(x-e-1,y-e-1,s+2,s+2);
+  const a=page*PS+1, b=Math.min(M,(page+1)*PS), here=pageCount.get(page)||0;
+  $('pinfo').innerHTML = `Page <b>${fmt(page+1)}</b> sur ${fmt(pages)} · gobelets n° ${fmt(a)} à ${fmt(b)}` +
+    (here ? ` · ${fmt(here)} soulevé${here>1?'s':''} ici` : '') +
+    `. Les pages en ambre contiennent des gobelets déjà soulevés. Regarder chaque page une seconde prendrait ${duration(pages)}.`;
+}
+function drawDense(){
+  drawOverview();
+  const {cv,W,cols,cs,rows,start,count}=denseGeom(), dpr=devicePixelRatio||1, H=rows*cs;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const r=Math.max(.8,cs*.38), tails=css('--tails'), brass=css('--brass'), ok=css('--ok');
+  for(let k=0;k<count;k++){
+    const i=start+k, x=(k%cols+.5)*cs, y=(Math.floor(k/cols)+.5)*cs;
+    g.beginPath();
+    if (found && i===ball){ g.globalAlpha=1; g.fillStyle=ok; g.arc(x,y,Math.max(r*1.8,4),0,7); g.fill(); continue; }
+    if (lifted.has(i)){
+      g.globalAlpha=1; g.strokeStyle = i===lastPick ? brass : tails; g.lineWidth = i===lastPick ? 2 : 1;
+      g.arc(x,y,i===lastPick?Math.max(r*1.6,3):r*.85,0,7); g.stroke(); continue;
+    }
+    g.globalAlpha=.6; g.fillStyle=tails; g.arc(x,y,r,0,7); g.fill();
+  }
+  g.globalAlpha=1;
+}
+function cUpdate(){
+  $('mOut').textContent = fmt(M);
+  const bits = Math.log2(M), left = M-lifted.size;
+  $('mOdds').textContent = `Chance au premier essai : 1 sur ${fmt(M)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
+  $('pick').max = M;
+  $('cTries').textContent = fmt(lifted.size);
+  $('cLeft').textContent = found ? '—' : fmt(left);
+  $('cNext').textContent = found ? 'trouvée' : `1 sur ${fmt(left)}`;
+  renderLadder();
+}
+function setM(m, fromSlider){
+  M = Math.max(MMIN, Math.min(EURO, Math.round(m)));
+  if (!fromSlider) $('m').value = mToSlider(M);
+  if (+$('pick').value > M) $('pick').value = M;
+  page = 0;
+  newRound(); renderPresets(); renderCups(); cUpdate();
+}
+function lift(i){
+  const msg = $('cmsg');
+  if (found){ msg.className='msg ok'; msg.textContent='La bille est déjà trouvée. Lancez une nouvelle partie pour rejouer.'; return; }
+  if (lifted.has(i)){ msg.className='msg'; msg.textContent=`Le gobelet n° ${fmt(i+1)} est déjà soulevé : il est vide.`; return; }
+  lifted.add(i); lastPick = i;
+  const p = Math.floor(i/PS); pageCount.set(p, (pageCount.get(p)||0)+1);
+  $('pick').value = i+1;
+  if (i===ball){
+    found = true;
+    msg.className = 'msg ok';
+    msg.textContent = `Trouvée sous le gobelet n° ${fmt(i+1)}, au ${lifted.size===1?'premier essai':fmt(lifted.size)+'ᵉ essai'} !`;
+  } else {
+    const left = M-lifted.size;
+    msg.className = 'msg ko';
+    msg.textContent = `Vide. Il reste ${fmt(left)} gobelet${left>1?'s':''} : 1 chance sur ${fmt(left)} au prochain essai.`;
+  }
+  if (M<=DOM_MAX) renderCups(); else setPage(p);
+  cUpdate();
+}
+function randomFree(){
+  if (lifted.size < M/2){ let i; do { i=Math.floor(Math.random()*M); } while (lifted.has(i)); return i; }
+  const free=[]; for (let i=0;i<M;i++) if (!lifted.has(i)) free.push(i);
+  return free[Math.floor(Math.random()*free.length)];
+}
+$('mEuro').addEventListener('click', ()=>setM(EURO));
+$('m').addEventListener('input', e=>setM(sliderToM(+e.target.value), true));
+$('presets').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) setM(presets[+b.dataset.i].m); });
+$('cupsArea').addEventListener('click', e=>{
+  const b = e.target.closest('.cupbox'); if (b) return lift(+b.dataset.i);
+  if (e.target.id==='cupcv'){
+    const {cv,cols,cs,start,count}=denseGeom(), r=cv.getBoundingClientRect();
+    const k = Math.floor((e.clientY-r.top)/cs)*cols + Math.floor((e.clientX-r.left)/cs);
+    if (k>=0 && k<count) lift(start+k);
+  }
+  if (e.target.id==='ovcv'){
+    const {cv,cols,cs,pages}=ovGeom(), r=cv.getBoundingClientRect();
+    const p = Math.floor((e.clientY-r.top)/cs)*cols + Math.floor((e.clientX-r.left)/cs);
+    if (p>=0 && p<pages) setPage(p);
+  }
+});
+$('cupsArea').addEventListener('change', e=>{ if (e.target.id==='pg'){ const v=Math.round(+e.target.value); if (v>=1) setPage(v-1); else e.target.value=page+1; } });
+$('lift').addEventListener('click', ()=>{
+  const v = Math.round(+$('pick').value);
+  if (!(v>=1 && v<=M)){ $('cmsg').className='msg ko'; $('cmsg').textContent=`Choisissez un numéro entre 1 et ${fmt(M)}.`; return; }
+  lift(v-1);
+});
+$('rand').addEventListener('click', ()=>{ if (found) return lift(0); lift(randomFree()); });
+$('creset').addEventListener('click', ()=>{ newRound(); renderCups(); cUpdate(); });
+const redrawCups = ()=>{ if (M>DOM_MAX) drawDense(); };
+addEventListener('resize', redrawCups);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawCups);
+new MutationObserver(redrawCups).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+setM(3);
+
+/* ---------- Historique As et rois ---------- */
+function kS(j){ // chance que les j premières cartes conviennent toutes
+  const L=LEVELS[lvl]; let g=0;
+  for (let x=0;x<=Math.min(j,L.a);x++){ const y=j-x; if (y<=L.r) g+=C(4,x)*C(L.kp,y); }
+  return g/C(52,j);
+}
+let kCells=[], kBlk=1, kN=0, kReveal=0, kAnim=null, kFailAt=[];
+function kClearHist(){ kCells=[]; kBlk=1; kN=0; kReveal=0; kFailAt=Array(LEVELS[lvl].k).fill(0); }
+function kCompact(){ const c=kCells,n=[]; for(let i=0;i<c.length;i+=2) n.push(i+1<c.length?Math.max(c[i],c[i+1]):c[i]); kCells=n; kBlk*=2; }
+function kRoom(x){ while(Math.ceil((kN+x)/kBlk)>MAXC) kCompact(); }
+function kFill(){ return kCells.length ? kN-(kCells.length-1)*kBlk : kBlk; }
+function kAddOne(v){ kRoom(1); const c=kCells; if (kFill()<kBlk) c[c.length-1]=Math.max(c[c.length-1],v); else c.push(v); kN++; }
+function kSampleMax(m){ // meilleure progression parmi m donnes ratées
+  const k=LEVELS[lvl].k, Sk=kS(k), u=Math.random();
+  for (let j=0;j<k-1;j++){ const q=(kS(j+1)-Sk)/(1-Sk); if (u<=Math.exp(m*Math.log1p(-q))) return j; }
+  return k-1;
+}
+function kAddFails(m){
+  kRoom(m);
+  if (kCells.length && kFill()<kBlk && m>0){ const t=Math.min(kBlk-kFill(),m); kCells[kCells.length-1]=Math.max(kCells[kCells.length-1],kSampleMax(t)); m-=t; kN+=t; }
+  while (m>0){ const t=Math.min(kBlk,m); kCells.push(kSampleMax(t)); m-=t; kN+=t; }
+}
+function kSplitFails(m){ // répartit m échecs selon la carte fautive
+  const k=LEVELS[lvl].k, Sk=kS(k);
+  for (let j=0;j<k && m>0;j++){
+    const h = j===k-1 ? 1 : (kS(j)-kS(j+1))/(kS(j)-Sk);
+    const c = binom(m, Math.min(1,Math.max(0,h)));
+    kFailAt[j]+=c; m-=c;
+  }
+}
+function kDrawGrid(){
+  const cv=$('kgrid'), W=cv.clientWidth; if (!W) return;
+  const dpr=devicePixelRatio||1, cs=W/COLS, rows=Math.max(8,Math.ceil(kCells.length/COLS)), H=rows*cs;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const stops=[css('--r0'),css('--r1'),css('--r2')].map(h=>{h=h.replace('#','');return [0,2,4].map(k=>parseInt(h.slice(k,k+2),16));});
+  const ramp=t=>{ const s=t<.5?0:1, u=t<.5?t*2:(t-.5)*2, a=stops[s], b=stops[s+1]; return `rgb(${a.map((c,i)=>Math.round(c+(b[i]-c)*u)).join(',')})`; };
+  const ok=css('--ok'), gap=cs>4?1:0, top=Math.max(1,LEVELS[lvl].k-1), n=Math.min(kReveal,kCells.length);
+  for (let i=0;i<n;i++){
+    const v=kCells[i], x=(i%COLS)*cs, y=Math.floor(i/COLS)*cs;
+    if (v===WIN){ g.fillStyle=ok; g.fillRect(x-cs*.4,y-cs*.4,cs*1.8,cs*1.8); continue; }
+    g.fillStyle=ramp(v/top); g.fillRect(x,y,cs-gap,cs-gap);
+  }
+  $('kLgMax').textContent = `ratée à la ${LEVELS[lvl].k}ᵉ carte`;
+  $('kBlk').textContent = !kCells.length ? 'Le tapis se remplit au fil des donnes.' :
+    kBlk===1 ? `1 case = 1 donne · ${fmt(kN)} donnes affichées.` :
+    `1 case = ${fmt(kBlk)} donnes (on garde la couleur de la meilleure) · ${fmt(kN)} donnes au total.`;
+}
+function kAnimateFrom(start){
+  cancelAnimationFrame(kAnim);
+  const end=kCells.length, t0=performance.now(), dur=reduce?0:Math.min(1800,200+(end-start)*.6);
+  const step=t=>{ const q=dur?Math.min(1,(t-t0)/dur):1; kReveal=Math.round(start+(end-start)*q); kDrawGrid(); if(q<1) kAnim=requestAnimationFrame(step); };
+  kAnim=requestAnimationFrame(step);
+}
+function kRenderFails(){
+  const k=LEVELS[lvl].k, lost=kFailAt.reduce((a,b)=>a+b,0), Sk=kS(k);
+  if (!lost){ $('kFails').innerHTML='<p class="empty">La courbe se dessine au fil des donnes.</p>'; return; }
+  const W=640,H=240,L=56,R=14,T=14,B=34,pw=W-L-R,ph=H-T-B;
+  const th=kFailAt.map((_,j)=>lost*(kS(j)-kS(j+1))/(1-Sk));
+  const max=Math.max(...kFailAt,...th);
+  const x=i=>L+(k>1?i/(k-1)*pw:pw/2), y=v=>T+ph-v/max*ph;
+  const pts=kFailAt.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`);
+  const thp=th.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(' ');
+  const yt=[0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(max*f)}" y2="${y(max*f)}" opacity="${f?0.5:1}"/><text x="${L-6}" y="${y(max*f)+4}" text-anchor="end">${fmt(max*f)}</text>`).join('');
+  const xt=kFailAt.map((_,i)=>`<text x="${x(i)}" y="${H-B+16}" text-anchor="middle">${i+1}</text>`).join('');
+  const dots=kFailAt.map((c,i)=>`<circle class="obsdot" cx="${x(i)}" cy="${y(c)}" r="3.5"/>`).join('');
+  $('kFails').innerHTML = `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Nombre de donnes ratées selon la carte fautive">
+    ${yt}<polygon class="area" points="${x(0)},${y(0)} ${pts.join(' ')} ${x(k-1)},${y(0)}"/>
+    <polyline class="th" points="${thp}"/><polyline class="obs" points="${pts.join(' ')}"/>${dots}${xt}
+    <text x="${L+pw/2}" y="${H-2}" text-anchor="middle">carte où la donne s'arrête</text></svg></div>
+  <div class="legend"><span class="sw"><i style="background:var(--ko)"></i>donnes ratées (${fmt(lost)})</span>
+  <span class="sw"><i style="background:var(--ink);opacity:.55;height:2px"></i>attendu en théorie</span>
+  <span class="sw"><i class="win"></i>réussites : ${fmt(kWins)}</span></div>`;
+}
+function kHistUpdate(){ kRenderFails(); }
+addEventListener('resize', ()=>{ kReveal=kCells.length; kDrawGrid(); });
+
+/* ---------- As et rois ---------- */
+function C(n,k){ let r=1; for(let i=1;i<=k;i++) r=r*(n-k+i)/i; return Math.round(r); }
+var LEVELS = [[2,0],[3,0],[4,0],[4,1],[4,2],[4,3],[4,3,['♠','♥','♦']],[4,4]].map(([a,r,suits])=>{
+  const k=a+r, kp=suits?suits.length:4, odds=Math.round(C(52,k)/(C(4,a)*C(kp,r)));
+  return {a, r, k, kp, suits, odds, lab: suits ? `4 as + R${suits.join(' R')}` : r ? `4 as + ${r} roi${r>1?'s':''}` : `${a} as`};
+});
+var lvl = 2;
+const SUITS=['♠','♥','♦','♣'], RANKS=['A','2','3','4','5','6','7','8','9','10','V','D','R'];
+const RNAME={A:'un as',R:'un roi',D:'une dame',V:'un valet'};
+let deck=[], pos=0, gotA=0, gotK=0, kState='idle', kTries=0, kWins=0, kBusy=false, shownCards=[];
+
+function shuffle(){
+  deck=[]; for (const s of SUITS) for (const r of RANKS) deck.push({r,s});
+  for (let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+}
+function newDeal(){ shuffle(); pos=0; gotA=0; gotK=0; shownCards=[]; kState='playing'; renderHand(); kStep(); }
+function isGood(c){ const L=LEVELS[lvl]; return (c.r==='A'&&gotA<L.a)||(c.r==='R'&&gotK<L.r&&(!L.suits||L.suits.includes(c.s))); }
+function favourable(){ const L=LEVELS[lvl]; return (gotA<L.a?4-gotA:0)+(gotK<L.r?L.kp-gotK:0); }
+function cardHTML(c, cls){
+  const red = c.s==='♥'||c.s==='♦';
+  return `<div class="card ${red?'red':''} ${cls}" aria-label="${c.r} ${c.s}"><span>${c.r}</span><span class="s">${c.s}</span></div>`;
+}
+function renderHand(){
+  const L=LEVELS[lvl];
+  $('hand').innerHTML = Array.from({length:L.k},(_,i)=> i<shownCards.length
+    ? cardHTML(shownCards[i].c, shownCards[i].good?'good':'bad')
+    : '<div class="card back" aria-label="Carte cachée"></div>').join('');
+}
+function kStep(){
+  const L=LEVELS[lvl], f=favourable(), left=52-pos;
+  $('kStep').textContent = kState==='playing'
+    ? `Carte ${pos+1} sur ${L.k} : ${f} carte${f>1?'s':''} favorable${f>1?'s':''} parmi les ${left} restantes.`
+    : '';
+}
+function kEnd(win, c){
+  kState='done'; kTries++; if (win) kWins++;
+  const prev=kN;
+  if (win) kAddOne(WIN); else { kAddOne(pos-1); kFailAt[pos-1]++; }
+  kAnimateFrom(Math.floor(prev/kBlk));
+  const m=$('kMsg');
+  m.className='msg '+(win?'ok':'ko');
+  m.textContent = win ? `Gagné : ${LEVELS[lvl].lab} !` :
+    `Raté à la carte ${pos} : ${RNAME[c.r]||'un '+c.r} ne convient pas.`;
+  kStep(); kUpdate();
+}
+async function flipOne(){
+  if (kState!=='playing'){ newDeal(); $('kMsg').textContent=''; }
+  const L=LEVELS[lvl], c=deck[pos], good=isGood(c);
+  if (good){ if (c.r==='A') gotA++; else gotK++; }
+  shownCards.push({c,good}); pos++;
+  const el=$('hand').children[pos-1];
+  if (el && !reduce){ el.classList.add('flip'); await sleep(140); }
+  renderHand();
+  if (!good) return kEnd(false, c);
+  if (pos===L.k) return kEnd(true);
+  kStep();
+}
+async function flipAll(){
+  if (kBusy) return; kBusy=true; kBtns();
+  if (kState!=='playing'){ newDeal(); $('kMsg').textContent=''; }
+  while (kState==='playing'){ await flipOne(); if (kState==='playing') await sleep(reduce?0:260); }
+  kBusy=false; kBtns();
+}
+function kUntil(){
+  if (kBusy) return;
+  const L=LEVELS[lvl], p=1/L.odds;
+  const k = 1 + Math.floor(Math.log(1-Math.random())/Math.log1p(-p));
+  const prev=kN; kSplitFails(k-1); kAddFails(k-1); kAddOne(WIN);
+  kTries += k; kWins++;
+  kAnimateFrom(Math.floor(prev/kBlk));
+  const pickSuits=n=>{ const s=[...SUITS].sort(()=>Math.random()-.5); return s.slice(0,n); };
+  const hand=[...pickSuits(L.a).map(s=>({r:'A',s})), ...(L.suits?[...L.suits]:pickSuits(L.r)).map(s=>({r:'R',s}))].sort(()=>Math.random()-.5);
+  shownCards=hand.map(c=>({c,good:true})); pos=L.k; kState='done';
+  renderHand(); kStep();
+  $('kMsg').className='msg ok';
+  $('kMsg').textContent = `Réussi après ${fmt(k)} donne${k>1?'s':''}. En moyenne il en faut ${fmt(L.odds)}.` +
+    (k>1 ? ` À une donne par seconde : ${duration(k)}.` : '');
+  kUpdate();
+}
+function kBtns(){ ['kOne','kAll','kUntil','kNew','kReset'].forEach(id=>$(id).disabled=kBusy); }
+function kUpdate(){
+  const L=LEVELS[lvl], bits=Math.log2(L.odds);
+  $('kOdds').textContent = `Chance par donne : 1 sur ${fmt(L.odds)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
+  $('kTries').textContent=fmt(kTries); $('kWins').textContent=fmt(kWins);
+  $('kTime').textContent = kTries ? duration(kTries) : '—';
+  kRenderFails(); renderLadder();
+}
+const texNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\\,');
+function typesetFormula(){
+  const L=LEVELS[lvl], el=$('kFormula');
+  const num = `\\binom{4}{${L.a}}` + (L.r ? `\\binom{${L.kp}}{${L.r}}` : '');
+  el.textContent = `\\[ P = \\frac{${num}}{\\binom{52}{${L.k}}} = \\frac{${C(4,L.a)*C(L.kp,L.r)}}{${texNum(C(52,L.k))}} = \\frac{1}{${texNum(L.odds)}} \\]`;
+  if (window.MathJax && MathJax.typesetPromise){ MathJax.typesetClear && MathJax.typesetClear([el]); MathJax.typesetPromise([el]).catch(()=>{}); }
+}
+function renderLevels(){
+  $('levels').innerHTML = LEVELS.map((L,i)=>`<button data-i="${i}" aria-pressed="${i===lvl}">${L.lab}</button>`).join('');
+}
+function setLevel(i){
+  if (kBusy) return;
+  lvl=i; kTries=0; kWins=0; $('kMsg').textContent='';
+  kClearHist(); renderLevels(); typesetFormula(); newDeal(); kUpdate(); kDrawGrid();
+}
+$('levels').addEventListener('click', e=>{ const b=e.target.closest('button'); if (b) setLevel(+b.dataset.i); });
+$('kEuro').addEventListener('click', ()=>setLevel(6));
+$('kOne').addEventListener('click', ()=>{ if (!kBusy) flipOne(); });
+$('kAll').addEventListener('click', flipAll);
+$('kUntil').addEventListener('click', kUntil);
+$('kReset').addEventListener('click', ()=>{ if (kBusy) return; kTries=0; kWins=0; kClearHist(); $('kMsg').textContent=''; newDeal(); kUpdate(); kDrawGrid(); });
+const kRedraw=()=>{ kReveal=kCells.length; kDrawGrid(); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', kRedraw);
+new MutationObserver(kRedraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+$('kNew').addEventListener('click', ()=>{ if (!kBusy){ newDeal(); $('kMsg').textContent=''; } });
+setLevel(2);
+
+/* ---------- Outils communs ---------- */
+function typesetEl(el, tex){
+  el.textContent = `\\[ ${tex} \\]`;
+  if (window.MathJax && MathJax.typesetPromise){ MathJax.typesetClear && MathJax.typesetClear([el]); MathJax.typesetPromise([el]).catch(()=>{}); }
+}
+const geom = p => p>=1 ? 1 : 1 + Math.floor(Math.log(1-Math.random())/Math.log1p(-p));
+const pct = x => (x*100).toLocaleString('fr-FR',{maximumFractionDigits: x<0.001||x>0.999 ? 4 : 1}) + ' %';
+
+/* ---------- Historique générique (tapis + courbe) ---------- */
+class Hist{
+  constructor(o){ Object.assign(this,o); this.clear(); }
+  clear(){ this.cells=[]; this.blk=1; this.n=0; this.reveal=0; this.wins=0; this.failAt=Array(this.K()).fill(0); }
+  compact(){ const c=this.cells,n=[]; for(let i=0;i<c.length;i+=2) n.push(i+1<c.length?Math.max(c[i],c[i+1]):c[i]); this.cells=n; this.blk*=2; }
+  room(x){ while(Math.ceil((this.n+x)/this.blk)>MAXC) this.compact(); }
+  fillN(){ return this.cells.length ? this.n-(this.cells.length-1)*this.blk : this.blk; }
+  addOne(v){ this.room(1); const c=this.cells; if (this.fillN()<this.blk) c[c.length-1]=Math.max(c[c.length-1],v); else c.push(v); this.n++; }
+  fail(j){ const s=Math.floor(this.n/this.blk); this.failAt[j]++; this.addOne(j); this.animateFrom(Math.min(s,this.cells.length-1)); }
+  win(){ const s=Math.floor(this.n/this.blk); this.wins++; this.addOne(WIN); this.animateFrom(Math.min(s,this.cells.length-1)); }
+  sampleMax(m){ const K=this.K(), u=Math.random(); let F=0;
+    for (let j=0;j<K-1;j++){ F+=this.pf(j); if (F>0 && u<=Math.exp(m*Math.log(Math.min(1,F)))) return j; } return K-1; }
+  bulk(m){ // m échecs d'un coup, puis une réussite
+    const s=Math.floor(this.n/this.blk), K=this.K();
+    let rem=m, tail=1;
+    for (let j=0;j<K && rem>0;j++){ const p=this.pf(j); const h = j===K-1 ? 1 : Math.min(1, tail>0 ? p/tail : 1); const c=binom(rem,h); this.failAt[j]+=c; rem-=c; tail-=p; }
+    let k=m; this.room(m+1);
+    if (this.cells.length && this.fillN()<this.blk && k>0){ const t=Math.min(this.blk-this.fillN(),k); const c=this.cells; c[c.length-1]=Math.max(c[c.length-1],this.sampleMax(t)); k-=t; this.n+=t; }
+    while (k>0){ const t=Math.min(this.blk,k); this.cells.push(this.sampleMax(t)); k-=t; this.n+=t; }
+    this.wins++; this.addOne(WIN);
+    this.animateFrom(Math.min(Math.floor(s*1),this.cells.length-1));
+  }
+  draw(){
+    const cv=$(this.grid), W=cv.clientWidth; if (!W) return;
+    const dpr=devicePixelRatio||1, cs=W/COLS, rows=Math.max(8,Math.ceil(this.cells.length/COLS)), H=rows*cs;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+    const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+    const stops=[css('--r0'),css('--r1'),css('--r2')].map(h=>{h=h.replace('#','');return [0,2,4].map(k=>parseInt(h.slice(k,k+2),16));});
+    const ramp=t=>{ const s=t<.5?0:1, u=t<.5?t*2:(t-.5)*2, a=stops[s], b=stops[s+1]; return `rgb(${a.map((c,i)=>Math.round(c+(b[i]-c)*u)).join(',')})`; };
+    const ok=css('--ok'), gap=cs>4?1:0, top=Math.max(1,this.K()-1), n=Math.min(this.reveal,this.cells.length);
+    for (let i=0;i<n;i++){
+      const v=this.cells[i], x=(i%COLS)*cs, y=Math.floor(i/COLS)*cs;
+      if (v===WIN){ g.fillStyle=ok; g.fillRect(x-cs*.4,y-cs*.4,cs*1.8,cs*1.8); continue; }
+      g.fillStyle=ramp(v/top); g.fillRect(x,y,cs-gap,cs-gap);
+    }
+    $(this.lgMax).textContent = this.lgMaxText();
+    const [u1,uN] = this.units;
+    $(this.note).textContent = !this.cells.length ? `Le tapis se remplit au fil des ${uN}.` :
+      this.blk===1 ? `1 case = 1 ${u1} · ${fmt(this.n)} ${uN} affichés.` :
+      `1 case = ${fmt(this.blk)} ${uN} (on garde la couleur du meilleur) · ${fmt(this.n)} ${uN} au total.`;
+  }
+  redraw(){ this.reveal=this.cells.length; this.draw(); }
+  animateFrom(start){
+    cancelAnimationFrame(this.anim);
+    const end=this.cells.length, t0=performance.now(), dur=reduce?0:Math.min(1800,200+(end-start)*.6);
+    const step=t=>{ const q=dur?Math.min(1,(t-t0)/dur):1; this.reveal=Math.round(start+(end-start)*q); this.draw(); if(q<1) this.anim=requestAnimationFrame(step); };
+    this.anim=requestAnimationFrame(step);
+    this.renderFails();
+  }
+  renderFails(){
+    const K=this.K(), lost=this.failAt.reduce((a,b)=>a+b,0), el=$(this.fails);
+    if (!lost){ el.innerHTML='<p class="empty">La courbe se dessine au fil des essais.</p>'; return; }
+    const W=640,H=240,L=56,R=14,T=14,B=34,pw=W-L-R,ph=H-T-B;
+    const th=this.failAt.map((_,j)=>lost*this.pf(j));
+    const max=Math.max(...this.failAt,...th);
+    const x=i=>L+(K>1?i/(K-1)*pw:pw/2), y=v=>T+ph-v/max*ph;
+    const pts=this.failAt.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`);
+    const thp=th.map((c,i)=>`${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(' ');
+    const yt=[0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(max*f)}" y2="${y(max*f)}" opacity="${f?0.5:1}"/><text x="${L-6}" y="${y(max*f)+4}" text-anchor="end">${fmt(max*f)}</text>`).join('');
+    const xt=this.failAt.map((_,i)=>`<text x="${x(i)}" y="${H-B+16}" text-anchor="middle">${this.xtick(i)}</text>`).join('');
+    const dots=this.failAt.map((c,i)=>`<circle class="obsdot" cx="${x(i)}" cy="${y(c)}" r="3.5"/>`).join('');
+    el.innerHTML = `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Répartition des échecs">
+      ${yt}<polygon class="area" points="${x(0)},${y(0)} ${pts.join(' ')} ${x(K-1)},${y(0)}"/>
+      <polyline class="th" points="${thp}"/><polyline class="obs" points="${pts.join(' ')}"/>${dots}${xt}
+      <text x="${L+pw/2}" y="${H-2}" text-anchor="middle">${this.xlabel}</text></svg></div>
+    <div class="legend"><span class="sw"><i style="background:var(--ko)"></i>${this.units[1]} ratés (${fmt(lost)})</span>
+    <span class="sw"><i style="background:var(--ink);opacity:.55;height:2px"></i>attendu en théorie</span>
+    <span class="sw"><i class="win"></i>réussites : ${fmt(this.wins)}</span></div>`;
+  }
+}
+
+/* ---------- Dés ---------- */
+var dN = 3; const dF = 6;
+let dTries=0, dBest=0, dBusy=false;
+const dH = new Hist({grid:'dgrid', note:'dBlk', fails:'dFails', lgMax:'dLgMax', units:['lancer','lancers'],
+  K:()=>dN, xlabel:'nombre de six dans le lancer', xtick:j=>j,
+  lgMaxText:()=>`${dN-1} six sur ${dN}`,
+  pf:j=>C(dN,j)*Math.pow(1/dF,j)*Math.pow((dF-1)/dF,dN-j)/(1-Math.pow(dF,-dN))});
+const PIPS = {1:[[50,50]],2:[[28,28],[72,72]],3:[[26,26],[50,50],[74,74]],4:[[28,28],[72,28],[28,72],[72,72]],
+  5:[[27,27],[73,27],[50,50],[27,73],[73,73]],6:[[28,24],[72,24],[28,50],[72,50],[28,76],[72,76]]};
+function dieSVG(v, cls){
+  const inner = !v ? '' : dF===6 ? PIPS[v].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9"/>`).join('')
+    : `<text x="50" y="52" dominant-baseline="middle" text-anchor="middle">${v}</text>`;
+  return `<svg class="die ${cls||''}" viewBox="0 0 100 100" aria-label="${v||'dé'}"><rect x="4" y="4" width="92" height="92" rx="${dF===6?18:30}"/>${inner}</svg>`;
+}
+function dRender(vals){
+  $('dice').innerHTML = Array.from({length:dN},(_,i)=> vals ? dieSVG(vals[i], vals[i]===dF?'six':'miss') : dieSVG(0,'blank')).join('');
+}
+function dUpdate(){
+  $('dOut').textContent = dN;
+  const odds = dF**dN, bits=Math.log2(odds);
+  $('dOdds').textContent = `Chance par lancer : 1 sur ${fmt(odds)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
+  $('dTries').textContent=fmt(dTries); $('dWins').textContent=fmt(dH.wins);
+  $('dBest').textContent = dTries ? `${dBest} / ${dN}` : '—';
+  $('dTime').textContent = dTries ? duration(dTries) : '—';
+  dH.renderFails(); renderLadder();
+}
+function dClear(){ dTries=0; dBest=0; dH.clear(); $('dMsg').textContent=''; $('dN').value=dN; dRender(null); dUpdate(); dH.redraw(); }
+async function dRoll(){
+  if (dBusy) return; dBusy=true; dBtns();
+  const roll=()=>Array.from({length:dN},()=>1+Math.floor(Math.random()*dF));
+  const vals = roll();
+  if (!reduce){ for (let t=0;t<5;t++){ dRender(roll()); await sleep(60); } }
+  dRender(vals);
+  const top = vals.filter(v=>v===dF).length, ok = top===dN;
+  dTries++; dBest=Math.max(dBest,top);
+  if (ok) dH.win(); else dH.fail(top);
+  $('dMsg').className='msg '+(ok?'ok':'ko');
+  $('dMsg').textContent = ok ? `Gagné : ${dN} six sur ${dN} !` : `${top} six sur ${dN}.`;
+  dUpdate(); dBusy=false; dBtns();
+}
+function dUntil(){
+  if (dBusy) return;
+  const k = geom(dF**-dN);
+  dTries+=k; dBest=dN; dH.bulk(k-1);
+  dRender(Array(dN).fill(dF));
+  $('dMsg').className='msg ok';
+  $('dMsg').textContent = `Réussi après ${fmt(k)} lancer${k>1?'s':''}. En moyenne il en faut ${fmt(dF**dN)}.` + (k>1?` À un lancer par seconde : ${duration(k)}.`:'');
+  dUpdate();
+}
+function dBtns(){ ['dRoll','dUntil','dReset'].forEach(id=>$(id).disabled=dBusy); }
+$('dN').addEventListener('input', e=>{ dN=+e.target.value; dClear(); });
+$('dEuro').addEventListener('click', ()=>{ if (dBusy) return; dN=10; dClear(); });
+$('dRoll').addEventListener('click', dRoll);
+$('dUntil').addEventListener('click', dUntil);
+$('dReset').addEventListener('click', dClear);
+addEventListener('resize', ()=>dH.redraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>dH.redraw());
+new MutationObserver(()=>dH.redraw()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+dClear();
+
+/* ---------- Cadenas ---------- */
+var lD = 4;
+let code='', wheels=[], tried=new Set(), lFound=false, lGaveUp=false;
+function lNew(){
+  code = Array.from({length:lD},()=>Math.floor(Math.random()*10)).join('');
+  wheels = Array(lD).fill(0); tried=new Set(); lFound=false; lGaveUp=false;
+  $('lMsg').textContent=''; lRender(); lUpdate();
+}
+function lRender(){
+  $('lockBox').classList.toggle('open', lFound);
+  $('wheels').innerHTML = wheels.map((w,i)=>`<div class="wheel">
+      <button class="wbtn" data-i="${i}" data-d="1" aria-label="Chiffre ${i+1} plus">▲</button>
+      <span class="wd">${(lGaveUp||lFound)?code[i]:w}</span>
+      <button class="wbtn" data-i="${i}" data-d="-1" aria-label="Chiffre ${i+1} moins">▼</button></div>`).join('');
+}
+function lUpdate(){
+  const total = 10**lD, left = total-tried.size, bits=Math.log2(total);
+  $('lOdds').textContent = `Chance au premier essai : 1 sur ${fmt(total)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
+  $('lTries').textContent = fmt(tried.size);
+  $('lLeft').textContent = lFound||lGaveUp ? '—' : fmt(left);
+  $('lNext').textContent = lFound ? 'ouvert' : lGaveUp ? '—' : `1 sur ${fmt(left)}`;
+  $('lOut').textContent=lD; $('lDr').value=lD;
+  renderLadder();
+}
+function lTry(guess){
+  const m=$('lMsg');
+  if (lFound||lGaveUp){ m.className='msg'; m.textContent='Partie terminée. Prenez un nouveau cadenas pour rejouer.'; return; }
+  if (tried.has(guess)){ m.className='msg'; m.textContent=`Le code ${guess} a déjà été essayé.`; return; }
+  tried.add(guess); wheels=guess.split('').map(Number);
+  if (guess===code){ lFound=true; m.className='msg ok'; m.textContent=`Ouvert avec ${guess}, au ${tried.size===1?'premier essai':fmt(tried.size)+'ᵉ essai'} !`; }
+  else { const left=10**lD-tried.size; m.className='msg ko'; m.textContent=`${guess} : fermé. Il reste ${fmt(left)} code${left>1?'s':''} possibles.`; }
+  lRender(); lUpdate();
+}
+function lRandom(){
+  const total=10**lD;
+  if (tried.size>=total) return;
+  let g;
+  if (tried.size<total/2){ do { g=String(Math.floor(Math.random()*total)).padStart(lD,'0'); } while (tried.has(g)); }
+  else { const free=[]; for(let i=0;i<total;i++){ const s=String(i).padStart(lD,'0'); if(!tried.has(s)) free.push(s); } g=free[Math.floor(Math.random()*free.length)]; }
+  lTry(g);
+}
+$('wheels').addEventListener('click', e=>{
+  const b=e.target.closest('.wbtn'); if (!b || lFound || lGaveUp) return;
+  const i=+b.dataset.i; wheels[i]=(wheels[i]+ +b.dataset.d+10)%10; lRender();
+});
+$('lDr').addEventListener('input', e=>{ lD=+e.target.value; lNew(); });
+$('lEuro').addEventListener('click', ()=>{ lD=8; lNew(); });
+$('lTry').addEventListener('click', ()=>lTry(wheels.join('')));
+$('lRand').addEventListener('click', ()=>{ if (lFound||lGaveUp) return lTry(''); lRandom(); });
+$('lGive').addEventListener('click', ()=>{ if (lFound) return; lGaveUp=true; $('lMsg').className='msg'; $('lMsg').textContent=`Le code était ${code}.`; lRender(); lUpdate(); });
+$('lNew').addEventListener('click', lNew);
+lNew();
+
+/* ---------- Anniversaires ---------- */
+var bN = 23;
+let bGroups=0, bHits=0;
+const MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MLEN=[31,28,31,30,31,30,31,31,30,31,30,31];
+const MNAME=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function bQ(n){ let q=1; for(let i=0;i<n;i++) q*= (365-i)/365; return q; }
+function bProb(n){ return 1-bQ(n); }
+function dayLabel(d){ let m=0; while (d>=MLEN[m]){ d-=MLEN[m]; m++; } return `${d+1} ${MNAME[m]}`; }
+function bCalendar(counts){
+  let html='<div class="cal">', d=0;
+  for (let m=0;m<12;m++){
+    html += `<span class="mlab">${MONTHS[m]}</span>`;
+    for (let j=0;j<31;j++){
+      if (j>=MLEN[m]){ html+='<i class="day none"></i>'; continue; }
+      const c = counts ? counts[d] : 0;
+      html += `<i class="day ${c>=2?'dup':c===1?'one':''}" title="${dayLabel(d)}${c?` : ${c}`:''}">${c>=2?c:''}</i>`;
+      d++;
+    }
+  }
+  return html+'</div>';
+}
+function bCurve(){
+  const W=640,H=220,L=48,R=14,T=12,B=32,pw=W-L-R,ph=H-T-B, NMAX=150;
+  const x=n=>L+(n-1)/(NMAX-1)*pw, y=p=>T+ph-p*ph;
+  const pts=[]; for(let n=1;n<=NMAX;n++) pts.push(`${x(n).toFixed(1)},${y(bProb(n)).toFixed(1)}`);
+  const p=bProb(bN);
+  const yt=[0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(f)}" y2="${y(f)}" opacity="${f===.5?0.9:0.5}"/><text x="${L-6}" y="${y(f)+4}" text-anchor="end">${f*100} %</text>`).join('');
+  const xt=[1,23,50,75,100,111,150].map(n=>`<text x="${x(n)}" y="${H-B+16}" text-anchor="middle">${n}</text>`).join('');
+  return `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Chance d'un anniversaire commun selon la taille du groupe">
+    ${yt}<polyline class="bcurve" points="${pts.join(' ')}"/>
+    <line class="ax" x1="${x(bN)}" x2="${x(bN)}" y1="${T}" y2="${T+ph}" stroke-dasharray="3 3"/>
+    <circle class="bdot" cx="${x(bN)}" cy="${y(p)}" r="6"/>
+    ${xt}<text x="${L+pw/2}" y="${H-2}" text-anchor="middle">personnes dans le groupe</text></svg></div>`;
+}
+function bFormula(){
+  const p=bProb(bN);
+  const num = bN<=4 ? Array.from({length:bN},(_,i)=>365-i).join('\\times ') : `365\\times 364\\times\\cdots\\times ${366-bN}`;
+  typesetEl($('bFormula'), `P(${bN}) = 1-\\frac{${num}}{365^{${bN}}} \\approx ${(p).toLocaleString('fr-FR',{maximumFractionDigits:4}).replace(',','{,}')}`);
+}
+function bUpdate(){
+  const p=bProb(bN);
+  $('bOut').textContent=bN;
+  const q=bQ(bN);
+  $('bOdds').textContent = `Au moins un anniversaire commun : ${pct(p)} · aucun : ${q<0.001 ? '1 chance sur '+fmt(1/q) : pct(q)}`;
+  $('bCurve').innerHTML = bCurve();
+  $('bGroups').textContent=fmt(bGroups); $('bHits').textContent=fmt(bHits);
+  $('bFreq').textContent = bGroups ? pct(bHits/bGroups) : '—';
+  renderLadder();
+}
+function bForm(times){
+  let last=null;
+  for (let t=0;t<times;t++){
+    const counts=new Uint8Array(365);
+    for (let i=0;i<bN;i++) counts[Math.floor(Math.random()*365)]++;
+    bGroups++; let dup=false; for (const c of counts) if (c>=2){ dup=true; break; }
+    if (dup) bHits++;
+    last=counts;
+  }
+  $('bCal').innerHTML = bCalendar(last);
+  const shared=[]; last.forEach((c,d)=>{ if(c>=2) shared.push(`${dayLabel(d)} (${c})`); });
+  const m=$('bMsg');
+  m.className='msg '+(shared.length?'ok':'ko');
+  m.textContent = (times>1?`${times} groupes formés. Le dernier : `:'') +
+    (shared.length ? `anniversaire commun le ${shared.join(', le ')}.` : 'aucun anniversaire commun.');
+  bUpdate();
+}
+function bClear(){ bGroups=0; bHits=0; $('bMsg').textContent=''; $('bCal').innerHTML=bCalendar(null); bUpdate(); bFormula(); }
+$('bN').addEventListener('input', e=>{ bN=+e.target.value; bClear(); });
+$('bEuro').addEventListener('click', ()=>{ bN=111; $('bN').value=111; bClear(); });
+$('bOne').addEventListener('click', ()=>bForm(1));
+$('bHundred').addEventListener('click', ()=>bForm(100));
+$('bReset').addEventListener('click', bClear);
+bClear();
+
+function typesetAll(){ typesetFormula(); bFormula(); if (typeof pFormula==='function') pFormula(); }
+
+/* ---------- Album Panini ---------- */
+var pN = 640, pS = 5;
+let pHist=[];
+let have = new Uint16Array(640), pPacks=0, pStick=0, pDup=0, pDone=false, pTimeline=[0], pNew=[], pBusy=false;
+function lnFact(n){ let s=0; for(let i=2;i<=n;i++) s+=Math.log(i); return s; }
+function pNoDupBits(n){ return (n*Math.log(n)-lnFact(n))/Math.LN2; } // log2 de n^n / n!
+function pHarm(n){ let H=0; for(let i=1;i<=n;i++) H+=1/i; return H; }
+function pExpStickers(){ return pN*pHarm(pN); }
+function pReset(){
+  pHist=[]; have=new Uint16Array(pN); pPacks=0; pStick=0; pDup=0; pDone=false; pTimeline=[0]; pNew=[];
+  $('pMsg').textContent=''; pDraw(); pUpdate();
+}
+function pOpen(){
+  const fresh=[];
+  for (let i=0;i<pS;i++){ const v=Math.floor(Math.random()*pN); if (have[v]++===0){ pStick++; fresh.push(v); } else pDup++; }
+  pPacks++; pTimeline.push(pStick); pHist.push(fresh.length); if (pStick===pN) pDone=true;
+  return fresh;
+}
+function pDraw(){
+  const cv=$('pAlbum'), W=cv.clientWidth; if (!W) return;
+  const cols=Math.min(40,Math.ceil(Math.sqrt(pN*2.2))), cs=W/cols, rows=Math.ceil(pN/cols), H=rows*cs, dpr=devicePixelRatio||1;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const isNew=new Set(pNew), line=css('--line'), brass=css('--brass'), ok=css('--ok'), ink=css('--surface');
+  const gap=Math.max(1,cs*.08);
+  g.textAlign='center'; g.textBaseline='middle'; g.font=`600 ${Math.max(8,cs*.32)}px ${css('--mono')}`;
+  for (let i=0;i<pN;i++){
+    const x=(i%cols)*cs, y=Math.floor(i/cols)*cs;
+    g.fillStyle = isNew.has(i) ? ok : have[i] ? brass : line;
+    g.globalAlpha = have[i] ? 1 : .6;
+    g.fillRect(x+gap/2,y+gap/2,cs-gap,cs-gap);
+    if (cs>=22){ g.globalAlpha=1; g.fillStyle = have[i] ? ink : css('--muted'); g.fillText(i+1, x+cs/2, y+cs/2+1); }
+  }
+  g.globalAlpha=1;
+}
+function pHistDraw(){
+  const cv=$('pgrid'), W=cv.clientWidth; if (!W) return;
+  const blk=Math.max(1,Math.ceil(pHist.length/MAXC)), cells=[];
+  for (let i=0;i<pHist.length;i+=blk){ let s=0,c=0; for(let j=i;j<Math.min(i+blk,pHist.length);j++){ s+=pHist[j]; c++; } cells.push(s/c); }
+  const dpr=devicePixelRatio||1, cs=W/COLS, rows=Math.max(6,Math.ceil(cells.length/COLS)), H=rows*cs;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const stops=[css('--r0'),css('--r1'),css('--r2')].map(h=>{h=h.replace('#','');return [0,2,4].map(k=>parseInt(h.slice(k,k+2),16));});
+  const ramp=t=>{ const s=t<.5?0:1, u=t<.5?t*2:(t-.5)*2, a=stops[s], b=stops[s+1]; return `rgb(${a.map((c,i)=>Math.round(c+(b[i]-c)*u)).join(',')})`; };
+  const gap=cs>4?1:0;
+  cells.forEach((v,i)=>{ g.fillStyle=ramp(v/pS); g.fillRect((i%COLS)*cs,Math.floor(i/COLS)*cs,cs-gap,cs-gap); });
+  $('pLgMax').textContent = pS>1 ? `${pS} neuves sur ${pS}` : 'neuve';
+  $('pBlk').textContent = !pHist.length ? 'Le tapis se remplit au fil des achats.' :
+    blk===1 ? `1 case = 1 achat · ${fmt(pHist.length)} achats.` : `1 case = ${blk} achats (moyenne) · ${fmt(pHist.length)} achats.`;
+}
+function pRate(){
+  const n=pHist.length;
+  if (!n){ $('pRate').innerHTML=''; return; }
+  const W=640,H=220,L=48,R=14,T=12,B=34,pw=W-L-R,ph=H-T-B;
+  const x=i=>L+(n>1?i/(n-1):0)*pw, y=v=>T+ph-v/pS*ph;
+  const win=Math.max(1,Math.round(n/30)), obs=[];
+  const step=Math.max(1,Math.ceil(n/300));
+  for (let i=0;i<n;i+=step){ let s=0,c=0; for(let j=Math.max(0,i-win);j<=Math.min(n-1,i+win);j++){ s+=pHist[j]; c++; } obs.push(`${x(i).toFixed(1)},${y(s/c).toFixed(1)}`); }
+  const q=1-1/pN, th=[];
+  for (let k=0;k<=80;k++){ const i=(n-1)*k/80; th.push(`${x(i).toFixed(1)},${y(pN*(Math.pow(q,pS*i)-Math.pow(q,pS*(i+1)))).toFixed(1)}`); }
+  const yt=[0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(pS*f)}" y2="${y(pS*f)}" opacity="${f?0.5:1}"/><text x="${L-6}" y="${y(pS*f)+4}" text-anchor="end">${(pS*f).toLocaleString('fr-FR',{maximumFractionDigits:1})}</text>`).join('');
+  const xt=[0,.5,1].map(f=>`<text x="${x((n-1)*f)}" y="${H-B+16}" text-anchor="middle">${fmt(1+(n-1)*f)}</text>`).join('');
+  $('pRate').innerHTML = `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vignettes neuves par achat au fil du temps">
+    ${yt}<polyline class="th" points="${th.join(' ')}"/><polyline class="pobs" points="${obs.join(' ')}"/>
+    ${xt}<text x="${L+pw/2}" y="${H-2}" text-anchor="middle">achat n°</text></svg></div>
+    <div class="legend"><span class="sw"><i style="background:var(--brass)"></i>vignettes neuves par achat (moyenne glissante)</span>
+    <span class="sw"><i style="background:var(--ink);opacity:.55;height:2px"></i>attendu en théorie</span></div>`;
+}
+function pCurve(){
+  const W=640,H=240,L=56,R=14,T=14,B=34,pw=W-L-R,ph=H-T-B;
+  const expPacks = pExpStickers()/pS;
+  const xmax = Math.max(pPacks, expPacks*1.6, 1);
+  const x=v=>L+v/xmax*pw, y=v=>T+ph-v/pN*ph;
+  const th=[]; for(let i=0;i<=80;i++){ const p=xmax*i/80; th.push(`${x(p).toFixed(1)},${y(pN*(1-Math.pow(1-1/pN,pS*p))).toFixed(1)}`); }
+  const step=Math.max(1,Math.ceil(pTimeline.length/400)), obs=[];
+  for (let i=0;i<pTimeline.length;i+=step) obs.push(`${x(i).toFixed(1)},${y(pTimeline[i]).toFixed(1)}`);
+  obs.push(`${x(pTimeline.length-1).toFixed(1)},${y(pTimeline[pTimeline.length-1]).toFixed(1)}`);
+  const yt=[0,.5,1].map(f=>`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(pN*f)}" y2="${y(pN*f)}" opacity="${f?0.5:1}"/><text x="${L-6}" y="${y(pN*f)+4}" text-anchor="end">${fmt(pN*f)}</text>`).join('');
+  const xt=[0,.25,.5,.75,1].map(f=>`<text x="${x(xmax*f)}" y="${H-B+16}" text-anchor="middle">${fmt(xmax*f)}</text>`).join('');
+  return `<div class="curve"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vignettes collées selon le nombre de paquets ouverts">
+    ${yt}
+    <line class="ax" x1="${x(expPacks)}" x2="${x(expPacks)}" y1="${T}" y2="${T+ph}" stroke-dasharray="3 3"/>
+    <text x="${x(expPacks)+4}" y="${T+12}">moyenne : ${fmt(expPacks)}</text>
+    <polyline class="th" points="${th.join(' ')}"/>
+    ${pPacks?`<polyline class="pobs" points="${obs.join(' ')}"/>`:''}
+    ${xt}<text x="${L+pw/2}" y="${H-2}" text-anchor="middle">paquets ouverts</text></svg></div>
+    <div class="legend"><span class="sw"><i style="background:var(--brass)"></i>cet album</span>
+    <span class="sw"><i style="background:var(--ink);opacity:.55;height:2px"></i>en moyenne</span></div>`;
+}
+function pFormula(){
+  const E=pExpStickers();
+  typesetEl($('pFormula'), `E = n\\,H_n = ${pN}\\left(1+\\frac{1}{2}+\\cdots+\\frac{1}{${pN}}\\right) \\approx ${texNum(Math.round(E))}\\ \\text{vignettes}`);
+}
+function pUpdate(){
+  const E=pExpStickers();
+  $('pOut').textContent=fmt(pN); $('pNr').value=pN;
+  $('pSizes').innerHTML=[[1,'À l\'unité'],[5,'Paquets de 5'],[7,'Paquets de 7']].map(([v,l])=>`<button data-s="${v}" aria-pressed="${v===pS}">${l}</button>`).join('');
+  $('pOdds').textContent = `En moyenne : ≈ ${fmt(E)} vignettes${pS>1?`, soit ≈ ${fmt(E/pS)} paquets`:''}, pour ${fmt(pN)} cases. Chance de le compléter sans aucun double : 1 sur ${fmtBig(pNoDupBits(pN))}.`;
+  $('pPacks').textContent=fmt(pPacks); $('pHave').textContent=`${fmt(pStick)} / ${fmt(pN)}`;
+  $('pDup').textContent=fmt(pDup);
+  $('pNext').textContent = pDone ? 'complet' : `${(pN-pStick)/pN<0.01 ? ((pN-pStick)/pN*100).toLocaleString('fr-FR',{maximumFractionDigits:2}) : Math.round((pN-pStick)/pN*100)} %`;
+  $('pCurve').innerHTML=pCurve(); pHistDraw(); pRate();
+  renderLadder();
+}
+function pReport(fresh, n){
+  const m=$('pMsg');
+  if (pDone){
+    m.className='msg ok';
+    m.textContent = `Album complet après ${fmt(pPacks)} ${pS>1?'paquets':'vignettes'} (${fmt(pPacks*pS)} vignettes, dont ${fmt(pDup)} doubles).` + (pDup===0?' Sans aucun double !':` Il a fallu ${(pPacks*pS/pN).toLocaleString('fr-FR',{maximumFractionDigits:1})} fois plus de vignettes que de cases.`);
+    return;
+  }
+  const left=pN-pStick;
+  m.className='msg';
+  m.textContent = (n>1?`${n} ${pS>1?'paquets ouverts':'vignettes achetées'} : `:'') + `${fresh} nouvelle${fresh>1?'s':''}. ` +
+    `Il manque ${fmt(left)} vignette${left>1?'s':''} : chaque vignette achetée a ${fmt(left)} chance${left>1?'s':''} sur ${fmt(pN)} d'être neuve.`;
+}
+function pOpenMany(n){
+  if (pBusy) return;
+  if (pDone){ $('pMsg').className='msg ok'; $('pMsg').textContent='Album déjà complet. Commencez un nouvel album.'; return; }
+  let fresh=[]; let k=0;
+  while (k<n && !pDone){ fresh=fresh.concat(pOpen()); k++; }
+  pNew=fresh; pDraw(); pReport(fresh.length, k); pUpdate();
+}
+async function pFinish(){
+  if (pBusy || pDone) return;
+  pBusy=true; pBtns();
+  const per=Math.max(1, Math.ceil(pExpStickers()/pS/90));
+  while (!pDone){
+    let fresh=[]; for (let i=0;i<per && !pDone;i++) fresh=fresh.concat(pOpen());
+    pNew=fresh; pDraw();
+    if (!reduce){ pUpdate(); await sleep(22); }
+  }
+  pNew=[]; pDraw(); pReport(0,1); pBusy=false; pBtns(); pUpdate();
+}
+function pBtns(){ ['pOne','pTen','pFin','pRes'].forEach(id=>$(id).disabled=pBusy); }
+$('pNr').addEventListener('input', e=>{ if (pBusy) return; pN=+e.target.value; pReset(); pFormula(); });
+$('pSizes').addEventListener('click', e=>{ const b=e.target.closest('button'); if (b && !pBusy){ pS=+b.dataset.s; pReset(); } });
+$('pEuro').addEventListener('click', ()=>{ if (pBusy) return; pN=21; pS=1; pReset(); pFormula(); });
+$('pOne').addEventListener('click', ()=>pOpenMany(1));
+$('pTen').addEventListener('click', ()=>pOpenMany(10));
+$('pFin').addEventListener('click', pFinish);
+$('pRes').addEventListener('click', ()=>{ if (!pBusy) pReset(); });
+addEventListener('resize', ()=>{ pDraw(); pHistDraw(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', pDraw);
+new MutationObserver(pDraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+pReset();
+
+/* ---------- Onglets ---------- */
+const TABS = ['coin','cups','cards','dice','lock','bday','panini'];
+function showTab(name){
+  if (!TABS.includes(name)) name='coin';
+  TABS.forEach(t=>{ $('tab-'+t).hidden = t!==name; $('t-'+t).setAttribute('aria-selected', t===name); });
+  curTab = name; renderLadder();
+  try{ localStorage.setItem('tab', name); }catch(e){}
+  if (name==='coin'){ reveal=cells.length; drawGrid(); } else if (name==='cups') redrawCups(); else if (name==='cards'){ typesetFormula(); kReveal=kCells.length; kDrawGrid(); } else if (name==='bday') bFormula(); else if (name==='dice') dH.redraw(); else if (name==='panini'){ pDraw(); pHistDraw(); pFormula(); }
+}
+TABS.forEach(t=>$('t-'+t).addEventListener('click', ()=>showTab(t)));
+let startTab = {'#piece':'coin','#gobelets':'cups','#cartes':'cards','#des':'dice','#cadenas':'lock','#anniversaires':'bday','#panini':'panini'}[location.hash] || null;
+if (!startTab){ try{ startTab = localStorage.getItem('tab'); }catch(e){} }
+showTab(startTab||'coin');
+</script>
+
+</body></html>

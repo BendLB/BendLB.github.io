@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Projets de Benoît de la Batut : jeux, simulations et explorations mathématiques interactives.">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Book de Benoît de la Batut</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@700;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : galerie sombre — nom en tête, projet vedette pleine largeur, puis grille de vignettes qui ouvrent chaque page */
+:root{
+  --paper:#0E1320; --sheet:#1A2233; --ink:#E9EDF3; --muted:#98A3B5; --line:#2B3446;
+  --accent:#8EA2FF; --accent-soft:#141B2A; --warm:#F0A456;
+  --display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --paper:#EEF0F4; --sheet:#FFFFFF; --ink:#141A26; --muted:#5A6476; --line:#D6DBE4;
+  --accent:#2944C9; --accent-soft:#E4E9F6; --warm:#D9822B; color-scheme:light}}
+:root[data-theme="light"]{
+  --paper:#EEF0F4; --sheet:#FFFFFF; --ink:#141A26; --muted:#5A6476; --line:#D6DBE4;
+  --accent:#2944C9; --accent-soft:#E4E9F6; --warm:#D9822B; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:0}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px;padding-block:56px 72px}
+
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 32px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6.5vw,4.6rem);line-height:.95;letter-spacing:-.035em;margin:0;text-wrap:balance}
+.hero h1 span{color:var(--accent)}
+.li{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 16px;transition:border-color .2s,color .2s}
+.li:hover{border-color:var(--accent);color:var(--accent)}
+.li:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hero p{margin:0;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;color:inherit;text-decoration:none;
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 18px 40px -24px rgba(0,0,0,.6)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.card.feat{grid-column:1 / -1;flex-direction:row}
+.card.feat .art{flex:0 0 55%;aspect-ratio:auto;min-height:300px;border-bottom:0;border-right:1px solid var(--line)}
+.card.feat .body{padding:32px 36px;justify-content:center}
+.card.feat h3{font-size:2.4rem}
+.card.feat p{font-size:1.05rem;max-width:44ch}
+.art{aspect-ratio:4/3;max-width:100%;border-bottom:1px solid var(--line);background:var(--accent-soft);position:relative;overflow:hidden}
+.art svg{width:100%;height:100%;display:block;transition:transform .4s ease}
+.card:hover .art svg{transform:scale(1.03)}
+.body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+.cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)}
+.card h3{font-family:var(--display);font-weight:800;font-size:1.4rem;line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.spec{margin-top:auto;padding-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:2.6em}
+.spec .go{color:var(--ink);white-space:nowrap}
+.card:hover .spec .go{color:var(--accent)}
+.spec math{font-size:1.15em;font-family:"Latin Modern Math","STIX Two Math","Cambria Math",serif}
+
+footer{font-family:var(--mono);font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:20px}
+
+.s-ink{stroke:var(--ink);fill:none} .s-acc{stroke:var(--accent);fill:none} .s-warm{stroke:var(--warm);fill:none} .s-line{stroke:var(--line);fill:none}
+.f-ink{fill:var(--ink)} .f-acc{fill:var(--accent)} .f-warm{fill:var(--warm)} .f-sheet{fill:var(--sheet)} .f-line{fill:var(--line)} .f-soft{fill:var(--accent-soft)}
+.t-mono{font-family:var(--mono);fill:var(--ink)}
+.t-disp{font-family:var(--display);font-weight:800;fill:var(--ink)}
+
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.card.feat{flex-direction:column}.card.feat .art{flex:none;aspect-ratio:4/3;min-height:0;border-right:0;border-bottom:1px solid var(--line)}.card.feat .body{padding:18px 20px 20px}.card.feat h3{font-size:1.7rem}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}.wrap{gap:32px;padding-block:32px 48px}}
+@media (prefers-reduced-motion:reduce){.card,.art svg{transition:none}.card:hover{transform:none}.card:hover .art svg{transform:none}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Benoît de la <span>Batut</span></h1>
+    <a class="li" href="https://www.linkedin.com/in/benoit-de-la-batut-98356b185/" target="_blank" rel="noopener">LinkedIn ↗</a>
+  </header>
+
+  <section id="projets" aria-labelledby="projets-t">
+    <h2 id="projets-t" hidden>Projets</h2>
+    <div class="grid" id="grid">
+
+      <a class="card feat" href="projets/livre.html">
+        <div class="art">
+          <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <path class="f-sheet s-ink" stroke-width="3" d="M60 70 Q150 52 240 72 L240 252 Q150 232 60 250 Z"/>
+            <path class="f-sheet s-ink" stroke-width="3" d="M420 70 Q330 52 240 72 L240 252 Q330 232 420 250 Z"/>
+            <g stroke-width="3" stroke-linejoin="round">
+              <rect class="f-warm s-ink" x="104" y="104" width="44" height="44" rx="7"/>
+              <rect class="f-sheet s-ink" x="152" y="104" width="44" height="44" rx="7"/>
+              <rect class="f-acc s-ink" x="104" y="152" width="44" height="44" rx="7"/>
+              <rect class="f-warm s-ink" x="152" y="152" width="44" height="44" rx="7"/>
+            </g>
+            <text class="t-mono" x="150" y="226" font-size="13" text-anchor="middle">p17</text>
+            <g class="t-mono" font-size="14">
+              <text x="280" y="120">U  → p.211</text>
+              <text x="280" y="148">R′ → p.94</text>
+              <text x="280" y="176">F  → p.362</text>
+            </g>
+            <path class="s-acc" stroke-width="2.5" stroke-dasharray="5 5" d="M200 128 C 230 110, 250 112, 272 116"/>
+          </svg></div>
+        <div class="body">
+          <h3>(Le Livre)³</h3>
+          <p>Un livre-jeu de 690 pages où chaque page montre un état d'un Rubik's Cube 2×2. On choisit un mouvement, la page tourne vers le nouvel état, jusqu'au cube résolu. Des blasons se cachent sur certaines pages.</p>
+          <div class="spec"><span>690 pages · 6 mouvements</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/balance.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <path class="f-ink" d="M150 262 L250 262 L238 248 L162 248 Z"/>
+            <rect class="f-ink" x="196" y="96" width="8" height="154"/>
+            <g transform="rotate(-9 200 96)">
+              <rect class="f-warm" x="70" y="90" width="260" height="10" rx="5"/>
+              <path class="s-ink" stroke-width="1.5" d="M80 95 L50 170 M80 95 L110 170 M320 95 L290 170 M320 95 L350 170"/>
+              <path class="f-acc" d="M40 170 Q80 196 120 170 Z"/>
+              <path class="f-warm" d="M280 170 Q320 196 360 170 Z"/>
+              <circle class="f-ink" cx="80" cy="152" r="16"/>
+              <g class="f-acc"><circle cx="304" cy="164" r="4"/><circle cx="316" cy="160" r="4"/><circle cx="328" cy="164" r="4"/><circle cx="322" cy="152" r="4"/><circle cx="310" cy="152" r="4"/></g>
+            </g>
+            <circle class="f-sheet s-ink" stroke-width="3" cx="200" cy="96" r="8"/>
+            <text class="t-mono" x="200" y="40" font-size="15" text-anchor="middle">1 pomme = ? photons</text>
+          </svg></div>
+        <div class="body">
+          <h3>Balance énergie</h3>
+          <p>Combien de photons pèsent autant qu'une pomme qui tombe ? On règle la balance à la puissance de 10 près, sur dix manches, du photon micro-onde au trou noir, et chaque objet pesé rejoint l'échelle des énergies.</p>
+          <div class="spec"><span><math><msup><mn>10</mn><mrow><mo>−</mo><mn>24</mn></mrow></msup></math> à <math><msup><mn>10</mn><mn>48</mn></msup></math> J</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/calcul.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect class="f-sheet s-ink" stroke-width="2.5" x="80" y="52" width="240" height="64" rx="8"/>
+            <text class="t-disp" x="200" y="95" font-size="28" text-anchor="middle">186,4 ÷ 8,6</text>
+            <g class="t-mono" font-size="16" text-anchor="middle">
+              <rect class="f-sheet s-line" stroke-width="2" x="80" y="134" width="112" height="38" rx="6"/><text x="136" y="159">16,9</text>
+              <rect class="f-acc" x="208" y="134" width="112" height="38" rx="6"/><text x="264" y="159" fill="var(--sheet)">21,7</text>
+              <rect class="f-sheet s-line" stroke-width="2" x="80" y="182" width="112" height="38" rx="6"/><text x="136" y="207">26,4</text>
+              <rect class="f-sheet s-line" stroke-width="2" x="208" y="182" width="112" height="38" rx="6"/><text x="264" y="207">31,2</text>
+            </g>
+            <rect class="f-warm" x="160" y="236" width="80" height="26" rx="6"/>
+            <text class="t-mono" x="200" y="254" font-size="13" text-anchor="middle" fill="var(--sheet)">Suivant →</text>
+          </svg></div>
+        <div class="body">
+          <h3>Calcul mental</h3>
+          <p>Cent questions d'estimation rapide à choix multiples : divisions, pourcentages, ordres de grandeur. Chaque réponse est suivie de l'astuce qui permet de la trouver de tête.</p>
+          <div class="spec"><span>100 questions · 5 choix</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/brown.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <circle class="f-sheet s-ink" stroke-width="3" cx="200" cy="150" r="118"/>
+            <path class="s-line" stroke-width="1.5" d="M82 150 H318 M200 32 V268"/>
+            <g class="f-line">
+              <circle cx="140" cy="100" r="3"/><circle cx="260" cy="90" r="3"/><circle cx="170" cy="210" r="3"/><circle cx="240" cy="200" r="3"/><circle cx="120" cy="170" r="3"/>
+              <circle cx="280" cy="160" r="3"/><circle cx="210" cy="70" r="3"/><circle cx="160" cy="140" r="3"/><circle cx="230" cy="130" r="3"/><circle cx="200" cy="240" r="3"/>
+              <circle cx="110" cy="120" r="3"/><circle cx="300" cy="200" r="3"/><circle cx="180" cy="90" r="3"/><circle cx="260" cy="240" r="3"/>
+            </g>
+            <path class="s-acc" stroke-width="2" stroke-linejoin="round" d="M200 150 l12 -8 l-6 14 l16 4 l-4 -18 l14 -6 l2 16 l-18 10 l8 12 l18 -4 l-6 16 l-20 -2"/>
+            <circle class="f-acc" cx="216" cy="184" r="12"/>
+            <path class="s-warm" stroke-width="2" stroke-linejoin="round" d="M150 120 l-10 6 l4 -14 l-14 -2 l6 -12 l-12 -8 l14 -4"/>
+            <circle class="f-warm" cx="128" cy="86" r="12"/>
+          </svg></div>
+        <div class="body">
+          <h3>Grains de Brown</h3>
+          <p>Quatre grains lourds bousculés par des milliers de molécules. On règle la température, la taille des grains ou une force extérieure, et l'on mesure le coefficient de diffusion comme Jean Perrin en 1908.</p>
+          <div class="spec"><span><math><mo>⟨</mo><msup><mi>r</mi><mn>2</mn></msup><mo>⟩</mo><mo>=</mo><mn>4</mn><mi>D</mi><mi>t</mi></math></span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/vie.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <defs><pattern id="g6" width="20" height="20" patternUnits="userSpaceOnUse"><path class="s-line" stroke-width="1" d="M20 0 V20 H0"/></pattern></defs>
+            <rect x="40" y="30" width="320" height="240" fill="url(#g6)"/>
+            <g class="f-acc">
+              <rect x="101" y="71" width="18" height="18"/><rect x="121" y="91" width="18" height="18"/><rect x="81" y="111" width="18" height="18"/><rect x="101" y="111" width="18" height="18"/><rect x="121" y="111" width="18" height="18"/>
+              <rect x="221" y="151" width="18" height="18"/><rect x="241" y="151" width="18" height="18"/><rect x="221" y="171" width="18" height="18"/><rect x="241" y="171" width="18" height="18"/>
+            </g>
+            <g class="f-warm">
+              <rect x="281" y="71" width="18" height="18"/><rect x="301" y="71" width="18" height="18"/><rect x="321" y="71" width="18" height="18"/>
+              <rect x="141" y="211" width="18" height="18"/>
+            </g>
+            <path class="s-acc" stroke-width="2" stroke-dasharray="4 4" d="M150 140 L196 186"/>
+          </svg></div>
+        <div class="body">
+          <h3>Jeu de la vie</h3>
+          <p>L'automate de John Conway et ses trois règles. On dessine ses cellules ou on pose l'une des 53 configurations connues, du planeur au canon de Gosper, jusqu'à Primer, qui crible les nombres premiers.</p>
+          <div class="spec"><span>B3/S23 · 53 configurations</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/traversee.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect class="f-line" x="0" y="40" width="400" height="34"/>
+            <rect class="f-ink" x="0" y="74" width="400" height="152"/>
+            <rect class="f-line" x="0" y="226" width="400" height="34"/>
+            <g class="f-sheet" opacity=".85"><rect x="180" y="84" width="40" height="12"/><rect x="180" y="108" width="40" height="12"/><rect x="180" y="132" width="40" height="12"/><rect x="180" y="156" width="40" height="12"/><rect x="180" y="180" width="40" height="12"/><rect x="180" y="204" width="40" height="12"/></g>
+            <rect class="f-warm" x="40" y="130" width="120" height="40" rx="8"/>
+            <text class="t-mono" x="100" y="155" font-size="13" text-anchor="middle" fill="var(--sheet)">→</text>
+            <g stroke-width="3" fill="none" stroke-linecap="round">
+              <path stroke="var(--accent)" stroke-dasharray="6 5" d="M200 240 L200 60"/>
+              <path stroke="#14a06b" stroke-dasharray="1 6" d="M200 240 L150 176 L200 60"/>
+            </g>
+            <circle class="f-acc" cx="200" cy="240" r="8"/>
+            <circle class="s-acc" stroke-width="3" cx="200" cy="58" r="8"/>
+          </svg></div>
+        <div class="body">
+          <h3>Traversée optimale</h3>
+          <p>Faut-il attendre que la voiture passe, ou la contourner par l'arrière sans s'arrêter ? Trois piétons partent en même temps. On compare leurs temps selon les vitesses, la longueur de la voiture et la largeur de la chaussée.</p>
+          <div class="spec"><span>3 stratégies · formules détaillées</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/improbable.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <circle class="f-warm" cx="110" cy="110" r="40"/><circle class="s-ink" stroke-width="2" cx="110" cy="110" r="32"/>
+            <text class="t-disp" x="110" y="120" font-size="28" text-anchor="middle" fill="var(--sheet)">P</text>
+            <rect class="f-sheet s-ink" stroke-width="3" x="186" y="76" width="64" height="64" rx="12"/>
+            <g class="f-ink"><circle cx="202" cy="92" r="5"/><circle cx="234" cy="92" r="5"/><circle cx="202" cy="108" r="5"/><circle cx="234" cy="108" r="5"/><circle cx="202" cy="124" r="5"/><circle cx="234" cy="124" r="5"/></g>
+            <rect class="f-sheet s-ink" stroke-width="3" x="274" y="70" width="52" height="76" rx="6"/>
+            <text class="t-disp" x="300" y="116" font-size="26" text-anchor="middle">A</text>
+            <rect class="f-sheet s-line" stroke-width="2" x="60" y="186" width="280" height="52" rx="6"/>
+            <rect class="f-acc" x="60" y="186" width="14" height="52"/>
+            <text class="t-mono" x="210" y="218" font-size="15" text-anchor="middle">1 sur 139 838 160</text>
+          </svg></div>
+        <div class="body">
+          <h3>L'échelle de l'improbable</h3>
+          <p>Que vaut une chance sur 139 838 160, celle de l'EuroMillions ? Sept jeux montent la difficulté jusqu'à ce niveau : pile ou face, gobelets, as et rois, dés, cadenas, anniversaires et album Panini.</p>
+          <div class="spec"><span>7 jeux · tirages simulés</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/pi.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <polygon class="f-soft s-warm" stroke-width="2.5" points="200,58 290,110 290,190 200,242 110,190 110,110" transform="rotate(30 200 150)"/>
+            <circle class="f-sheet s-ink" stroke-width="2.5" cx="200" cy="150" r="80"/>
+            <polygon class="s-acc" stroke-width="2.5" points="200,70 269,110 269,190 200,230 131,190 131,110"/>
+            <path class="s-ink" stroke-width="1.5" stroke-dasharray="4 4" d="M200 150 H280"/>
+            <text class="t-disp" x="200" y="168" font-size="54" text-anchor="middle" fill="var(--accent)" font-style="italic">π</text>
+            <text class="t-mono" x="200" y="282" font-size="13" text-anchor="middle">3,14159265358979…</text>
+          </svg></div>
+        <div class="body">
+          <h3>Chasse à π</h3>
+          <p>Huit façons d'approcher π, des polygones d'Archimède à la série de Chudnovsky, en passant par Monte-Carlo, les aiguilles de Buffon et les chocs de Galperin. Les décimales exactes s'affichent en vert, avec quatre mille ans d'histoire.</p>
+          <div class="spec"><span><math><mi>π</mi><mo>=</mo><mn>16</mn><mi>arctan</mi><mo>&#x2061;</mo><mfrac displaystyle="true"><mn>1</mn><mn>5</mn></mfrac><mo>−</mo><mn>4</mn><mi>arctan</mi><mo>&#x2061;</mo><mfrac displaystyle="true"><mn>1</mn><mn>239</mn></mfrac></math></span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/fourier.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <circle class="s-ink" stroke-width="2" cx="110" cy="150" r="60"/>
+            <circle class="s-ink" stroke-width="2" cx="152" cy="108" r="28"/>
+            <circle class="s-ink" stroke-width="2" cx="170" cy="94" r="12"/>
+            <path class="s-ink" stroke-width="2" d="M110 150 L152 108 L170 94 L178 86"/>
+            <circle class="f-acc" cx="178" cy="86" r="5"/>
+            <path class="s-line" stroke-width="1.5" stroke-dasharray="5 5" d="M178 86 H220"/>
+            <path class="s-acc" stroke-width="3" d="M220 86 C 240 60, 255 60, 268 100 S 296 200, 312 170 S 334 90, 352 120"/>
+            <path class="s-warm" stroke-width="2" stroke-dasharray="3 4" d="M220 120 H360"/>
+          </svg></div>
+        <div class="body">
+          <h3>Fourier Épicycles</h3>
+          <p>Des cercles qui tournent redessinent n'importe quelle forme. Cinq onglets : contours à dessiner, fonctions classiques, enregistrements réels analysés par FFT, courbes en 3D et le jeu du gribouillis.</p>
+          <div class="spec"><span><math><munder><mo>∑</mo><mi>k</mi></munder><mo>(</mo><msub><mi>a</mi><mi>k</mi></msub><mi>cos</mi><mo>&#x2061;</mo><mi>k</mi><mi>t</mi><mo>+</mo><msub><mi>b</mi><mi>k</mi></msub><mi>sin</mi><mo>&#x2061;</mo><mi>k</mi><mi>t</mi><mo>)</mo></math></span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/float.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <g class="t-mono" font-size="13">
+              <text x="40" y="104" fill="#b8324f">S</text><text x="74" y="104" fill="var(--accent)">EXPOSANT</text><text x="216" y="104" fill="var(--warm)">MANTISSE</text>
+            </g>
+            <rect x="40" y="116" width="22" height="32" rx="4" fill="#b8324f" opacity=".15" stroke="#b8324f"/>
+            <g fill="var(--accent-soft)" stroke="var(--accent)"><rect x="70" y="116" width="22" height="32" rx="4"/><rect x="96" y="116" width="22" height="32" rx="4" fill="var(--accent)"/><rect x="122" y="116" width="22" height="32" rx="4" fill="var(--accent)"/><rect x="148" y="116" width="22" height="32" rx="4" fill="var(--accent)"/><rect x="174" y="116" width="22" height="32" rx="4"/></g>
+            <g fill="var(--sheet)" stroke="var(--warm)"><rect x="210" y="116" width="22" height="32" rx="4" fill="var(--warm)"/><rect x="236" y="116" width="22" height="32" rx="4"/><rect x="262" y="116" width="22" height="32" rx="4"/><rect x="288" y="116" width="22" height="32" rx="4" fill="var(--warm)"/><rect x="314" y="116" width="22" height="32" rx="4" fill="var(--warm)"/><rect x="340" y="116" width="22" height="32" rx="4"/></g>
+            <text class="t-mono" x="200" y="200" font-size="15" text-anchor="middle">0,1 → 0,100000001490116…</text>
+            <text class="t-mono" x="200" y="226" font-size="12" text-anchor="middle" fill="var(--muted)">erreur ≤ ½ ULP</text>
+          </svg></div>
+        <div class="body">
+          <h3>Anatomie d'un float</h3>
+          <p>Pourquoi 0,1 n'est pas exactement 0,1 dans un ordinateur. On tape un nombre et l'on voit ses bits de signe, d'exposant et de mantisse, la valeur réellement stockée et l'erreur d'arrondi, dans sept formats.</p>
+          <div class="spec"><span><math><msup><mrow><mo>(</mo><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mi>s</mi></msup><mo>×</mo><mi>m</mi><mo>×</mo><msup><mn>2</mn><mi>e</mi></msup></math></span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/morse.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect class="f-sheet" x="40" y="60" width="320" height="56" rx="4"/>
+            <text class="t-mono" x="200" y="96" font-size="22" text-anchor="middle" letter-spacing="3">··· ––– ···</text>
+            <ellipse class="f-ink" cx="200" cy="232" rx="90" ry="12" opacity=".15"/>
+            <circle class="f-warm s-ink" stroke-width="3" cx="200" cy="186" r="44"/>
+            <circle class="f-sheet" cx="186" cy="172" r="10" opacity=".35"/>
+            <text class="t-mono" x="200" y="138" font-size="12" text-anchor="middle" fill="var(--muted)">S · O · S</text>
+          </svg></div>
+        <div class="body">
+          <h3>Télégraphe Morse</h3>
+          <p>L'alphabet avec ses mots-repères (Co·ca·Co·la donne C), un manipulateur à presser du doigt avec l'arbre des lettres qui s'illumine, et un traducteur qui lit le message à voix de télégraphe.</p>
+          <div class="spec"><span>Alphabet · télégramme · traduction</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/allure.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect class="f-ink" x="190" y="46" width="20" height="14" rx="3"/>
+            <circle class="f-sheet s-ink" stroke-width="4" cx="200" cy="150" r="88"/>
+            <path class="s-line" stroke-width="3" d="M200 70 V82 M280 150 H268 M200 230 V218 M120 150 H132"/>
+            <path class="s-warm" stroke-width="10" stroke-linecap="round" d="M200 70 A80 80 0 0 1 276 126"/>
+            <text class="t-disp" x="200" y="162" font-size="40" text-anchor="middle">5:00</text>
+            <text class="t-mono" x="200" y="188" font-size="13" text-anchor="middle" fill="var(--muted)">min/km · 12 km/h</text>
+          </svg></div>
+        <div class="body">
+          <h3>Convertisseur d'allure</h3>
+          <p>Passer de la vitesse à l'allure et inversement, en kilomètres ou en miles. On obtient le temps d'arrivée sur 10 km, semi et marathon, ou l'allure à tenir pour un objectif, avec les temps de passage.</p>
+          <div class="spec"><span>10 km · semi · marathon</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="projets/monkey.html">
+        <div class="art">
+          <svg viewBox="0 0 400 300" aria-hidden="true">
+            <rect x="0" y="0" width="400" height="300" fill="#2F4D2F"/>
+            <path d="M0 40 Q60 10 120 46 T240 30 T400 44 V0 H0Z" fill="#3E6B3A"/>
+            <g stroke="#1F3420" stroke-width="3">
+              <rect x="70" y="150" width="56" height="56" rx="10" fill="#F0A456"/>
+              <rect x="136" y="150" width="56" height="56" rx="10" fill="#E8F0E0"/>
+              <rect x="202" y="150" width="56" height="56" rx="10" fill="#E8F0E0"/>
+              <rect x="268" y="150" width="56" height="56" rx="10" fill="#8EA2FF"/>
+            </g>
+            <g font-family="JetBrains Mono,monospace" font-size="22" font-weight="700" text-anchor="middle">
+              <text x="98" y="186" fill="#1F3420">1</text><text x="164" y="186" fill="#1F3420">?</text>
+              <text x="230" y="186" fill="#1F3420">?</text><text x="296" y="186" fill="#1F3420">4</text>
+            </g>
+            <g>
+              <circle cx="200" cy="96" r="34" fill="#7A4E2D"/>
+              <circle cx="164" cy="90" r="13" fill="#7A4E2D"/><circle cx="236" cy="90" r="13" fill="#7A4E2D"/>
+              <circle cx="164" cy="90" r="7" fill="#D9A57A"/><circle cx="236" cy="90" r="7" fill="#D9A57A"/>
+              <ellipse cx="200" cy="106" rx="22" ry="18" fill="#D9A57A"/>
+              <circle cx="189" cy="88" r="4" fill="#1F1A14"/><circle cx="211" cy="88" r="4" fill="#1F1A14"/>
+              <path d="M190 112 Q200 120 210 112" stroke="#1F1A14" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </g>
+          </svg></div>
+        <div class="body">
+          <h3>Monkey Memory</h3>
+          <p>Un jeu de mémoire dans la jungle : on mémorise l'ordre des cases, puis on le retrouve. Modes zen et score, avec musique. Développé en Flutter avec Claude Code.</p>
+          <div class="spec"><span>Flutter · version web</span><span class="go">Ouvrir →</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <footer>© 2026 Benoît de la Batut</footer>
+</div>
+
+
+</body>
+</html>

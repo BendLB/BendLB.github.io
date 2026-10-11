@@ -1,0 +1,474 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Anatomie d'un float</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: single datasheet column — input, bit register, decomposition, stored value, error, format spec */
+:root{
+  --bg:#edf0f3; --surface:#ffffff; --ink:#16202a; --muted:#5a6776; --line:#d2d9e1;
+  --sign:#b8324f; --exp:#1d6c8a; --man:#a86a12; --ok:#2f7d4f; --warn:#b4471f;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#17202a; --ink:#e3e8ee; --muted:#93a0af; --line:#2a3542;
+  --sign:#f0809a; --exp:#5db7d6; --man:#e3aa4c; --ok:#6cc792; --warn:#f08a5d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#17202a; --ink:#e3e8ee; --muted:#93a0af; --line:#2a3542;
+  --sign:#f0809a; --exp:#5db7d6; --man:#e3aa4c; --ok:#6cc792; --warn:#f08a5d; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-body);font-weight:400;font-size:.9rem;color:var(--muted);letter-spacing:0;margin-top:4px}
+h2{font-family:var(--f-display);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px}
+.seg button{font:inherit;font-size:.82rem;border:0;background:transparent;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;line-height:1.2;text-align:left}
+.seg button b{display:block;font-family:var(--f-mono);font-weight:600;color:var(--ink);font-size:.85rem}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-pressed="true"] b{color:var(--bg)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--exp);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tabs button{font:inherit;font-weight:500;background:none;border:0;border-bottom:2px solid transparent;padding:4px 0 8px;color:var(--muted);cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+label.l{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px}
+input[type=text]{width:100%;box-sizing:border-box;font-family:var(--f-mono);font-size:1.15rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips button{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:3px 10px;cursor:pointer}
+.chips button:hover{border-color:var(--muted)}
+.emgrid{display:grid;grid-template-columns:auto 1fr 2fr;gap:12px;align-items:end}
+.signbtn{font-family:var(--f-mono);font-size:1.3rem;width:52px;height:46px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--sign);cursor:pointer}
+.hint{font-size:.8rem;color:var(--muted);margin:10px 0 0}
+.err{color:var(--warn);font-size:.85rem;margin:8px 0 0}
+/* bit register */
+.reg{display:flex;flex-wrap:wrap;gap:14px 10px;align-items:flex-start}
+.fld{min-width:0}
+.fld .cap{font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;font-family:var(--f-display)}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.bit{font-family:var(--f-mono);font-size:.85rem;width:22px;height:30px;padding:0;border-radius:4px;border:1px solid var(--c);cursor:pointer;
+  background:color-mix(in srgb,var(--c) 8%,var(--surface));color:var(--c)}
+.bit.on{background:var(--c);color:var(--surface)}
+.bit.nib{margin-right:5px}
+.f-s{--c:var(--sign)}.f-e{--c:var(--exp)}.f-m{--c:var(--man)}
+.reg-foot{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:12px;font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.reg-foot span b{color:var(--ink);font-weight:500}
+.repr{margin-top:14px;font-family:var(--f-mono);font-size:1.15rem;overflow-x:auto;white-space:nowrap;padding:10px 12px;background:var(--bg);border-radius:8px}
+.repr .s{color:var(--sign)}.repr .e{color:var(--exp)}.repr .m{color:var(--man)}
+.repr small{font-family:var(--f-body);font-size:.75rem;color:var(--muted);margin-left:10px}
+.fmtbar{display:flex;align-items:center;gap:8px}
+.helpbtn{font:600 1rem var(--f-body);width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.helpbtn:hover,.back:hover{border-color:var(--muted)}
+.back{font:inherit;font-weight:500;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--ink);cursor:pointer}
+.prose p{max-width:68ch;margin:0 0 10px}
+.prose h3{font-family:var(--f-display);font-size:1.05rem;font-weight:600;margin:18px 0 4px}
+.prose .eq{font-family:var(--f-mono);font-size:1.2rem;background:var(--bg);border-radius:8px;padding:10px 12px;display:inline-block}
+.tscroll{overflow-x:auto}
+.cmp{border-collapse:collapse;font-size:.88rem;min-width:620px;width:100%}
+.cmp th,.cmp td{padding:8px 10px;border-top:1px solid var(--line);text-align:right;vertical-align:top;font-variant-numeric:tabular-nums}
+.cmp thead th{border-top:0;font-family:var(--f-mono);font-weight:600}
+.cmp thead th span{display:block;font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.78rem}
+.cmp td{font-family:var(--f-mono);white-space:nowrap}
+.cmp th[scope=row]{text-align:left;font-weight:600;width:42%}
+.cmpfmt{min-width:420px}
+.cmpfmt tbody tr{cursor:pointer}
+.cmpfmt tbody tr:hover th,.cmpfmt tbody tr:hover td{background:color-mix(in srgb,var(--exp) 6%,transparent)}
+.cmpfmt tr.cur th,.cmpfmt tr.cur td{background:color-mix(in srgb,var(--exp) 13%,transparent)}
+.cmpfmt th[scope=row]{width:auto;font-family:var(--f-mono)}
+.cmpfmt td{white-space:normal}
+.cmp th[scope=row] span{display:block;font-weight:400;color:var(--muted);font-size:.8rem;margin-top:2px;max-width:40ch}
+/* values */
+.big{font-family:var(--f-mono);font-size:1.6rem;font-weight:500;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.exact{font-family:var(--f-mono);font-size:.85rem;background:var(--bg);border-radius:8px;padding:10px 12px;word-break:break-all;max-height:9em;overflow-y:auto;margin-top:4px}
+.rows{display:grid;grid-template-columns:minmax(0,13em) minmax(0,1fr);gap:8px 16px;margin-top:14px;align-items:baseline}
+.rows dt{color:var(--muted);font-size:.88rem}
+.rows dd{margin:0;font-family:var(--f-mono);font-size:.92rem;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:var(--f-body);font-size:.78rem;font-weight:600;padding:1px 8px;border-radius:10px;margin-left:6px}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.line{margin-top:16px;overflow-x:auto}
+.line svg{display:block;width:100%;max-width:640px;height:auto}
+.note{color:var(--muted);font-size:.85rem;margin:10px 0 0;max-width:65ch}
+sup{font-size:.7em}
+@media (max-width:700px){
+  .rows{grid-template-columns:minmax(0,1fr);gap:2px 0}
+  .rows dd{margin-bottom:8px}
+  .emgrid{grid-template-columns:auto 1fr}
+  .emgrid .mcol{grid-column:1/-1}
+  h1{font-size:1.6rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="app">
+  <header>
+    <h1>Anatomie d'un float<small>Norme IEEE 754 : signe, exposant, mantisse et erreur d'arrondi</small></h1>
+    <div class="fmtbar"><div class="seg" id="fmts" role="group" aria-label="Format"></div><button class="helpbtn" id="helpBtn" aria-label="Comment un float est stocké">?</button></div>
+  </header>
+
+  <section class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-dec" aria-selected="true">Nombre décimal</button>
+      <button role="tab" id="tab-em" aria-selected="false">Signe · e · m</button>
+    </div>
+    <div id="pane-dec">
+      <label class="l" for="decIn">Valeur à convertir (décimal, notation scientifique ou fraction)</label>
+      <input type="text" id="decIn" value="0.1" autocomplete="off" spellcheck="false" inputmode="decimal">
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="pane-em" hidden>
+      <div class="emgrid">
+        <div><label class="l" for="sIn">Signe</label><button class="signbtn" id="sIn" aria-label="Basculer le signe">+</button></div>
+        <div><label class="l" for="eIn">Exposant réel e</label><input type="text" id="eIn" value="-4" autocomplete="off" inputmode="numeric"></div>
+        <div class="mcol"><label class="l" for="mIn">Mantisse m (1 ≤ m &lt; 2 en forme normalisée)</label><input type="text" id="mIn" value="1.6" autocomplete="off" inputmode="decimal"></div>
+      </div>
+      <p class="hint">Valeur demandée : (−1)<sup>s</sup> × m × 2<sup>e</sup>. Elle est ensuite arrondie au float le plus proche.</p>
+    </div>
+    <p class="err" id="errMsg" hidden></p>
+  </section>
+
+  <section class="panel">
+    <h2>Registre de bits <span style="text-transform:none;letter-spacing:0;font-weight:400">· touchez un bit pour l'inverser</span></h2>
+    <div class="reg" id="reg"></div>
+    <div class="repr" id="repr"></div>
+    <div class="reg-foot" id="regFoot"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Valeur stockée</h2>
+    <div class="big" id="stored"></div>
+    <label class="l" style="margin-top:12px">Valeur exacte en décimal</label>
+    <div class="exact" id="exact"></div>
+    <dl class="rows" id="errRows"></dl>
+    <div class="line" id="line"></div>
+    <p class="note" id="lineNote"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Comparaison des formats</h2>
+    <div class="tscroll"><table class="cmp cmpfmt" id="cmpFmt"></table></div>
+    <p class="note">Touchez une ligne pour passer à ce format.</p>
+  </section>
+</div>
+
+<div class="wrap" id="help" hidden>
+  <div><button class="back" id="backBtn">← Retour</button></div>
+  <h1>Comment un float est stocké</h1>
+  <section class="panel prose">
+    <h2>Le principe</h2>
+    <p>Un nombre à virgule flottante IEEE 754 est rangé dans trois champs de bits. Sa valeur se lit comme une notation scientifique en base 2 :</p>
+    <p class="eq"><span style="color:var(--sign)">(−1)<sup>s</sup></span> × <span style="color:var(--man)">m</span> × <span style="color:var(--exp)">2<sup>e</sup></span></p>
+    <h3 style="color:var(--sign)">Signe s</h3>
+    <p>Un seul bit : 0 pour positif, 1 pour négatif. Il existe donc un +0 et un −0.</p>
+    <h3 style="color:var(--exp)">Exposant e</h3>
+    <p>Stocké comme un entier non signé auquel on a ajouté un <strong>biais</strong> (127 en binary32). L'exposant réel vaut exposant stocké − biais. Exemple : 0,1 en binary32 a un exposant stocké de 123, donc e = 123 − 127 = −4. Le biais évite d'avoir un bit de signe pour l'exposant et permet de comparer deux floats positifs comme de simples entiers.</p>
+    <h3 style="color:var(--man)">Mantisse m</h3>
+    <p>Pour un nombre normalisé, 1 ≤ m &lt; 2. Le chiffre avant la virgule vaut toujours 1, il n'est donc <strong>pas stocké</strong> : c'est le bit implicite. Les bits de mantisse ne contiennent que la partie après la virgule (la fraction f), et m = 1,f. On gagne ainsi un bit de précision gratuitement.</p>
+    <h3>Nombres dénormalisés</h3>
+    <p>Quand tous les bits d'exposant sont à 0, le bit implicite devient 0 (m = 0,f) et l'exposant est bloqué à sa valeur minimale, 1 − biais. Ces nombres comblent l'écart entre zéro et le plus petit normalisé, au prix d'une précision qui diminue à mesure qu'on s'approche de zéro.</p>
+    <h3>Valeurs spéciales</h3>
+    <p>Exposant et fraction tous à 0 : <strong>zéro</strong> (±0). Exposant tout à 1 et fraction nulle : <strong>infini</strong> (±∞), obtenu par dépassement ou par 1/0. Exposant tout à 1 et fraction non nulle : <strong>NaN</strong> (« not a number »), résultat d'opérations indéfinies comme 0/0.</p>
+    <h3>Formats 8 et 4 bits (IA)</h3>
+    <p>Les formats FP8 et FP4 servent à accélérer les réseaux de neurones. Ils suivent le même principe, avec quelques écarts aux règles IEEE pour ne pas gaspiller de codes sur si peu de bits.</p>
+    <p><strong>FP8 E5M2</strong> suit les règles IEEE : infini et NaN existent.</p>
+    <p><strong>FP8 E4M3</strong> n’a pas d’infini. L’exposant tout à 1 sert à des nombres normaux, sauf le code S.1111.111 qui est NaN. Le plus grand nombre est 448. Au-delà, la conversion donne NaN.</p>
+    <p><strong>FP4 E2M1</strong> n’a ni infini ni NaN. Il ne possède que 8 valeurs positives : 0, 0,5, 1, 1,5, 2, 3, 4 et 6. Au-delà de 6, la conversion sature à 6.</p>
+    <h3>Arrondi</h3>
+    <p>La plupart des nombres décimaux (0,1 par exemple) n'ont pas d'écriture binaire finie. On garde le float le plus proche ; en cas d'égalité parfaite, celui dont le dernier bit est pair. L'erreur est donc au plus d'un demi-ULP, l'écart entre deux floats consécutifs.</p>
+  </section>
+  <section class="panel">
+    <h2>Les quatre formats</h2>
+    <div class="tscroll"><table class="cmp" id="cmp"></table></div>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const FORMATS=[
+  {id:'e2m1',name:'FP4 E2M1',sub:'IA · pas d’∞ ni NaN',e:2,m:1,sp:'none'},
+  {id:'e4m3',name:'FP8 E4M3',sub:'IA · pas d’∞',e:4,m:3,sp:'e4m3'},
+  {id:'e5m2',name:'FP8 E5M2',sub:'IA',e:5,m:2},
+  {id:'b16',name:'binary16',sub:'half',e:5,m:10},
+  {id:'bf16',name:'bfloat16',sub:'brain float',e:8,m:7},
+  {id:'b32',name:'binary32',sub:'float',e:8,m:23},
+  {id:'b64',name:'binary64',sub:'double',e:11,m:52},
+];
+FORMATS.forEach(F=>{F.bias=2**(F.e-1)-1;F.expMax=2**F.e-1;F.Emin=1-F.bias-F.m;F.total=1+F.e+F.m;F.P=BigInt(F.m);F.twoP=1n<<F.P;F.sp=F.sp||'ieee';
+  const ones=F.twoP-1n, top=BigInt(F.expMax)<<F.P;
+  F.maxMag=F.sp==='ieee'?(BigInt(F.expMax-1)<<F.P)|ones:F.sp==='e4m3'?top|(ones-1n):top|ones;
+  F.nanMag=F.sp==='ieee'?top|(1n<<(F.P-1n)):F.sp==='e4m3'?top|ones:null;
+  F.Emax=F.sp==='ieee'?F.bias:F.expMax-F.bias;});
+let F=FORMATS.find(f=>f.id==='b32'), mode='dec', cur=null;
+
+/* ---------- parsing ---------- */
+function parseInput(raw){
+  let s=String(raw).trim().replace(/\s+/g,'').replace(/,/g,'.').replace(/[−–]/g,'-');
+  if(!s) return {kind:'err',msg:'Entrez un nombre.'};
+  let m;
+  if(m=s.match(/^([+-]?)(inf|infinity|infini|∞)$/i)) return {kind:'inf',neg:m[1]==='-'};
+  if(/^[+-]?nan$/i.test(s)) return {kind:'nan',neg:false};
+  if(m=s.match(/^([+-]?)(\d+)\/(\d+)$/)){const d=BigInt(m[3]);if(d===0n)return{kind:'err',msg:'Division par zéro.'};return{kind:'num',neg:m[1]==='-',num:BigInt(m[2]),den:d};}
+  m=s.match(/^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);
+  if(!m||!(m[2]||m[3])) return {kind:'err',msg:'Format non reconnu. Exemples : 0.1, -2.5e-8, 1/3.'};
+  const frac=m[3]||'';const x=(m[4]?parseInt(m[4],10):0)-frac.length;
+  if(Math.abs(x)>6000) return {kind:'err',msg:'Exposant décimal trop grand (limite ±6000).'};
+  const N=BigInt(((m[2]||'')+frac)||'0');
+  return x>=0?{kind:'num',neg:m[1]==='-',num:N*10n**BigInt(x),den:1n}:{kind:'num',neg:m[1]==='-',num:N,den:10n**BigInt(-x)};
+}
+const bl=n=>n.toString(2).length;
+
+/* ---------- exact rounding (round half to even) ---------- */
+function encode(r){
+  const P=F.P, sb=(r.neg?1n:0n)<<BigInt(F.e+F.m);
+  const over=()=>F.sp==='ieee'?sb|(BigInt(F.expMax)<<P):F.sp==='e4m3'?sb|F.nanMag:sb|F.maxMag;
+  if(r.kind==='inf') return over();
+  if(r.kind==='nan') return F.nanMag!==null?F.nanMag:0n;
+  const {num,den}=r; if(num===0n) return sb;
+  const two1=F.twoP<<1n;
+  const fl=E=>E>=0?num/(den<<BigInt(E)):(num<<BigInt(-E))/den;
+  let E=bl(num)-bl(den)-F.m-1, q=fl(E);
+  while(q>=two1){E++;q=fl(E);} while(q<F.twoP){E--;q=fl(E);}
+  if(E<F.Emin) E=F.Emin;
+  const A=E>=0?num:num<<BigInt(-E), B=E>=0?den<<BigInt(E):den;
+  q=A/B; const r2=(A-q*B)*2n;
+  if(r2>B||(r2===B&&(q&1n))) q++;
+  if(q===two1){q>>=1n;E++;}
+  let ef,fr;
+  if(q<F.twoP){ef=0;fr=q;} else {ef=E+F.m+F.bias;fr=q-F.twoP;}
+  const mag=(BigInt(ef)<<P)|fr;
+  if(ef>F.expMax||mag>F.maxMag) return over();
+  return sb|mag;
+}
+function decode(bits){
+  const P=F.P, sign=Number((bits>>BigInt(F.e+F.m))&1n), ef=Number((bits>>P)&BigInt(F.expMax)), fr=bits&(F.twoP-1n);
+  const mg=bits&((1n<<BigInt(F.e+F.m))-1n);
+  let kind = F.nanMag!==null&&mg===F.nanMag?'nan':F.sp==='ieee'&&ef===F.expMax?(fr?'nan':'inf'):F.sp==='e4m3'&&ef===F.expMax&&mg>F.nanMag?'nan':ef===0?(fr?'sub':'zero'):'norm';
+  const M = kind==='norm'?fr+F.twoP:fr, E = kind==='norm'?ef-F.bias-F.m:F.Emin;
+  let value = kind==='inf'?(sign?-Infinity:Infinity):kind==='nan'?NaN:(sign?-1:1)*Number(M)*2**E;
+  return {sign,ef,fr,kind,M,E,value};
+}
+function tidy(s){let [a,x]=s.split('e');if(a.includes('.'))a=a.replace(/0+$/,'').replace(/\.$/,'');return x?a+'e'+x.replace('+',''):a;}
+function shortest(bits){
+  const d=decode(bits);
+  if(d.kind==='inf') return (d.sign?'-':'')+'Infinity';
+  if(d.kind==='nan') return 'NaN';
+  if(d.kind==='zero') return d.sign?'-0':'0';
+  const ex=exactDec(d.M,d.E); // short exact value beats the shortest round-trip string
+  if(ex.replace('.','').replace(/^0+/,'').length<=17&&ex.length<=24) return (d.sign?'-':'')+ex;
+  for(let i=1;i<=17;i++){const s=d.value.toPrecision(i);if(encode(parseInput(s))===bits){const n=String(Number(s));return /e/.test(n)?tidy(s):n;}}
+  return String(d.value);
+}
+const pretty=s=>s.replace(/^-/,'−').replace(/Infinity/,'∞').replace(/e(-?)(\d+)$/,(_,g,n)=>' × 10<sup>'+(g?'−':'')+n+'</sup>');
+function exactDec(M,E){
+  if(M===0n) return '0';
+  if(E>=0) return (M<<BigInt(E)).toString();
+  const k=-E; let s=(M*5n**BigInt(k)).toString();
+  if(s.length<=k) s='0'.repeat(k-s.length+1)+s;
+  const i=s.slice(0,s.length-k), f=s.slice(s.length-k).replace(/0+$/,'');
+  return f?i+'.'+f:i;
+}
+function fmtSci(num,den,sig=8,txt=false){
+  if(den<0n){num=-num;den=-den;}
+  const neg=num<0n, a=neg?-num:num; if(a===0n) return '0';
+  let d=a.toString().length-den.toString().length;
+  const ge=d=>d>=0?a>=den*10n**BigInt(d):a*10n**BigInt(-d)>=den;
+  while(!ge(d))d--; while(ge(d+1))d++;
+  const m=sig-1-d; const A=m>=0?a*10n**BigInt(m):a, B=m>=0?den:den*10n**BigInt(-m);
+  let S=(2n*A+B)/(2n*B); if(S.toString().length>sig){S/=10n;d++;}
+  const st=S.toString(); let mant=st[0]+(st.length>1?'.'+st.slice(1):''); if(mant.includes('.'))mant=mant.replace(/0+$/,'').replace(/\.$/,'');
+  const sgn=neg?'−':'';
+  if(d>=-3&&d<=5){ // plain notation
+    let out;
+    if(d>=0){const ip=st.slice(0,d+1).padEnd(d+1,'0'), fp=st.slice(d+1); out=fp?ip+'.'+fp:ip;}
+    else out='0.'+'0'.repeat(-d-1)+st;
+    if(out.includes('.')) out=out.replace(/0+$/,'').replace(/\.$/,'');
+    return sgn+out;
+  }
+  if(txt) return sgn+mant+'e'+(d<0?'−'+(-d):d);
+  return sgn+mant+' × 10<sup>'+(d<0?'−'+(-d):d)+'</sup>';
+}
+const pow2=E=>E>=0?{n:1n<<BigInt(E),d:1n}:{n:1n,d:1n<<BigInt(-E)};
+const fmtPow2=E=>{const p=pow2(E);return fmtSci(p.n,p.d,8);};
+const sigOf=()=>Math.min(17,Math.ceil((F.m+1)*Math.log10(2))+3);
+const hex=bits=>'0x'+bits.toString(16).toUpperCase().padStart(Math.ceil(F.total/4),'0');
+const sup=n=>'<sup>'+(n<0?'−'+(-n):n)+'</sup>';
+
+/* ---------- UI build ---------- */
+$('fmts').innerHTML=FORMATS.map(f=>`<button data-f="${f.id}" aria-pressed="${f===F}"><b>${f.name}</b>${f.sub} · ${f.total} bits</button>`).join('');
+$('fmts').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;F=FORMATS.find(f=>f.id===b.dataset.f);
+  [...$('fmts').children].forEach(x=>x.setAttribute('aria-pressed',x===b));fromInputs();});
+const PRESETS=['0.1','1/3','3.14159265358979','16777217','65504','1e-40','-0.75','1e39'];
+$('chips').innerHTML=PRESETS.map(p=>`<button data-v="${p}">${p}</button>`).join('');
+$('chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$('decIn').value=b.dataset.v;fromInputs();});
+function setMode(m){
+  mode=m;$('tab-dec').setAttribute('aria-selected',m==='dec');$('tab-em').setAttribute('aria-selected',m==='em');
+  $('pane-dec').hidden=m!=='dec';$('pane-em').hidden=m!=='em';
+}
+$('tab-dec').onclick=()=>{if(mode==='dec')return;setMode('dec');if(cur)$('decIn').value=shortest(cur.bits);fromInputs();};
+$('tab-em').onclick=()=>{if(mode==='em')return;setMode('em');if(cur)fillEM(cur.bits);fromInputs();};
+$('sIn').onclick=()=>{$('sIn').textContent=$('sIn').textContent==='+'?'−':'+';fromInputs();};
+['decIn','eIn','mIn'].forEach(id=>$(id).addEventListener('input',fromInputs));
+
+function fillEM(bits){
+  const d=decode(bits); if(d.kind==='inf'||d.kind==='nan') return;
+  $('sIn').textContent=d.sign?'−':'+';
+  if(d.kind==='zero'){$('eIn').value='0';$('mIn').value='0';return;}
+  $('eIn').value=String(d.kind==='norm'?d.ef-F.bias:1-F.bias);
+  $('mIn').value=exactDec(d.M,-F.m);
+}
+function showErr(msg){$('errMsg').hidden=!msg;$('errMsg').textContent=msg||'';}
+
+function fromInputs(){
+  let ref,label;
+  if(mode==='dec'){
+    ref=parseInput($('decIn').value); if(ref.kind==='err') return showErr(ref.msg);
+    label=pretty(tidy($('decIn').value.trim().replace(/,/g,'.')));
+  } else {
+    const es=$('eIn').value.trim().replace(/[−–]/g,'-');
+    if(!/^[+-]?\d+$/.test(es)) return showErr('L’exposant e doit être un entier.');
+    const e=parseInt(es,10); if(Math.abs(e)>8000) return showErr('Exposant hors limites (±8000).');
+    const m=parseInput($('mIn').value); if(m.kind==='err') return showErr('Mantisse : '+m.msg);
+    if(m.kind!=='num') return showErr('La mantisse doit être un nombre fini.');
+    const neg=($('sIn').textContent==='−')!==m.neg;
+    ref={kind:'num',neg,num:e>=0?m.num<<BigInt(e):m.num,den:e>=0?m.den:m.den<<BigInt(-e)};
+    label=(neg?'−':'')+$('mIn').value.trim().replace(/^[+-]/,'')+' × 2'+sup(e);
+  }
+  if(ref.kind==='nan'&&F.nanMag===null) return showErr(F.name+' ne peut pas représenter NaN.');
+  showErr('');
+  cur={bits:encode(ref),ref,label};render();
+}
+
+/* ---------- render ---------- */
+function render(){
+  const {bits,ref,label}=cur, d=decode(bits);
+  // register
+  const str=bits.toString(2).padStart(F.total,'0');
+  const cell=(i,cls,title,gap)=>`<button class="bit ${cls}${str[i]==='1'?' on':''}${gap?' nib':''}" data-i="${i}" title="${title}" aria-label="bit ${F.total-1-i} : ${str[i]}">${str[i]}</button>`;
+  let s=cell(0,'f-s','signe'), ex='', mn='';
+  for(let j=0;j<F.e;j++) ex+=cell(1+j,'f-e','poids 2^'+(F.e-1-j)+' dans l’exposant stocké',(F.e-1-j)%4===0&&j!==F.e-1);
+  for(let j=0;j<F.m;j++) mn+=cell(1+F.e+j,'f-m','poids 2^−'+(j+1),(F.m-1-j)%4===0&&j!==F.m-1);
+  $('reg').innerHTML=`<div class="fld f-s"><div class="cap" style="color:var(--sign)">S</div><div class="cells">${s}</div></div>
+  <div class="fld f-e"><div class="cap" style="color:var(--exp)">Exposant · ${F.e} bits</div><div class="cells">${ex}</div></div>
+  <div class="fld f-m" style="flex:1 1 260px"><div class="cap" style="color:var(--man)">Mantisse · ${F.m} bits</div><div class="cells">${mn}</div></div>`;
+  $('regFoot').innerHTML=`<span>hex <b>${hex(bits)}</b></span><span>entier <b>${bits.toString()}</b></span>`;
+
+  // representation (−1)^s × m × 10^x, x = e·log10(2)
+  const finite=d.kind!=='inf'&&d.kind!=='nan';
+  const fr=s=>s.replace('.',',');
+  let rp;
+  if(d.kind==='inf') rp=`<span class="s">${d.sign?'−':'+'}</span> ∞<small>infini</small>`;
+  else if(d.kind==='nan') rp=`NaN<small>pas un nombre</small>`;
+  else if(d.kind==='zero') rp=`<span class="s">${d.sign?'−':'+'}</span> 0`;
+  else {
+    const eReal=d.kind==='norm'?d.ef-F.bias:1-F.bias;
+    const mStr=fmtSci(d.kind==='norm'?d.fr+F.twoP:d.fr,F.twoP,sigOf(),true);
+    const x=eReal*Math.LOG10E*Math.LN2, xs=(Math.round(x*1e4)/1e4).toFixed(4).replace(/0+$/,'').replace(/\.$/,'');
+    rp=`<span class="s">${d.sign?'−':'+'}</span> <span class="m">${fr(mStr)}</span> × <span class="e">10<sup>${fr(xs).replace('-','−')}</sup></span>`
+      +`<small>${d.kind==='sub'?'dénormalisé, ':''}2<sup>${eReal<0?'−'+(-eReal):eReal}</sup> = 10<sup>${fr(xs).replace('-','−')}</sup></small>`;
+  }
+  $('repr').innerHTML=rp;
+
+  // stored value
+  $('stored').innerHTML=pretty(shortest(bits));
+  $('exact').textContent=finite?(d.sign?'−':'')+exactDec(d.M,d.E):'—';
+  const sm=(1n<<BigInt(F.e+F.m)), mag=bits&(sm-1n), sb=bits&sm;
+  let rows='', line='', note='';
+  if(finite) rows+=`<dt>Écart (1 ULP)</dt><dd>2${sup(d.E)} = ${fmtPow2(d.E)}</dd>`;
+  if(ref.kind!=='num'){
+    rows+=`<dt>Erreur absolue</dt><dd>non définie pour ${ref.kind==='nan'?'NaN':'l’infini'}</dd>`;
+  } else if(!finite){
+    rows+=`<dt>Erreur absolue</dt><dd>infinie <span class="pill warn">dépassement</span></dd>`;
+    note=`La valeur dépasse le plus grand nombre fini (${pretty(shortest(F.maxMag))}) : ${F.sp==='ieee'?'elle est arrondie à l’infini.':'ce format n’a pas d’infini, le résultat est NaN.'}`;
+  } else {
+    const rat=(dd)=>({n:(dd.sign?-1n:1n)*(dd.E>=0?dd.M<<BigInt(dd.E):dd.M), d:dd.E>=0?1n:1n<<BigInt(-dd.E)});
+    const S=rat(d), rN=(ref.neg?-1n:1n)*ref.num, rD=ref.den;
+    const eN=rN*S.d-S.n*rD, eD=rD*S.d;
+    const uN=d.E>=0?eN:eN<<BigInt(-d.E), uD=d.E>=0?eD<<BigInt(d.E):eD;
+    const t=Number((uN*1000000n)/uD)/1e6*(d.sign?-1:1);
+    rows+=`<dt>Erreur absolue (demandée − stockée)</dt><dd>${fmtSci(eN,eD,10)}${eN===0n?'<span class="pill ok">représentation exacte</span>':''}</dd>`;
+    // number line on |x| axis, in ULP units
+    const sig=sigOf(), val=dd=>{const r=rat(dd);return fmtSci(r.n,r.d,sig,true);};
+    const ls=(d.kind==='norm'&&d.fr===0n&&d.ef>1)?0.5:1, hasLo=mag>0n, hasHi=mag<F.maxMag;
+    const W=480, X=u=>24+(u+1.3)/2.6*(W-48), tc=Math.max(-1.25,Math.min(1.25,t)), bL=hasLo?-ls/2:0;
+    const loV=hasLo?val(decode(sb|(mag-1n))):'', hiV=hasHi?val(decode(sb|(mag+1n))):(F.sp==='ieee'?'∞':'aucun');
+    const clampX=x=>Math.max(90,Math.min(W-90,x));
+    const tick=(u,lbl,v,y)=>`<line x1="${X(u)}" x2="${X(u)}" y1="49" y2="65" style="stroke:var(--ink)" stroke-width="2"/>
+      <text x="${clampX(X(u))}" y="${y}" text-anchor="middle" style="fill:var(--muted);font:12px var(--f-body)">${lbl}</text>
+      <text x="${clampX(X(u))}" y="${y+15}" text-anchor="middle" style="fill:var(--ink);font:11px var(--f-mono)">${v}</text>`;
+    const refV=fmtSci(rN,rD,sig,true);
+    line=`<svg viewBox="0 0 ${W} 150" role="img" aria-label="Valeur demandée entre les floats voisins">
+      <rect x="${X(bL)}" y="46" width="${X(0.5)-X(bL)}" height="22" style="fill:color-mix(in srgb,var(--exp) 14%,transparent)"/>
+      <line x1="${X(-1.3)}" x2="${X(1.3)}" y1="57" y2="57" style="stroke:var(--muted)" stroke-width="1"/>
+      ${[bL,0.5].map(u=>`<line x1="${X(u)}" x2="${X(u)}" y1="42" y2="72" style="stroke:var(--exp)" stroke-dasharray="3 3"/>`).join('')}
+      ${hasLo?tick(-ls,'plus proche en dessous',loV,88):''}
+      ${tick(1,'plus proche au-dessus',hiV,88)}
+      ${tick(0,'stockée',val(d),122)}
+      <path d="M${X(tc)} 42 l-6 -10 h12 z" style="fill:var(--sign)"/>
+      <text x="${clampX(X(tc))}" y="12" text-anchor="middle" style="fill:var(--sign);font:600 12px var(--f-body)">demandée</text>
+      <text x="${clampX(X(tc))}" y="26" text-anchor="middle" style="fill:var(--sign);font:11px var(--f-mono)">${refV}</text>
+    </svg>`;
+    note=Math.abs(t)>0.5?`La valeur dépasse le plus grand nombre fini : ce format sature, elle est ramenée à ${pretty(shortest(F.maxMag))}.`:`Zone bleue : toutes les valeurs qui s’arrondissent vers ce float (± ½ ULP). La valeur demandée y tombe forcément, donc l’erreur absolue ne dépasse jamais ½ ULP.`;
+  }
+  $('errRows').innerHTML=rows; $('line').innerHTML=line; $('lineNote').innerHTML=note;
+  renderCompare();
+}
+const rng=(bits,r)=>{const t=shortest(bits);return /e/.test(t)?fmtSci(r.n,r.d,2):pretty(t);};
+function renderCompare(){
+  const ref=cur.ref, keep=F;
+  const rat=dd=>({n:(dd.sign?-1n:1n)*(dd.E>=0?dd.M<<BigInt(dd.E):dd.M), d:dd.E>=0?1n:1n<<BigInt(-dd.E)});
+  const body=FORMATS.map(f=>{F=f;
+    const b=encode(ref), d=decode(b), mx=rat(decode(F.maxMag)), mn=pow2(F.Emin);
+    let err='—', flag='';
+    if(ref.kind==='num'){
+      const rN=(ref.neg?-1n:1n)*ref.num, rD=ref.den, a=ref.num*mx.d, big=a>mx.n*ref.den, small=ref.num!==0n&&ref.num*2n*mn.d<mn.n*ref.den;
+      if(d.kind==='inf'||d.kind==='nan') err='∞';
+      else {const S=rat(d), eN=rN*S.d-S.n*rD; err=eN===0n?'0':fmtSci(eN,rD*S.d,3);}
+      if(big) flag='<span class="pill warn">trop grand</span>'; else if(small) flag='<span class="pill warn">trop petit</span>';
+      else if(err==='0') flag='<span class="pill ok">exact</span>';
+    }
+    return `<tr data-f="${f.id}" class="${f===keep?'cur':''}"><th scope="row">${f.name}</th><td>${pretty(shortest(b))}</td><td>${err}</td></tr>`;
+  }).join('');
+  F=keep;
+  $('cmpFmt').innerHTML=`<thead><tr><th style="text-align:left">Format</th><th>Valeur stockée</th><th>Erreur absolue</th></tr></thead><tbody>${body}</tbody>`;
+}
+$('cmpFmt').addEventListener('click',e=>{const tr=e.target.closest('tr[data-f]');if(!tr)return;
+  const b=[...$('fmts').children].find(x=>x.dataset.f===tr.dataset.f); if(b) b.click();});
+$('reg').addEventListener('click',e=>{
+  const b=e.target.closest('.bit');if(!b)return;
+  const i=+b.dataset.i;const bits=cur.bits^(1n<<BigInt(F.total-1-i));
+  if(mode==='dec'){$('decIn').value=shortest(bits);}else{fillEM(bits);}
+  const d=decode(bits);
+  if(d.kind==='nan'){cur={bits,ref:{kind:'nan'},label:'NaN'};render();return;}
+  fromInputs();
+});
+/* ---------- help screen ---------- */
+function buildHelp(){
+  const keep=F, cols=FORMATS.map(f=>{F=f;
+    return {name:f.name,sub:f.sub,total:f.total,split:`1 / ${f.e} / ${f.m}`,p:f.m+1,dig:((f.m+1)*Math.log10(2)).toFixed(1),
+      bias:f.bias,er:`${1-f.bias} … ${f.Emax}`,eps:fmtPow2(-f.m),max:pretty(shortest(f.maxMag)),
+      sp:f.sp==='ieee'?'oui / oui':f.sp==='e4m3'?'non / oui':'non / non',minN:pretty(shortest(1n<<f.P)),minS:pretty(shortest(1n))};});
+  F=keep;
+  const R=[
+    ['total','Bits totaux','Taille d’un nombre en mémoire.'],
+    ['split','Signe / exposant / mantisse','Nombre de bits de chaque champ. Plus d’exposant donne une plus grande plage, plus de mantisse une meilleure précision.'],
+    ['p','Précision p (bits)','Bits significatifs : les bits de mantisse plus le 1 implicite.'],
+    ['dig','Chiffres décimaux','Nombre de chiffres décimaux fiables, environ p × log₁₀(2).'],
+    ['bias','Biais','Constante soustraite à l’exposant stocké pour obtenir l’exposant réel e. Elle vaut 2^(bits d’exposant − 1) − 1.'],
+    ['er','Exposant réel e','Plage des puissances de 2 accessibles aux nombres normalisés.'],
+    ['eps','Epsilon machine','Écart entre 1 et le float suivant, 2^−(p−1). L’erreur relative d’arrondi d’un nombre normalisé ne dépasse pas ε/2.'],
+    ['sp','Infini / NaN','Valeurs spéciales disponibles. Les formats IA récupèrent ces codes pour gagner des nombres finis.'],
+    ['max','Plus grand fini','Au-delà, le résultat devient l’infini (dépassement).'],
+    ['minN','Plus petit normalisé','En dessous, on passe aux dénormalisés et on perd progressivement de la précision.'],
+    ['minS','Plus petit dénormalisé','Plus petit nombre non nul représentable. En dessous, l’arrondi donne zéro.'],
+  ];
+  $('cmp').innerHTML=`<thead><tr><th></th>${cols.map(c=>`<th>${c.name}<span>${c.sub}</span></th>`).join('')}</tr></thead><tbody>`+
+    R.map(([k,l,ex])=>`<tr><th scope="row">${l}<span>${ex}</span></th>${cols.map(c=>`<td>${c[k]}</td>`).join('')}</tr>`).join('')+'</tbody>';
+}
+buildHelp();
+$('helpBtn').onclick=()=>{$('app').hidden=true;$('help').hidden=false;window.scrollTo(0,0);$('backBtn').focus();};
+$('backBtn').onclick=()=>{$('help').hidden=true;$('app').hidden=false;window.scrollTo(0,0);$('helpBtn').focus();};
+fromInputs();
+</script>
+
+</body></html>
