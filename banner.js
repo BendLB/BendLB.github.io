@@ -67,7 +67,7 @@
     '</style>' +
     '<nav aria-label="Navigation du book">' +
       '<a class="home" href="' + ROOT + 'index.html"><span class="mono" aria-hidden="true">B</span>' +
-        '<span class="who">Benoît de la Batut</span></a>' +
+        '<span class="who">Benoît de La Batut</span></a>' +
       '<span class="pos"></span>' +
       (prev ? '<a class="step" href="' + ROOT + 'projets/' + prev[0] + '.html" aria-label="Projet précédent : ' + esc(prev[1]) + '">‹ <span class="t"><b>' + esc(prev[1]) + '</b></span></a>' : '') +
       (next ? '<a class="step" href="' + ROOT + 'projets/' + next[0] + '.html" aria-label="Projet suivant : ' + esc(next[1]) + '"><span class="t"><b>' + esc(next[1]) + '</b></span> ›</a>' : '') +
