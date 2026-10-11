@@ -143,7 +143,7 @@ p.note strong { color: var(--fg); font-weight: 500; }
   .panel > * { grid-column: 2; min-width: 0; }
   #pShape > .stage, #p3d > .stage, #pGame > .g-stage { grid-column: 1; grid-row: 1 / span 12; position: sticky; top: 12px; }
   #pFunc > #fcv { grid-column: 1; grid-row: 1 / span 12; position: sticky; top: 12px; }
-  #pShape > .stage canvas, #p3d > .stage canvas, #pGame > .g-stage canvas { max-width: min(100%, calc(100vh - 140px)); margin: 0 auto; }
+  #pShape > .stage, #p3d > .stage, #pGame > .g-stage { width: 100%; max-width: min(100%, calc(100vh - 140px)); justify-self: center; }
   #pTrans:not([hidden]) { display: flex; max-width: 920px; margin: 0 auto; width: 100%; }
 }
 
@@ -2025,6 +2025,12 @@ p.note strong { color: var(--fg); font-weight: 500; }
   const toScreen = (x, y) => [V / 2 + (x - view.x) * view.s, V / 2 - (y - view.y) * view.s];
   function frame() {
     if (panel.hidden) { requestAnimationFrame(frame); return; }
+    // Le spectre est redessiné en continu : il reste visible quelle que soit la façon dont la page a été ouverte ou redimensionnée.
+    const want = Math.round(sp.getBoundingClientRect().width * (window.devicePixelRatio || 1));
+    if (want && sp.width !== want) fit(sp);
+    const wantC = Math.round(cv.getBoundingClientRect().width * (window.devicePixelRatio || 1));
+    if (wantC && cv.width !== wantC) fit(cv);
+    drawSpectrum();
     const g = ctx; g.clearRect(0, 0, V, V);
     const ease = 0.12;
     view.s += (target.s - view.s) * ease; view.x += (target.x - view.x) * ease; view.y += (target.y - view.y) * ease;
