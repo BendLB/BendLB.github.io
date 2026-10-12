@@ -409,8 +409,6 @@ button:disabled{opacity:.5;cursor:default}
     <div id="bCurve"></div>
     <div class="btns">
       <button id="bOne">Former un groupe</button>
-      <button id="bHundred" class="ghost">Former 100 groupes</button>
-      <button id="bReset" class="ghost">Remettre à zéro</button>
     </div>
     <p class="msg" id="bMsg"></p>
     <div class="calwrap" id="bCal"></div>
@@ -1346,8 +1344,6 @@ function bForm(times){
 function bClear(){ bGroups=0; bHits=0; $('bMsg').textContent=''; $('bCal').innerHTML=bCalendar(null); bUpdate(); bFormula(); }
 $('bN').addEventListener('input', e=>{ bN=+e.target.value; bClear(); });
 $('bOne').addEventListener('click', ()=>bForm(1));
-$('bHundred').addEventListener('click', ()=>bForm(100));
-$('bReset').addEventListener('click', bClear);
 bClear();
 
 function typesetAll(){ typesetFormula(); bFormula(); if (typeof pFormula==='function') pFormula(); }
