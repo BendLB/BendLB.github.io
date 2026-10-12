@@ -164,7 +164,7 @@ button:disabled{opacity:.5;cursor:default}
 <div class="wrap">
   <header>
     <h1>Comment gagner à <em>l'EuroMillions</em></h1>
-    <p class="lede">Gagner à l'EuroMillions, c'est 1 chance sur 139 838 160. Pour sentir ce que ça veut dire, on part de jeux simples et on monte la difficulté jusqu'à atteindre les mêmes chances.</p>
+    <p class="lede">Gagner à l'EuroMillions, c'est 1 chance sur 139 838 160. Pour sentir ce que ça veut dire, cinq jeux simples montent la difficulté jusqu'à atteindre les mêmes chances. Les deux derniers onglets, anniversaires et album Panini, montrent comment se comportent les probabilités sur de grands nombres.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Jeux">
@@ -324,7 +324,6 @@ button:disabled{opacity:.5;cursor:default}
       <div class="label">Nombre de dés</div>
       <div class="nrow"><span class="nbig" id="dOut">3</span>
         <input type="range" id="dN" min="1" max="12" value="3" aria-label="Nombre de dés"></div>
-      <div class="odds" id="dOdds"></div>
       <button class="euro" id="dEuro">≈ EuroMillions : 10 dés (1 sur 60 466 176, le réglage le plus proche)</button>
     </div>
     <div class="dice" id="dice" aria-live="polite"></div>
@@ -374,7 +373,6 @@ button:disabled{opacity:.5;cursor:default}
       <div class="label">Longueur du code</div>
       <div class="nrow"><span class="nbig" id="lOut">4</span>
         <input type="range" id="lDr" min="1" max="9" value="4" aria-label="Nombre de chiffres du code"></div>
-      <div class="odds" id="lOdds"></div>
       <button class="euro" id="lEuro">≈ EuroMillions : code à 8 chiffres (1 sur 100 000 000)</button>
     </div>
     <div class="lockbox" id="lockBox">
@@ -406,8 +404,6 @@ button:disabled{opacity:.5;cursor:default}
       <div class="label">Taille du groupe</div>
       <div class="nrow"><span class="nbig" id="bOut">23</span>
         <input type="range" id="bN" min="2" max="150" value="23" aria-label="Taille du groupe"></div>
-      <div class="odds" id="bOdds"></div>
-      <button class="euro" id="bEuro">≈ EuroMillions : aucun anniversaire commun parmi 111 personnes (1 sur 135 949 526)</button>
       <div class="formula" id="bFormula"></div>
     </div>
     <div id="bCurve"></div>
@@ -443,7 +439,6 @@ button:disabled{opacity:.5;cursor:default}
       <div class="label">Achat</div>
       <div class="chips" id="pSizes"></div>
       <div class="formula" id="pFormula"></div>
-      <button class="euro" id="pEuro">≈ EuroMillions : album de 21 cases complété avec 21 vignettes, sans aucun double (1 sur 114 356 611)</button>
     </div>
     <div class="carpet"><canvas id="pAlbum" role="img" aria-label="Cases de l'album, remplies ou vides"></canvas></div>
     <div class="legend">
@@ -488,7 +483,7 @@ button:disabled{opacity:.5;cursor:default}
   </section>
   </div>
 
-  <section class="panel" aria-labelledby="lad-t">
+  <section class="panel" id="ladSec" aria-labelledby="lad-t">
     <div>
       <h2 id="lad-t">L'échelle des chances</h2>
       <p class="note">Longueur de barre = nombre de piles d'affilée équivalent. Chaque cran de plus divise la chance par deux.</p>
@@ -633,8 +628,6 @@ function renderLadder(){
   if (typeof LEVELS!=='undefined' && LEVELS) X.cards={name:LEVELS[lvl].lab, odds:LEVELS[lvl].odds};
   if (typeof dN==='number') X.dice={name:`${dN} six avec ${dN} dé${dN>1?'s':''}`, odds:6**dN};
   if (typeof lD==='number') X.lock={name:`Code à ${lD} chiffre${lD>1?'s':''}`, odds:10**lD};
-  if (typeof bN==='number' && typeof bProb==='function') X.bday = bProb(bN)<0.5 ? {name:`Anniversaire commun parmi ${bN} personnes`, odds:1/bProb(bN)} : {name:`Aucun anniversaire commun parmi ${bN} personnes`, odds:1/bQ(bN)};
-  if (typeof pN==='number' && typeof pNoDupBits==='function') X.panini={name:`Album de ${fmt(pN)} cases complété sans aucun double`, bits:pNoDupBits(pN)};
   const rows = refs.map(r=>({...r}));
   if (X[curTab]) rows.push({...X[curTab], you:true});
   rows.forEach(r=>{ if (r.bits==null) r.bits=Math.log2(r.odds); });
@@ -1193,7 +1186,6 @@ function dRender(vals){
 function dUpdate(){
   $('dOut').textContent = dN;
   const odds = dF**dN, bits=Math.log2(odds);
-  $('dOdds').textContent = `Chance par lancer : 1 sur ${fmt(odds)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
   $('dTries').textContent=fmt(dTries); $('dWins').textContent=fmt(dH.wins);
   $('dBest').textContent = dTries ? `${dBest} / ${dN}` : '—';
   $('dTime').textContent = dTries ? duration(dTries) : '—';
@@ -1250,7 +1242,6 @@ function lRender(){
 }
 function lUpdate(){
   const total = 10**lD, left = total-tried.size, bits=Math.log2(total);
-  $('lOdds').textContent = `Chance au premier essai : 1 sur ${fmt(total)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
   $('lTries').textContent = fmt(tried.size);
   $('lLeft').textContent = lFound||lGaveUp ? '—' : fmt(left);
   $('lNext').textContent = lFound ? 'ouvert' : lGaveUp ? '—' : `1 sur ${fmt(left)}`;
@@ -1330,7 +1321,6 @@ function bUpdate(){
   const p=bProb(bN);
   $('bOut').textContent=bN;
   const q=bQ(bN);
-  $('bOdds').textContent = `Au moins un anniversaire commun : ${pct(p)} · aucun : ${q<0.001 ? '1 chance sur '+fmt(1/q) : pct(q)}`;
   $('bCurve').innerHTML = bCurve();
   $('bGroups').textContent=fmt(bGroups); $('bHits').textContent=fmt(bHits);
   $('bFreq').textContent = bGroups ? pct(bHits/bGroups) : '—';
@@ -1355,7 +1345,6 @@ function bForm(times){
 }
 function bClear(){ bGroups=0; bHits=0; $('bMsg').textContent=''; $('bCal').innerHTML=bCalendar(null); bUpdate(); bFormula(); }
 $('bN').addEventListener('input', e=>{ bN=+e.target.value; bClear(); });
-$('bEuro').addEventListener('click', ()=>{ bN=111; $('bN').value=111; bClear(); });
 $('bOne').addEventListener('click', ()=>bForm(1));
 $('bHundred').addEventListener('click', ()=>bForm(100));
 $('bReset').addEventListener('click', bClear);
@@ -1499,7 +1488,6 @@ async function pFinish(){
 function pBtns(){ ['pOne','pTen','pFin','pRes'].forEach(id=>$(id).disabled=pBusy); }
 $('pNr').addEventListener('input', e=>{ if (pBusy) return; pN=+e.target.value; pReset(); pFormula(); });
 $('pSizes').addEventListener('click', e=>{ const b=e.target.closest('button'); if (b && !pBusy){ pS=+b.dataset.s; pReset(); } });
-$('pEuro').addEventListener('click', ()=>{ if (pBusy) return; pN=21; pS=1; pReset(); pFormula(); });
 $('pOne').addEventListener('click', ()=>pOpenMany(1));
 $('pTen').addEventListener('click', ()=>pOpenMany(10));
 $('pFin').addEventListener('click', pFinish);
@@ -1514,7 +1502,7 @@ const TABS = ['coin','cups','cards','dice','lock','bday','panini'];
 function showTab(name){
   if (!TABS.includes(name)) name='coin';
   TABS.forEach(t=>{ $('tab-'+t).hidden = t!==name; $('t-'+t).setAttribute('aria-selected', t===name); });
-  curTab = name; renderLadder();
+  curTab = name; $('ladSec').hidden = (name==='bday' || name==='panini'); renderLadder();
   try{ localStorage.setItem('tab', name); }catch(e){}
   if (name==='coin'){ reveal=cells.length; drawGrid(); } else if (name==='cups') redrawCups(); else if (name==='cards'){ typesetFormula(); kReveal=kCells.length; kDrawGrid(); } else if (name==='bday') bFormula(); else if (name==='dice') dH.redraw(); else if (name==='panini'){ pDraw(); pHistDraw(); pFormula(); }
 }
