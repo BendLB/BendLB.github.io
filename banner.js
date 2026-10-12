@@ -20,7 +20,12 @@
   var ROOT = ME ? new URL(".", ME).href : new URL("../", location.href).href;
   if (document.getElementById("book-banner")) return;
   /* Pas de zoom au double-tap (le pincement pour zoomer reste possible). */
-  try { document.documentElement.style.touchAction = "manipulation"; } catch (e) {}
+  try {
+    document.documentElement.style.touchAction = "manipulation";
+    var tz = document.createElement("style");
+    tz.textContent = ":where(html,body,*){touch-action:manipulation}";
+    (document.head || document.documentElement).appendChild(tz);
+  } catch (e) {}
 
   var slug = (location.pathname.split("/").pop() || "").replace(/\.html?$/, "");
   var i = -1;
