@@ -86,6 +86,12 @@ button.primary:hover{background:var(--brass);border-color:var(--brass)}
 .axis .lab{position:relative;height:1.6rem;font-size:.75rem;color:var(--muted)}
 .axis .lab span{position:absolute;top:0;transform:translateX(-50%)}
 .empty{font-size:.9rem;color:var(--muted);margin:0}
+[data-item]{cursor:help}
+@media (hover:none){ [data-item]{cursor:pointer;-webkit-tap-highlight-color:transparent} }
+.side[data-item] .nm{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:3px}
+.tip{position:fixed;z-index:20;max-width:min(300px, calc(100vw - 32px));background:var(--ink);color:var(--panel);
+  border-radius:10px;padding:10px 12px;font-size:.88rem;line-height:1.4;box-shadow:0 6px 20px rgb(0 0 0 / .25);pointer-events:none}
+.tip b{display:block;margin-bottom:3px}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 
@@ -95,9 +101,9 @@ button.primary:hover{background:var(--brass);border-color:var(--brass)}
   <section class="card" id="game">
     <p class="ask">Combien en faut-il à droite pour équilibrer ?</p>
     <div class="eq">
-      <div class="side a"><span class="emo" id="eA"></span><span class="nm" id="nA"></span><span class="mult">× 1</span></div>
+      <div class="side a" id="sideA"><span class="emo" id="eA"></span><span class="nm" id="nA"></span><span class="mult">× 1</span></div>
       <span class="op">=</span>
-      <div class="side b"><span class="emo" id="eB"></span><span class="nm" id="nB"></span><span class="mult">× ?</span></div>
+      <div class="side b" id="sideB"><span class="emo" id="eB"></span><span class="nm" id="nB"></span><span class="mult">× ?</span></div>
     </div>
 
     <svg class="scale" viewBox="0 0 360 246" role="img" aria-label="Balance à deux plateaux">
@@ -118,10 +124,8 @@ button.primary:hover{background:var(--brass);border-color:var(--brass)}
         <text id="multB" x="0" y="118" text-anchor="middle" font-size="15" font-family="var(--f-mono)" fill="var(--brass)"></text>
       </g>
     </svg>
-    <p class="status" id="status"></p>
 
     <div id="controls" style="display:flex;flex-direction:column;gap:12px">
-      <div class="reading"><span id="guessTex"></span><span class="unit" id="guessUnit"></span></div>
       <div class="ctrl">
         <button class="step" id="div10" aria-label="Diviser par 10">÷10</button>
         <input type="range" id="slider" min="-16" max="16" step="1" value="0" aria-label="Nombre d'objets à droite">
@@ -134,12 +138,7 @@ button.primary:hover{background:var(--brass);border-color:var(--brass)}
       <div class="verdict"><span class="t" id="vt"></span><span class="p" id="vp"></span></div>
       <div class="cmp">
         <div><div class="lbl">Votre réponse</div><div class="v" id="yourTex"></div></div>
-        <div><div class="lbl">Bonne réponse</div><div class="v" id="goodTex"></div><div class="math" id="goodExact" style="font-size:.8rem;color:var(--muted)"></div></div>
-      </div>
-      <div class="rule">
-        <div class="lbl">Points</div>
-        <div class="math" id="ptsTex"></div>
-        100 points pour le bon ordre de grandeur, 25 points de moins par puissance de 10 d'écart (dans un sens ou dans l'autre).
+        <div><div class="lbl">Bonne réponse</div><div class="v" id="goodTex"></div></div>
       </div>
       <div class="why">
         <div class="lbl">Le calcul</div>
@@ -243,6 +242,37 @@ const ITEMS_RAW = [
 ['🎸',"concert de rock de 2 heures (sono)",7.2e7,R`P\,t = 10\ \text{kW} \times 7200\ \text{s} = 72\ \text{MJ}`],
 ['🎈',"kilogramme d'hydrogène",1.2e8,R`120\ \tfrac{\text{MJ}}{\text{kg}} \times 1\ \text{kg} = 120\ \text{MJ}`],
 ['🚙',"batterie de voiture électrique (75 kWh)",2.7e8,R`75\ \text{kWh} \times 3{,}6\ \tfrac{\text{MJ}}{\text{kWh}} = 270\ \text{MJ}`],
+// --- Vie quotidienne ---
+['🍌',"banane",4.4e5,R`105\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 440\ \text{kJ}`],
+['🥚',"œuf",3.1e5,R`75\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 310\ \text{kJ}`],
+['🥛',"verre de lait",6.7e5,R`160\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 670\ \text{kJ}`],
+['🥤',"canette de soda",5.8e5,R`139\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 580\ \text{kJ}`],
+['🍫',"tablette de chocolat",2.3e6,R`540\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 2{,}3\ \text{MJ}`],
+['🥖',"baguette de pain",2.7e6,R`650\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 2{,}7\ \text{MJ}`],
+['🍕',"pizza entière",4.2e6,R`1000\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 4{,}2\ \text{MJ}`],
+['🫕',"micro-ondes pendant 1 minute",4.8e4,R`P\,t = 800\ \text{W} \times 60\ \text{s} = 48\ \text{kJ}`],
+['🍝',"casserole d'eau pour les pâtes",1e6,R`m c \Delta T = 3 \times 4186 \times 80 \approx 1\ \text{MJ}`],
+['💨',"sèche-cheveux pendant 5 minutes",5.4e5,R`P\,t = 1800\ \text{W} \times 300\ \text{s} = 540\ \text{kJ}`],
+['🧹',"aspirateur pendant 15 minutes",7.2e5,R`P\,t = 800\ \text{W} \times 900\ \text{s} = 720\ \text{kJ}`],
+['📺',"soirée télé de 2 heures",7.2e5,R`P\,t = 100\ \text{W} \times 7200\ \text{s} = 720\ \text{kJ}`],
+['🧊',"réfrigérateur pendant 1 jour",2.9e6,R`0{,}8\ \text{kWh} \times 3{,}6\ \tfrac{\text{MJ}}{\text{kWh}} \approx 2{,}9\ \text{MJ}`],
+['🍽️',"cycle de lave-vaisselle",4e6,R`1{,}1\ \text{kWh} \times 3{,}6\ \tfrac{\text{MJ}}{\text{kWh}} \approx 4\ \text{MJ}`],
+['👔',"repassage de 30 minutes",3.6e6,R`P\,t = 2000\ \text{W} \times 1800\ \text{s} = 3{,}6\ \text{MJ}`],
+['🌡️',"radiateur électrique pendant 1 heure",7.2e6,R`P\,t = 2000\ \text{W} \times 3600\ \text{s} = 7{,}2\ \text{MJ}`],
+['🛁',"bain chaud",1.6e7,R`m c \Delta T = 150 \times 4186 \times 25 \approx 16\ \text{MJ}`],
+['💡',"ampoule à incandescence de 60 W pendant 1 heure",2.2e5,R`P\,t = 60\ \text{W} \times 3600\ \text{s} \approx 216\ \text{kJ}`],
+['🪥',"brossage de dents électrique",240,R`P\,t = 2\ \text{W} \times 120\ \text{s} = 240\ \text{J}`],
+['🔦',"lampe de poche allumée 1 heure",3.6e3,R`P\,t = 1\ \text{W} \times 3600\ \text{s} = 3{,}6\ \text{kJ}`],
+['🎧',"batterie d'écouteurs sans fil",720,R`0{,}2\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} = 720\ \text{J}`],
+['⌚',"batterie de montre connectée",3.6e3,R`1\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} = 3{,}6\ \text{kJ}`],
+['🛴',"batterie de trottinette électrique",1e6,R`280\ \text{Wh} \times 3600\ \tfrac{\text{J}}{\text{Wh}} \approx 1\ \text{MJ}`],
+['🚲',"cycliste à 20 km/h",1.3e3,R`\tfrac12 m v^2 = \tfrac12 \times 85 \times 5{,}56^2 \approx 1{,}3\ \text{kJ}`],
+['🐕',"chien qui court",1e3,R`\tfrac12 m v^2 = \tfrac12 \times 30 \times 8{,}3^2 \approx 1\ \text{kJ}`],
+['🧳',"valise chargée dans un coffre",200,R`m g h = 20 \times 9{,}81 \times 1 \approx 200\ \text{J}`],
+['🏀',"lancer de ballon de basket",20,R`\tfrac12 m v^2 = \tfrac12 \times 0{,}62 \times 8^2 \approx 20\ \text{J}`],
+['🪢',"saut à la corde (1 saut)",34,R`m g h = 70 \times 9{,}81 \times 0{,}05 \approx 34\ \text{J}`],
+['🏊',"longueur de piscine de 50 m",4.2e4,R`10\ \text{kcal} \times 4184\ \tfrac{\text{J}}{\text{kcal}} \approx 42\ \text{kJ}`],
+['⛽',"plein d'essence de 50 litres",1.7e9,R`50 \times 34\ \text{MJ} = 1{,}7\times10^{9}\ \text{J}`],
 // --- Grandes machines et nature ---
 ['🌩️',"éclair",1e9,R`Q V \approx 5\ \text{C} \times 2\times10^{8}\ \text{V} = 10^{9}\ \text{J}`],
 ['🌊',"chutes du Niagara pendant 1 seconde",1.4e9,R`m g h = 2{,}8\times10^{6} \times 9{,}81 \times 51 \approx 1{,}4\times10^{9}\ \text{J}`],
@@ -303,7 +333,8 @@ const ITEMS_RAW = [
 ['🌑',"impact de Théia (formation de la Lune)",5e30,R`\tfrac12 m v^2 = \tfrac12 \times 6{,}4\times10^{23} \times (4\times10^{3})^2 \approx 5\times10^{30}\ \text{J}`],
 ['☀️',"Soleil pendant 1 siècle",1.2e36,R`3{,}8\times10^{26}\ \text{W} \times 3{,}15\times10^{9}\ \text{s} \approx 1{,}2\times10^{36}\ \text{J}`]
 ];
-const ITEMS = ITEMS_RAW.map(([emo, sg, E, tex], i) => ({id:'i'+i, emo, sg, E, tex}));
+const DESC = {"molécule d'air agitée à 20 °C": "Énergie de mouvement moyenne d'une seule molécule d'air, due à l'agitation thermique à température ambiante.", "molécule d'ATP utilisée par une cellule": "Énergie libérée par une seule molécule d'ATP, la « monnaie énergétique » de nos cellules.", "photon de lumière verte": "Un seul grain de lumière verte (longueur d'onde 530 nm), au milieu du spectre visible.", "liaison chimique C–H rompue": "Énergie pour casser une seule liaison entre un atome de carbone et un atome d'hydrogène.", "photon de rayons X (10 keV)": "Un seul photon comme ceux d'une radiographie médicale.", "commutation d'un transistor": "Énergie dissipée quand un seul transistor d'un processeur moderne passe de 0 à 1.", "fusion deutérium–tritium (1 réaction)": "Une seule réaction de fusion entre deux noyaux d'hydrogène lourd, comme dans le projet ITER.", "fission d'un atome d'uranium": "Cassure d'un seul noyau d'uranium 235 dans un réacteur nucléaire.", "bit envoyé en Wi-Fi": "Électricité consommée par une box Wi-Fi (environ 1 W) pour transmettre un seul bit à 100 Mbit/s.", "rayon cosmique « Oh-My-God » (1991)": "Un seul proton venu de l'espace, détecté en 1991 au-dessus de l'Utah : la particule la plus énergétique jamais observée.", "moustique en vol": "Énergie de mouvement d'un moustique de 2,5 mg qui vole à 0,5 m/s.", "saut de puce": "Une puce de 0,5 mg qui saute à 20 cm de haut.", "flocon de neige qui tombe": "Énergie de mouvement d'un flocon de 3 mg qui tombe à 1 m/s.", "fourmi qui grimpe 1 m": "Énergie pour élever une fourmi de 3 mg d'un mètre.", "voix humaine parlant 1 minute (son émis)": "Seulement l'énergie du son produit par une voix normale pendant une minute, pas l'effort du corps.", "clic de souris": "Travail du doigt pour enfoncer le bouton d'une souris d'ordinateur.", "pointeur laser allumé 1 seconde": "Pointeur laser classique de 1 mW allumé une seconde.", "goutte de pluie qui tombe": "Énergie de mouvement d'une goutte de pluie de 34 mg à sa vitesse de chute (environ 9 m/s).", "frappe de touche de clavier": "Travail du doigt pour enfoncer une touche de clavier.", "ressort d'un stylo Bic comprimé": "Énergie stockée dans le petit ressort d'un stylo rétractable quand on clique dessus.", "pièce lancée à pile ou face": "Pièce de 7,5 g lancée en l'air à environ 3 m/s.", "battement de cœur": "Travail du cœur pour éjecter environ 70 mL de sang à chaque battement.", "pomme tombant de 2 m": "Pomme de 150 g qui tombe d'une branche à 2 m de hauteur.", "livre posé sur une étagère à 1 m": "Énergie pour soulever un livre de 1 kg et le poser sur une étagère à 1 m.", "chat qui saute sur une table": "Chat de 4 kg qui saute du sol sur une table de 1 m.", "flash d'appareil photo": "Énergie stockée dans le condensateur d'un flash, libérée en un éclair.", "service de tennis à 200 km/h": "Balle de 57 g frappée à 200 km/h lors d'un service puissant.", "pas de marche": "Énergie dépensée par une personne de 70 kg pour faire un pas de 70 cm.", "tir de football": "Ballon de 430 g frappé à 30 m/s (environ 110 km/h).", "coup de poing de boxeur": "Énergie de mouvement du poing et de l'avant-bras d'un boxeur (environ 4 kg à 10 m/s).", "recherche Google": "Électricité consommée par les centres de données pour une seule recherche.", "image générée par une IA": "Électricité consommée pour générer une seule image avec un modèle d'IA.", "allumette qui brûle": "Combustion complète d'une allumette de 0,1 g.", "soleil sur 1 m² pendant 1 seconde": "Énergie solaire reçue en une seconde par 1 m² face au Soleil, au-dessus de l'atmosphère.", "pile bouton CR2032": "Pile plate de montre ou de télécommande, totalement vidée.", "montée d'un étage à pied": "Personne de 70 kg qui monte 3 m d'escalier.", "glaçon de 10 g qui fond": "Chaleur pour faire fondre un glaçon de 10 g déjà à 0 °C.", "Usain Bolt en pleine course": "Énergie de mouvement d'Usain Bolt (94 kg) à sa vitesse maximale, environ 45 km/h.", "saut à la perche à 6 m": "Perchiste de 80 kg élevé à 6 m de hauteur.", "sirène de pompiers pendant 1 minute": "Électricité consommée par une sirène de pompiers (environ 100 W) pendant une minute.", "Tic Tac": "Énergie alimentaire d'un seul bonbon Tic Tac.", "pile AA": "Pile alcaline standard, totalement vidée.", "ampoule LED de 10 W pendant 1 heure": "Ampoule LED classique restée allumée une heure.", "tasse de café chauffée": "Chauffer 20 cL d'eau de 20 °C à 80 °C.", "batterie de téléphone pleine": "Batterie de smartphone (15 Wh), chargée à 100 %.", "cerveau humain pendant 1 heure": "Le cerveau consomme environ 20 W en permanence, ici pendant une heure.", "voiture de 1,2 t à 50 km/h": "Énergie de mouvement d'une voiture de 1,2 tonne qui roule à 50 km/h.", "batterie d'ordinateur portable": "Batterie d'ordinateur portable (60 Wh), chargée à 100 %.", "ascenseur montant 10 étages": "Cabine et passagers (environ 1 tonne) élevés de 30 m.", "bougie allumée 1 heure": "Chaleur dégagée par une bougie qui brûle pendant une heure.", "litre d'eau porté à ébullition": "Chauffer 1 L d'eau de 20 °C à 100 °C.", "pomme mangée": "Énergie alimentaire d'une pomme moyenne (environ 95 kcal).", "croissant": "Énergie alimentaire d'un croissant au beurre (environ 230 kcal).", "Big Mac": "Énergie alimentaire d'un Big Mac (environ 550 kcal).", "ascension de l'Everest depuis le camp de base": "Alpiniste de 70 kg qui s'élève de 3 500 m. Seule l'énergie gagnée en altitude compte.", "cycle de lave-linge": "Électricité d'un cycle de lavage à 40 °C (environ 1 kWh).", "kilogramme de TNT": "Énergie libérée par l'explosion d'un kilogramme de TNT.", "étape du Tour de France (effort du coureur)": "Coureur qui pédale 5 heures à 250 W en moyenne.", "Ferrari à 300 km/h": "Énergie de mouvement d'une voiture de 1,5 tonne lancée à 300 km/h.", "ration alimentaire d'une journée": "Énergie alimentaire conseillée pour un adulte sur une journée (environ 2 000 kcal).", "douche chaude de 10 minutes": "Chauffer les 80 L d'eau d'une douche de 10 minutes, de 12 °C à 38 °C.", "marathon couru": "Énergie dépensée par un coureur de 70 kg sur 42 km.", "kilogramme de bois sec": "Combustion d'un kilogramme de bois sec dans un poêle.", "kilogramme de sucre": "Énergie alimentaire d'un kilogramme de sucre.", "kilogramme de charbon": "Combustion d'un kilogramme de charbon.", "kilogramme de beurre": "Énergie alimentaire d'un kilogramme de beurre.", "litre d'essence": "Combustion d'un litre d'essence dans un moteur (avant pertes).", "mètre cube de gaz naturel": "Combustion d'un mètre cube de gaz naturel, comme dans une chaudière.", "concert de rock de 2 heures (sono)": "Électricité de la sonorisation (environ 10 kW) pendant tout le concert.", "kilogramme d'hydrogène": "Combustion d'un kilogramme d'hydrogène avec l'oxygène de l'air.", "batterie de voiture électrique (75 kWh)": "Batterie d'une voiture électrique familiale, chargée à 100 %.", "éclair": "Un seul éclair d'orage, entre le nuage et le sol.", "chutes du Niagara pendant 1 seconde": "Les 2 800 tonnes d'eau qui tombent de 51 m en une seconde.", "TGV à 320 km/h": "Énergie de mouvement d'une rame de 400 tonnes lancée à 320 km/h.", "Titanic à pleine vitesse": "Énergie de mouvement du Titanic (46 000 tonnes) à environ 40 km/h.", "avion de ligne en vol de croisière": "Énergie de mouvement et d'altitude d'un avion de 77 tonnes à 800 km/h et 10 km d'altitude.", "électricité d'un foyer pendant 1 an": "Électricité consommée par un ménage moyen en un an (environ 3 500 kWh).", "gramme de deutérium–tritium fusionné": "Fusion complète d'un seul gramme de combustible de fusion.", "navette spatiale en orbite": "Énergie de mouvement d'une navette de 100 tonnes en orbite à 7,8 km/s.", "plein de kérosène d'un A380": "Énergie chimique des 250 tonnes de kérosène d'un Airbus A380 plein.", "éolienne de 2 MW pendant 1 an": "Production d'une éolienne sur une année entière, en tenant compte des périodes sans vent.", "séisme de magnitude 6": "Énergie libérée sous forme d'ondes sismiques par un séisme de magnitude 6.", "bombe d'Hiroshima": "Énergie de la bombe d'Hiroshima (1945), environ 15 000 tonnes de TNT.", "kilogramme d'uranium 235 fissionné": "Fission complète d'un kilogramme d'uranium 235.", "orage": "Chaleur libérée par la condensation de la vapeur d'eau dans un orage moyen.", "tsunami de 2004 (énergie des vagues)": "Énergie des vagues du tsunami de l'océan Indien, le 26 décembre 2004.", "centrale nucléaire de 1 GW pendant 1 an": "Production électrique d'un réacteur nucléaire qui tourne à plein toute une année.", "kilogramme de matière (E = mc²)": "Énergie qu'on obtiendrait en convertissant entièrement un kilogramme de matière.", "électricité de la Belgique pendant 1 an": "Consommation d'électricité de toute la Belgique sur une année.", "éruption du Krakatoa (1883)": "Explosion du volcan indonésien en 1883, l'une des plus violentes de l'histoire.", "séisme de magnitude 9": "Énergie libérée par un séisme de magnitude 9, comme au Japon en 2011.", "ouragan pendant 1 jour": "Chaleur libérée par la formation des nuages et de la pluie d'un ouragan, sur une journée.", "consommation énergétique mondiale en 1 an": "Toute l'énergie consommée par l'humanité en un an : pétrole, gaz, charbon, nucléaire et renouvelables.", "soleil reçu par la Terre en 1 heure": "Énergie solaire interceptée par toute la Terre en une heure.", "impact de l'astéroïde de Chicxulub": "Astéroïde d'environ 10 km qui a percuté le Mexique il y a 66 millions d'années.", "Soleil pendant 1 seconde": "Toute la lumière émise par le Soleil en une seconde.", "rotation de la Terre sur elle-même": "Énergie de rotation de la Terre sur son axe.", "Lune en orbite autour de la Terre": "Énergie de mouvement de la Lune sur son orbite.", "Terre en orbite autour du Soleil": "Énergie de mouvement de la Terre sur son orbite, à 30 km/s.", "supernova": "Explosion d'une étoile massive en fin de vie.", "trou noir de 10 masses solaires (E = mc²)": "Énergie qu'on obtiendrait en convertissant toute la masse d'un trou noir de 10 masses solaires.", "énergie du vide dans 1 m³ (énergie noire)": "Énergie noire, qui accélère l'expansion de l'Univers, contenue dans 1 m³ d'espace vide.", "énergie du vide dans le volume de la Terre": "Énergie noire contenue dans un volume d'espace vide égal à celui de la Terre.", "photon micro-onde (four à 2,45 GHz)": "Un seul photon émis par un four à micro-ondes.", "effacement d'un bit (limite de Landauer)": "Énergie minimale théorique pour effacer un bit d'information à température ambiante.", "photon ultraviolet (10 eV)": "Un seul photon ultraviolet, capable d'arracher un électron à un atome.", "électron d'un tube cathodique (25 kV)": "Un seul électron accéléré dans un ancien téléviseur à tube.", "annihilation électron–positon": "Un électron et son antiparticule qui se rencontrent et disparaissent en lumière.", "désintégration alpha (5 MeV)": "Une seule particule alpha éjectée par un noyau radioactif.", "réserves mondiales de pétrole": "Énergie de toutes les réserves de pétrole prouvées de la planète.", "soleil reçu par la Terre en 1 an": "Énergie solaire interceptée par toute la Terre en une année.", "éruption solaire géante": "L'une des plus grandes éruptions observées à la surface du Soleil.", "énergie de cohésion gravitationnelle de la Terre": "Énergie qu'il faudrait pour disperser toute la matière de la Terre à l'infini.", "Soleil pendant 1 an": "Toute la lumière émise par le Soleil en une année.", "Jupiter en orbite autour du Soleil": "Énergie de mouvement de Jupiter sur son orbite.", "Voie lactée pendant 1 seconde": "Toute la lumière émise par notre galaxie en une seconde.", "nova": "Explosion à la surface d'une naine blanche qui aspire la matière d'une étoile voisine.", "Soleil pendant 1 million d'années": "Toute la lumière émise par le Soleil en un million d'années.", "énergie de cohésion gravitationnelle du Soleil": "Énergie qu'il faudrait pour disperser toute la matière du Soleil à l'infini.", "Soleil pendant 1 milliard d'années": "Toute la lumière émise par le Soleil en un milliard d'années.", "sursaut gamma": "L'explosion la plus violente connue, repérée par son flash de rayons gamma.", "fusion de deux trous noirs (ondes gravitationnelles, 2015)": "Première fusion de trous noirs détectée, en 2015 : environ 3 masses solaires transformées en ondes gravitationnelles.", "photon d'onde millimétrique (100 GHz)": "Un seul photon d'onde millimétrique, comme celles des radars automobiles.", "photon térahertz (scanner d'aéroport, 1 THz)": "Un seul photon térahertz, comme ceux de certains scanners d'aéroport.", "photon gamma (100 keV)": "Un seul photon gamma, comme en médecine nucléaire.", "proton du LHC à pleine énergie": "Un seul proton accéléré dans le grand collisionneur du CERN.", "impact de Théia (formation de la Lune)": "Collision entre la jeune Terre et une planète de la taille de Mars, qui aurait donné naissance à la Lune.", "Soleil pendant 1 siècle": "Toute la lumière émise par le Soleil en cent ans.", "banane": "Énergie alimentaire d'une banane moyenne (environ 105 kcal).", "œuf": "Énergie alimentaire d'un gros œuf (environ 75 kcal).", "verre de lait": "Énergie alimentaire d'un verre de 25 cL de lait entier.", "canette de soda": "Énergie alimentaire d'une canette de 33 cL de soda sucré.", "tablette de chocolat": "Énergie alimentaire d'une tablette de chocolat de 100 g.", "baguette de pain": "Énergie alimentaire d'une baguette de 250 g.", "pizza entière": "Énergie alimentaire d'une pizza individuelle entière (environ 1 000 kcal).", "micro-ondes pendant 1 minute": "Four à micro-ondes de 800 W qui chauffe pendant une minute.", "casserole d'eau pour les pâtes": "Chauffer 3 L d'eau de 20 °C à 100 °C.", "sèche-cheveux pendant 5 minutes": "Sèche-cheveux de 1 800 W utilisé cinq minutes.", "aspirateur pendant 15 minutes": "Aspirateur de 800 W utilisé un quart d'heure.", "soirée télé de 2 heures": "Téléviseur d'environ 100 W allumé deux heures.", "réfrigérateur pendant 1 jour": "Électricité consommée par un réfrigérateur-congélateur en une journée.", "cycle de lave-vaisselle": "Électricité d'un cycle de lave-vaisselle classique (environ 1,1 kWh).", "repassage de 30 minutes": "Fer à repasser de 2 000 W utilisé une demi-heure.", "radiateur électrique pendant 1 heure": "Radiateur électrique de 2 000 W allumé une heure.", "bain chaud": "Chauffer les 150 L d'eau d'une baignoire de 15 °C à 40 °C.", "ampoule à incandescence de 60 W pendant 1 heure": "Ancienne ampoule à filament de 60 W allumée une heure.", "brossage de dents électrique": "Brosse à dents électrique (environ 2 W) pendant les 2 minutes de brossage.", "lampe de poche allumée 1 heure": "Lampe de poche LED de 1 W allumée une heure.", "batterie d'écouteurs sans fil": "Batterie d'un écouteur sans fil, chargée à 100 %.", "batterie de montre connectée": "Batterie d'une montre connectée, chargée à 100 %.", "batterie de trottinette électrique": "Batterie d'une trottinette électrique de ville (280 Wh), chargée à 100 %.", "cycliste à 20 km/h": "Énergie de mouvement d'un cycliste et de son vélo (85 kg) à 20 km/h.", "chien qui court": "Énergie de mouvement d'un chien de 30 kg qui court à 30 km/h.", "valise chargée dans un coffre": "Soulever une valise de 20 kg d'un mètre pour la mettre dans le coffre.", "lancer de ballon de basket": "Ballon de 620 g lancé à 8 m/s vers le panier.", "saut à la corde (1 saut)": "Personne de 70 kg qui décolle de 5 cm à chaque saut.", "longueur de piscine de 50 m": "Énergie dépensée par un nageur pour une longueur de 50 m en crawl.", "plein d'essence de 50 litres": "Énergie chimique contenue dans un plein de 50 L d'essence."};
+const ITEMS = ITEMS_RAW.map(([emo, sg, E, tex], i) => ({id:'i'+i, emo, sg, E, tex, desc: DESC[sg] || ''}));
 const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const ROUNDS = 10;
 const $ = id => document.getElementById(id);
@@ -365,10 +396,10 @@ function swingTo(target){
   anim = requestAnimationFrame(step);
 }
 /* right-hand object grows with the number entered (log scale) */
-function setRight(n){
+function setRight(n, label = n){
   const t = Math.max(0, Math.min(1, (Math.log10(n) + 16) / 32));
   $('emoB').setAttribute('font-size', (14 + t * 42).toFixed(1));
-  $('multB').innerHTML = numSvg(n);
+  $('multB').innerHTML = numSvg(label);
 }
 
 /* ---------- Game ---------- */
@@ -400,16 +431,21 @@ function startRound(){
   $('emoA').textContent = A.emo; $('emoB').textContent = B.emo;
   $('slider').value = 0;
   $('controls').style.display = 'flex'; $('result').hidden = true;
-  $('status').textContent = 'Réglez le nombre, puis pesez.';
+  ['sideA','panL'].forEach(id => $(id).dataset.item = A.id);
+  ['sideB','panR'].forEach(id => $(id).dataset.item = B.id);
+  hideTip();
   cancelAnimationFrame(anim); cur = 0; vel = 0; draw(0);
   updateGuess();
 }
+/* Ordre de grandeur : a × 10^n donne 10^n si a < 5, 10^(n+1) si a ≥ 5 */
+function orderOf(x){
+  let e = Math.floor(Math.log10(x)), a = x / Math.pow(10, e);
+  if (a >= 10 - 1e-9){ e++; a /= 10; }
+  return a >= 5 - 1e-9 ? e + 1 : e;
+}
 const guessVal = () => Math.pow(10, Number($('slider').value));
 function updateGuess(){
-  const g = guessVal(), n = Math.round(Number($('slider').value));
-  setTex($('guessTex'), `10^{${n}}` + (n >= -2 && n <= 5 && n !== 1 ? ` = ${numTex(g)}` : '') + '\\ \\times');
-  $('guessUnit').textContent = S.B.emo + ' ' + S.B.sg;
-  setRight(g);
+  setRight(guessVal());
 }
 $('slider').addEventListener('input', updateGuess);
 $('div10').onclick = () => { $('slider').value = Math.max(-16, Number($('slider').value) - 1); updateGuess(); };
@@ -431,7 +467,7 @@ function renderLadder(fresh = []){
   const list = found.map(id => byId[id]).sort((a, b) => b.E - a.E);
   lad.innerHTML = list.map(it => {
     const pos = Math.max(0, Math.min(100, (Math.log10(it.E) + 25) / 75 * 100));
-    return `<div class="rung${fresh.includes(it.id) ? ' new' : ''}"><span class="e">${it.emo}</span><div>
+    return `<div class="rung${fresh.includes(it.id) ? ' new' : ''}" data-item="${it.id}"><span class="e">${it.emo}</span><div>
       <div class="top"><span>${it.sg}${fresh.includes(it.id) ? '<span class="badge">nouveau</span>' : ''}</span><span class="v" data-v="${it.id}"></span></div>
       <div class="track"><i style="left:${pos}%"></i></div></div></div>`;
   }).join('');
@@ -442,31 +478,24 @@ renderLadder();
 
 $('weigh').onclick = () => {
   const n = Math.round(Number($('slider').value)), g = Math.pow(10, n);
-  const target = Math.round(Math.log10(S.ans)), diff = Math.abs(n - target);
-  const lr = n - Math.log10(S.ans), err = diff === 0 ? 0 : diff;
-  const pts = Math.max(0, 100 - 25 * diff);
+  const target = orderOf(S.ans), diff = Math.abs(n - target);
+  const lr = n - Math.log10(S.ans);
+  const pts = Math.max(0, 100 - 10 * diff);
   S.total += pts; S.hist.push({A:S.A, B:S.B, pts});
   $('score').textContent = S.total;
   $('controls').style.display = 'none';
 
   swingTo(18 * Math.tanh(lr / 1.5));
-  $('status').textContent = err < Math.log10(2) ? 'La balance est presque à l\'équilibre.' :
-    lr > 0 ? 'Le plateau droit descend : trop d\'objets.' : 'Le plateau gauche descend : pas assez d\'objets.';
-  if (err >= Math.log10(2)) setTimeout(() => {
+  if (diff > 0) setTimeout(() => {
     if (S.hist.length !== S.round + 1) return;
-    setRight(S.ans); swingTo(0);
-    $('status').textContent = 'Avec la bonne quantité, la balance s\'équilibre.';
+    setRight(S.ans, Math.pow(10, target)); swingTo(0);
   }, reduce() ? 1200 : 1800);
 
   const [cls, txt] = diff === 0 ? ['good','Bon ordre de grandeur'] : diff === 1 ? ['ok','À une puissance de 10 près'] :
-                     diff === 2 ? ['near','Pas loin'] : ['bad','Raté'];
+                     diff <= 3 ? ['near','Pas loin'] : ['bad','Raté'];
   $('vt').className = 't ' + cls; $('vt').textContent = txt; $('vp').textContent = '+' + pts + ' pts';
   setTex($('yourTex'), `10^{${n}}`);
   setTex($('goodTex'), `10^{${target}}`);
-  $('goodExact').dataset.tex = ''; setTex($('goodExact'), `\\text{valeur exacte} \\approx ${numTex(S.ans)}`);
-  setTex($('ptsTex'), diff >= 4
-    ? `\\text{écart} = ${diff}\\ \\text{puissances de 10} \\;\\Rightarrow\\; 0`
-    : `\\text{écart} = ${diff}\\ \\text{puissance${diff > 1 ? 's' : ''} de 10} \\;\\Rightarrow\\; 100 - 25 \\times ${diff} = ${pts}`);
   discover([S.A.id, S.B.id]);
   $('wA').textContent = S.A.emo + ' 1 ' + S.A.sg; setTex($('fA'), S.A.tex);
   $('wB').textContent = S.B.emo + ' 1 ' + S.B.sg; setTex($('fB'), S.B.tex);
@@ -482,12 +511,47 @@ $('next').onclick = () => {
 function endGame(){
   $('game').hidden = true; $('end').hidden = false;
   $('final').textContent = S.total + ' / 1000';
-  $('rank').textContent = S.total >= 800 ? 'Instinct de physicien : les ordres de grandeur vous obéissent.' :
-    S.total >= 500 ? 'Bonne intuition, quelques puissances de dix vous ont échappé.' : 'Les joules gardent leurs secrets. Une autre partie ?';
+  $('rank').textContent = S.total >= 900 ? 'Instinct de physicien : les ordres de grandeur vous obéissent.' :
+    S.total >= 700 ? 'Bonne intuition, quelques puissances de dix vous ont échappé.' : 'Les joules gardent leurs secrets. Une autre partie ?';
   $('hist').innerHTML = S.hist.map(r => `<span>${r.A.emo} 1 ${r.A.sg} = ${r.B.emo} ?</span><span>${r.pts}</span>`).join('');
   window.scrollTo({top:0});
 }
 $('again').onclick = newGame;
+
+/* ---------- Info-bulles : survol à la souris, tap sur mobile ---------- */
+const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; tip.setAttribute('role', 'tooltip');
+document.body.appendChild(tip);
+let tipFor = null;
+function showTip(el){
+  const it = byId[el.dataset.item]; if (!it) return;
+  tip.innerHTML = '';
+  const b = document.createElement('b'); b.textContent = it.emo + ' ' + it.sg;
+  const t = document.createElement('span'); t.textContent = it.desc;
+  tip.append(b, t); tip.hidden = false; tipFor = el;
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = Math.min(Math.max(16, r.left + r.width / 2 - w / 2), innerWidth - w - 16);
+  let y = r.bottom + 8; if (y + h > innerHeight - 8) y = Math.max(8, r.top - h - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip(){ tip.hidden = true; tipFor = null; }
+document.addEventListener('pointerover', e => {
+  if (e.pointerType !== 'mouse') return;
+  const el = e.target.closest('[data-item]'); if (el && el !== tipFor) showTip(el);
+});
+document.addEventListener('pointerout', e => {
+  if (e.pointerType !== 'mouse') return;
+  const el = e.target.closest('[data-item]');
+  if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) hideTip();
+});
+let lastPointer = 'mouse';
+document.addEventListener('pointerdown', e => { lastPointer = e.pointerType || 'touch'; }, true);
+document.addEventListener('touchstart', () => { lastPointer = 'touch'; }, {capture: true, passive: true});
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-item]');
+  if (el && lastPointer === 'mouse') return;
+  if (el && el !== tipFor) showTip(el); else hideTip();
+});
+addEventListener('scroll', hideTip, {passive: true});
 newGame();
 </script>
 
