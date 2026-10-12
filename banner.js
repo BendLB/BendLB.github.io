@@ -9,7 +9,7 @@
     ["brown", "Grains de Brown"],
     ["vie", "Jeu de la vie"],
     ["traversee", "Traversée optimale"],
-    ["improbable", "L'échelle de l'improbable"],
+    ["improbable", "Comment gagner à l'EuroMillions"],
     ["pi", "Chasse à π"],
     ["fourier", "Fourier Épicycles"],
     ["float", "Anatomie d'un float"],
