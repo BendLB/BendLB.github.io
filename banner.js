@@ -19,6 +19,8 @@
   var ME = document.currentScript && document.currentScript.src;
   var ROOT = ME ? new URL(".", ME).href : new URL("../", location.href).href;
   if (document.getElementById("book-banner")) return;
+  /* Pas de zoom au double-tap (le pincement pour zoomer reste possible). */
+  try { document.documentElement.style.touchAction = "manipulation"; } catch (e) {}
 
   var slug = (location.pathname.split("/").pop() || "").replace(/\.html?$/, "");
   var i = -1;
