@@ -32,7 +32,6 @@ h2{font-family:var(--display);font-weight:800;font-size:1.35rem;margin:0 0 4px;t
 .nrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .nbig{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;min-width:2ch;font-variant-numeric:tabular-nums}
 input[type=range]{flex:1;min-width:180px;accent-color:var(--brass)}
-.odds{font-family:var(--mono);font-size:.95rem}
 .coins{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
 .coin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:.8rem;border:2px solid var(--line);color:var(--muted);transition:transform .25s}
 .coin.P{background:var(--brass);border-color:var(--brass);color:var(--surface)}
@@ -77,11 +76,12 @@ button:disabled{opacity:.5;cursor:default}
 .chips button[aria-pressed="true"]{background:var(--brass-soft);border-color:var(--brass)}
 .pickrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .pickrow input{width:9rem;font:500 1rem var(--mono);padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.odds{font-family:var(--mono);font-size:.95rem}
 .cups{display:flex;flex-wrap:wrap;gap:10px 6px;justify-content:center;padding-top:16px}
 .cupbox{position:relative;width:46px;height:56px;border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px}
 .cupbox .ball{position:absolute;left:50%;bottom:2px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--ok);opacity:0}
 .cupbox svg{position:absolute;inset:0;width:100%;height:100%;transition:transform .35s}
-.cupbox .num{position:absolute;inset:auto 0 -2px 0;font:600 .62rem var(--mono);color:var(--surface);text-align:center;transition:transform .35s;pointer-events:none}
+.cupbox .num{position:absolute;left:0;right:0;top:27px;line-height:1;font:600 .66rem/1 var(--mono);color:var(--surface);text-align:center;transition:transform .35s;pointer-events:none}
 .cupbox.up svg,.cupbox.up .num{transform:translateY(-22px)}
 .cupbox.has .ball{opacity:1}
 .cupbox.chosen svg path{fill:var(--brass)}
@@ -243,7 +243,6 @@ button:disabled{opacity:.5;cursor:default}
         <input type="range" id="m" min="0" max="1000" value="0" aria-label="Nombre de gobelets (échelle logarithmique)">
       </div>
       <div class="chips" id="presets"></div>
-      <div class="odds" id="mOdds"></div>
       <button class="euro" id="mEuro">≈ EuroMillions : 139 838 160 gobelets (exactement)</button>
     </div>
     <div id="cupsArea"></div>
@@ -273,7 +272,6 @@ button:disabled{opacity:.5;cursor:default}
     <div>
       <div class="label">Objectif</div>
       <div class="chips" id="levels"></div>
-      <div class="odds" id="kOdds"></div>
       <button class="euro" id="kEuro">≈ EuroMillions : 4 as + 3 rois imposés (1 sur 133 784 560)</button>
       <div class="formula" id="kFormula"></div>
     </div>
@@ -444,7 +442,6 @@ button:disabled{opacity:.5;cursor:default}
         <input type="range" id="pNr" min="10" max="700" value="640" aria-label="Nombre de cases dans l'album"></div>
       <div class="label">Achat</div>
       <div class="chips" id="pSizes"></div>
-      <div class="odds" id="pOdds"></div>
       <div class="formula" id="pFormula"></div>
       <button class="euro" id="pEuro">≈ EuroMillions : album de 21 cases complété avec 21 vignettes, sans aucun double (1 sur 114 356 611)</button>
     </div>
@@ -738,7 +735,6 @@ clearAll(); renderCoins(null); update(); drawGrid();
 /* ---------- Jeu des gobelets ---------- */
 const EURO = 139838160, MMIN = 2;
 const presets = [
-  {lab:'3', m:3}, {lab:'6 · dé', m:6}, {lab:'36 · double six', m:36}, {lab:'1 000', m:1000},
   {lab:'Lotto belge', m:8145060}, {lab:'Loto FDJ', m:19068840}, {lab:'EuroMillions', m:EURO}];
 var M = 3;
 let ball = 0, lifted = new Set(), pageCount = new Map(), found = false, lastPick = -1;
@@ -841,7 +837,6 @@ function drawDense(){
 function cUpdate(){
   $('mOut').textContent = fmt(M);
   const bits = Math.log2(M), left = M-lifted.size;
-  $('mOdds').textContent = `Chance au premier essai : 1 sur ${fmt(M)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
   $('pick').max = M;
   $('cTries').textContent = fmt(lifted.size);
   $('cLeft').textContent = found ? '—' : fmt(left);
@@ -1068,7 +1063,6 @@ function kUntil(){
 function kBtns(){ ['kOne','kAll','kUntil','kNew','kReset'].forEach(id=>$(id).disabled=kBusy); }
 function kUpdate(){
   const L=LEVELS[lvl], bits=Math.log2(L.odds);
-  $('kOdds').textContent = `Chance par donne : 1 sur ${fmt(L.odds)} · comme ≈ ${bits.toFixed(1).replace('.',',')} piles d'affilée`;
   $('kTries').textContent=fmt(kTries); $('kWins').textContent=fmt(kWins);
   $('kTime').textContent = kTries ? duration(kTries) : '—';
   kRenderFails(); renderLadder();
@@ -1466,7 +1460,6 @@ function pUpdate(){
   const E=pExpStickers();
   $('pOut').textContent=fmt(pN); $('pNr').value=pN;
   $('pSizes').innerHTML=[[1,'À l\'unité'],[5,'Paquets de 5'],[7,'Paquets de 7']].map(([v,l])=>`<button data-s="${v}" aria-pressed="${v===pS}">${l}</button>`).join('');
-  $('pOdds').textContent = `En moyenne : ≈ ${fmt(E)} vignettes${pS>1?`, soit ≈ ${fmt(E/pS)} paquets`:''}, pour ${fmt(pN)} cases. Chance de le compléter sans aucun double : 1 sur ${fmtBig(pNoDupBits(pN))}.`;
   $('pPacks').textContent=fmt(pPacks); $('pHave').textContent=`${fmt(pStick)} / ${fmt(pN)}`;
   $('pDup').textContent=fmt(pDup);
   $('pNext').textContent = pDone ? 'complet' : `${(pN-pStick)/pN<0.01 ? ((pN-pStick)/pN*100).toLocaleString('fr-FR',{maximumFractionDigits:2}) : Math.round((pN-pStick)/pN*100)} %`;
