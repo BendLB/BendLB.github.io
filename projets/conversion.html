@@ -142,6 +142,8 @@ const RAW=[
  ['mph','S',.44704,'mph','miles par heure','mi/h',1,'i'],
  ['kn','S',1852/3600,'kn','nœuds','noeud noeuds knot knots nd',1,'o'],
  ['fts','S',.3048,'ft/s','pieds par seconde','fps ft/s',0,'i'],
+ ['minkm','S','PACE:1000','min/km','minutes au kilomètre','min/km mn/km minkm allure pace /km',1,'m'],
+ ['minmi','S','PACE:1609.344','min/mi','minutes au mile','min/mi mn/mi minmi min/mile /mi pace',1,'i'],
 
  ['s','t',1,'s','secondes','seconde second sec',0,'m'],
  ['msec','t',1e-3,'ms','millisecondes','milliseconde millisecond',0,'m'],
@@ -203,7 +205,7 @@ const RAW=[
  ['Mio','D',1048576,'Mio','mébioctets','mib mebibyte',0,'m'],
  ['Gio','D',1073741824,'Gio','gibioctets','gib gibibyte',0,'m'],
 ];
-const POP=['m','km','cm','mm','kg','g','lb','C','Fh','L','mi','in','ft','kmh','mph','oz','mL','h','min','t','m2','ha','kWh','kcal','bar','psi','yd','gal','floz','d','s','kW','hp','ch','Go','Mo','acre','ft2','kn','atm','deg','pct','rad','J','W','N','K','tr','grad'];
+const POP=['minkm','minmi','m','km','cm','mm','kg','g','lb','C','Fh','L','mi','in','ft','kmh','mph','oz','mL','h','min','t','m2','ha','kWh','kcal','bar','psi','yd','gal','floz','d','s','kW','hp','ch','Go','Mo','acre','ft2','kn','atm','deg','pct','rad','J','W','N','K','tr','grad'];
 const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/²/g,'2').replace(/³/g,'3').replace(/[µμ]/g,'u').replace(/°/g,'').replace(/\s+/g,' ').trim();
 const U={};
 RAW.forEach(r=>{const [id,d,f,sym,name,al,usual,sys]=r;
@@ -212,10 +214,13 @@ RAW.forEach(r=>{const [id,d,f,sym,name,al,usual,sys]=r;
 // ---------- Calcul ----------
 // Multiples décimaux de l'unité de base : pas de ligne « SI » pour eux (10 km ≠ besoin de 10 000 m)
 const PREFIXED=new Set(['km','dm','cm','mm','um','nm','g','mg','t','L','mL','cL','dL','cm3','km2','cm2','ha','are','msec','hPa','kPa','MPa','bar','mbar','kJ','MJ','kW','MW','kN','mrad','ko','Mo','Go','To']);
+const paceK=u=>typeof u.f==='string'&&u.f.startsWith('PACE:')?+u.f.slice(5)/60:0;
 function toBase(v,u){if(u.f==='PCT')return Math.atan(v/100);
+  if(paceK(u))return v===0?Infinity:paceK(u)/v;
   if(u.d!=='T')return v*u.f;
   return u.f==='C'?v+273.15:u.f==='F'?(v-32)*5/9+273.15:u.f==='R'?v*5/9:v;}
-function fromBase(b,u){if(u.f==='PCT'){const c=Math.cos(b);return Math.abs(c)<1e-12?Infinity:Math.tan(b)*100;}
+function fromBase(b,u){if(paceK(u))return b===0?Infinity:paceK(u)/b;
+  if(u.f==='PCT'){const c=Math.cos(b);return Math.abs(c)<1e-12?Infinity:Math.tan(b)*100;}
   if(u.d!=='T')return b/u.f;
   return u.f==='C'?b-273.15:u.f==='F'?(b-273.15)*9/5+32:u.f==='R'?b*9/5:b;}
 const nf=new Intl.NumberFormat('fr-FR',{maximumSignificantDigits:6});
@@ -227,10 +232,16 @@ function fmt(v){
     return new Intl.NumberFormat('fr-FR',{maximumSignificantDigits:4}).format(m)+'&#8239;×&#8239;10<sup>'+(e<0?'−':'')+Math.abs(e)+'</sup>';}
   return nf.format(v);
 }
+function paceTxt(v){if(!isFinite(v)||v<=0)return '∞';let t=Math.round(v*60),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;
+  return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(sec).padStart(2,'0');}
+const show=(v,u)=>paceK(u)?paceTxt(v):fmt(v), copyv=(v,u)=>paceK(u)?paceTxt(v):plain(v);
 function plain(v){if(!isFinite(v))return '∞';return String(Number(v.toPrecision(6))).replace('.',',');}
 
 function rowsFor(card){
   const u=U[card.u], b=toBase(card.v,u), base=U[DIMS[u.d].base], out=[], seen=new Set([u.id]);
+  if(u.d==='S'){ // vitesse et allure : jeu fixe, quelle que soit l'unité saisie
+    ['kmh','minkm','ms_','mph','minmi'].concat(card.extra||[]).forEach(id=>{if(!seen.has(id)&&U[id]){out.push({u:U[id],v:fromBase(b,U[id]),k:(card.extra||[]).includes(id)?'+':''});seen.add(id);}});
+    return out;}
   // seen = unités réellement affichées ; la base n'y entre que si sa ligne est affichée
   // longueurs : jamais de ligne en mètres par défaut
   // surfaces : m² toujours en premier (sauf saisie en m²)
@@ -283,6 +294,8 @@ function mixedImp(meters){
 // ---------- Saisie ----------
 function parse(str){
   str=canon(str).replace(/−/g,'-').replace(/(\d)[\s  ](?=\d{3}(\D|$))/g,'$1');
+  const ms=str.match(/^\s*(\d+)\s*[:']\s*(\d{1,2})\s*(?:"|″)?\s*(.*)$/);
+  if(ms)return {v:+ms[1]+ms[2]/60,unit:ms[3]};
   const fr=str.match(/^\s*([-+]?)(?:(\d+)\s+)?(\d+)\/(\d+)\s*(.*)$/);
   if(fr&&+fr[4]>0){const v=(+(fr[2]||0))+fr[3]/fr[4];return {v:fr[1]==='-'?-v:v,unit:fr[5]};}
   const m=str.match(/^\s*([-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[-+]?\d+)?)\s*(.*)$/i);
@@ -327,8 +340,8 @@ function render(){
     const u=U[c.u];
     const rows=rowsFor(c).map(r=>r.html
       ?'<li class="row mix" tabindex="0" data-copy="'+r.copy+'"><span class="k">'+r.k+'</span><span class="v">'+r.html+'</span><span class="n">'+r.name+'</span></li>'
-      :'<li class="row'+(r.si?' si':'')+'" tabindex="0" data-copy="'+plain(r.v)+'"><span class="k">'+(r.k==='+'?'<button class="unpin" type="button" aria-label="Ne plus afficher '+r.u.sym+'" data-unpin="'+r.u.id+'" data-card="'+c.id+'">×</button>':r.k)+'</span><span class="v"><b>'+fmt(r.v)+'</b>&nbsp;'+r.u.sym+'</span><span class="n">'+r.u.name+'</span></li>').join('');
-    return '<article class="card" data-id="'+c.id+'"><div class="head"><div class="src">'+fmt(c.v)+'&nbsp;'+u.sym+'<small>'+u.name+'</small></div>'+
+      :'<li class="row'+(r.si?' si':'')+'" tabindex="0" data-copy="'+copyv(r.v,r.u)+'"><span class="k">'+(r.k==='+'?'<button class="unpin" type="button" aria-label="Ne plus afficher '+r.u.sym+'" data-unpin="'+r.u.id+'" data-card="'+c.id+'">×</button>':r.k)+'</span><span class="v"><b>'+show(r.v,r.u)+'</b>&nbsp;'+r.u.sym+'</span><span class="n">'+r.u.name+'</span></li>').join('');
+    return '<article class="card" data-id="'+c.id+'"><div class="head"><div class="src">'+show(c.v,u)+'&nbsp;'+u.sym+'<small>'+u.name+'</small></div>'+
       '<button class="x" type="button" aria-label="Supprimer" data-del="'+c.id+'">×</button>'+
       '</div><ul class="rows">'+rows+'</ul><div class="more"><button class="addbtn" type="button" data-add="'+c.id+'">+ autre unité</button></div></article>';
   }).join('');
