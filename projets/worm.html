@@ -75,24 +75,34 @@ input[type=range]{width:100%;accent-color:var(--worm);margin:2px 0}
 @media (max-width:420px){.g .l{font-size:.62rem}}
 @media (prefers-reduced-motion:reduce){.g .f,.toast{transition:none}}
 .top{padding-top:8px}
-/* Ordinateur : infos compactes dans le ciel, instincts en petit panneau sur le côté */
+/* Ordinateur : infos compactes dans le ciel ; boutons et instincts dans une colonne à droite, hors de l'image du sol */
 @media (min-width:900px){
-  .top{grid-template-columns:max-content minmax(0,880px);gap:18px;align-items:start;padding-top:10px;padding-right:12px}
+  .game{--side:270px}
+  canvas{right:var(--side);width:calc(100% - var(--side))}
+  .toast{left:calc((100% - var(--side)) / 2)}
+  .top{right:var(--side);grid-template-columns:max-content minmax(0,880px);gap:18px;align-items:start;padding-top:10px;padding-right:12px}
   .top .head{flex-direction:column;align-items:flex-start;gap:4px}
   .top .tag{text-align:left}
   .top .chip{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;padding:7px 12px}
   .top .gauges{grid-column:1/-1}
   .top .line{margin-top:5px;min-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #panel{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 58px);width:250px;max-height:calc(100vh - 290px);gap:7px;padding:9px 11px}
-  #panel h2{font-size:.85rem}
-  #panel .sliders{grid-template-columns:1fr;gap:5px}
-  #panel .s .row{font-size:.74rem}
-  #panel .s .row span{font-size:.66rem}
-  #panel .s .ends{font-size:.6rem}
-  #panel .legend{font-size:.6rem}
+  .hud.bottom{top:0;bottom:0;left:auto;right:0;width:var(--side);padding:12px;display:flex;flex-direction:column;gap:12px;
+    background:#211913;border-left:1px solid var(--line);overflow-y:auto}
+  .hud.bottom > .bar{order:-1;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .hud.bottom > .bar .spacer,#instincts{display:none}
+  .hud.bottom > .bar button{padding:7px 8px;font-size:.76rem}
+  .hud.bottom > .bar .primary{grid-column:1/-1}
+  #panel[hidden]{display:grid!important}
+  #panel{max-height:none;overflow:visible;gap:8px;padding:0;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #panel h2{font-size:.9rem}
+  #panel .sliders{grid-template-columns:1fr;gap:6px}
+  #panel .s .row{font-size:.76rem}
+  #panel .s .row span{font-size:.68rem}
+  #panel .s .ends{font-size:.62rem}
+  #panel .legend{font-size:.62rem}
   #panel .legend i{width:70px}
-  #panel .status{font-size:.66rem}
-  #panel button{font-size:.7rem;padding:5px 8px}
+  #panel .status{font-size:.68rem}
+  #panel button{font-size:.72rem;padding:5px 8px}
 }
 </style>
 
@@ -188,7 +198,7 @@ function setupDims() {
   /* Le bandeau du book occupe le haut de l'écran : le jeu commence juste en dessous. */
   const bn = document.getElementById('book-banner'), top = bn ? Math.round(bn.getBoundingClientRect().bottom) : 0;
   document.querySelector('.game').style.top = top + 'px';
-  const vw = Math.max(320, window.innerWidth), vh = Math.max(400, window.innerHeight - top);
+  const vw = Math.max(320, window.innerWidth - (window.innerWidth >= 900 ? 270 : 0)), vh = Math.max(400, window.innerHeight - top);
   const cs = Math.sqrt(vw * vh / 6800);
   const wide = window.innerWidth >= 900, hudH = wide ? document.querySelector('.hud.top').offsetHeight + 12 : 0;
   GW = Math.max(40, Math.round(vw / cs));
