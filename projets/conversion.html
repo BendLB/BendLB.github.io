@@ -313,12 +313,12 @@ function chipHTML(list,hint){
 }
 
 // ---------- État ----------
+// Historique gardé en mémoire uniquement : il repart de zéro à chaque chargement de la page.
 let cards=[];
-try{cards=(JSON.parse(localStorage.getItem('conv-cards')||'[]')||[]).filter(c=>c.id!=='ex'&&U[c.u]);}catch(e){cards=[];}
+try{localStorage.removeItem('conv-cards');localStorage.removeItem('conv-pins');}catch(e){}
 // unités ajoutées à la main, par grandeur : reprises sur les conversions suivantes
 let pins={};
-try{pins=JSON.parse(localStorage.getItem('conv-pins')||'{}')||{};}catch(e){pins={};}
-function save(){try{localStorage.setItem('conv-cards',JSON.stringify(cards.slice(-40)));localStorage.setItem('conv-pins',JSON.stringify(pins));}catch(e){}}
+function save(){}
 
 const $list=document.getElementById('list'),$q=document.getElementById('q'),$chips=document.getElementById('chips');
 
