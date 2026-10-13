@@ -14,7 +14,8 @@
     ["fourier", "Fourier Épicycles"],
     ["float", "Anatomie d'un float"],
     ["morse", "Télégraphe Morse"],
-    ["allure", "Convertisseur d'allure"]
+    ["allure", "Convertisseur d'allure"],
+    ["conversion", "Conversion rapide"]
   ];
   var ME = document.currentScript && document.currentScript.src;
   var ROOT = ME ? new URL(".", ME).href : new URL("../", location.href).href;

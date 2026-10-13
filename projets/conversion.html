@@ -1,0 +1,390 @@
+<!doctype html><html><head><style>:where(html,body,*){touch-action:manipulation}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><meta name="theme-color" content="#0E1320"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Book BdLB"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Conversion rapide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column — a stack of conversion cards, the input always sits under the last one. Ruler ticks mark each card. */
+:root{
+  --bg:#EDF0F3; --card:#FFFFFF; --fg:#151A20; --muted:#5D6874; --line:#D3D9E0; --accent:#F2B705; --accent-ink:#151A20; --chip:#E3E8ED;
+  --num:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1216; --card:#171D24; --fg:#E7EBEF; --muted:#8E9AA7; --line:#2A333D; --accent:#F2B705; --accent-ink:#151A20; --chip:#222A33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1216; --card:#171D24; --fg:#E7EBEF; --muted:#8E9AA7; --line:#2A333D; --accent:#F2B705; --accent-ink:#151A20; --chip:#222A33; color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:30rem;margin:0 auto;padding:1.25rem 16px 6rem;display:flex;flex-direction:column;gap:.9rem}
+h1{font-family:var(--num);font-weight:600;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.card{position:relative;background:var(--card);border-radius:10px;padding:1.1rem 1rem .8rem;border:1px solid var(--line);overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:7px;
+  background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 10px),
+             repeating-linear-gradient(90deg,var(--muted) 0 1px,transparent 1px 50px);
+  background-size:100% 5px,100% 7px;background-repeat:no-repeat;opacity:.7}
+.head{display:flex;align-items:baseline;gap:.5rem;justify-content:space-between}
+.src{font-family:var(--num);font-weight:600;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.src small{font-family:var(--body);font-weight:400;font-size:.8rem;color:var(--muted);margin-left:.35rem}
+.tag{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 .35rem}
+.x{background:none;border:0;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;padding:.2rem .3rem;border-radius:6px}
+.rows{list-style:none;margin:.6rem 0 0;padding:0;display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:2.4rem 1fr auto;align-items:baseline;gap:.5rem;padding:.42rem 0;border-top:1px solid var(--line);cursor:pointer}
+.row:first-child{border-top:0}
+.row .k{font-size:.66rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row.si .k{background:var(--accent);color:var(--accent-ink);border-radius:4px;text-align:center;padding:.05rem 0}
+.row .v{font-family:var(--num);font-weight:500;font-size:1.35rem;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.row .v b{font-weight:600}
+.row .n{font-size:.78rem;color:var(--muted);text-align:right}
+.row.si .v{font-weight:600}
+sup{font-size:.62em}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.62em;line-height:1.05;font-weight:600;margin:0 .05em}
+.frac span:first-child{border-bottom:1.5px solid currentColor;padding:0 .15em}
+.frac span:last-child{padding:0 .15em}
+.row.mix .k{color:var(--fg)}
+.unpin{background:var(--chip);border:0;color:var(--muted);border-radius:4px;width:1.6rem;height:1.4rem;font-size:1rem;line-height:1;cursor:pointer;padding:0}
+.unpin:hover{color:var(--fg)}
+.more{margin-top:.4rem}
+.addbtn{background:none;border:1px dashed var(--line);color:var(--muted);font:inherit;font-size:.85rem;border-radius:6px;padding:.35rem .7rem;cursor:pointer}
+.addbtn:hover{color:var(--fg);border-color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:.55rem}
+input.q{width:100%;box-sizing:border-box;font-family:var(--num);font-weight:500;font-size:1.6rem;padding:.6rem .8rem;border-radius:10px;
+  border:2px solid var(--line);background:var(--card);color:var(--fg);outline:none}
+input.q:focus{border-color:var(--accent)}
+input.q.small{font-size:1.1rem;padding:.4rem .6rem;border-width:1px}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;min-height:2.1rem}
+.chip{display:inline-flex;align-items:baseline;gap:.35rem;background:var(--chip);color:var(--fg);border:0;border-radius:999px;padding:.4rem .75rem;font:inherit;font-size:.9rem;cursor:pointer}
+.chip b{font-family:var(--num);font-weight:600;font-size:1.05rem}
+.chip span{color:var(--muted);font-size:.78rem}
+.chip.first{box-shadow:inset 0 0 0 2px var(--accent)}
+.hint{color:var(--muted);font-size:.85rem;align-self:center}
+button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);
+  padding:.4rem .9rem;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<div class="wrap">
+  <h1>Conversion rapide</h1>
+  <div id="list" class="wrap" style="padding:0;gap:.9rem;max-width:none"></div>
+  <div class="field">
+    <input id="q" class="q" type="text" placeholder="ex. 12 km" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Valeur et unité">
+    <div id="chips" class="chips" role="listbox" aria-label="Unités proposées"></div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status">Copié</div>
+
+<script>
+// ---------- Données ----------
+const DIMS={
+  L:{base:'m',si:true}, M:{base:'kg',si:true}, T:{base:'K',si:true}, V:{base:'m3',si:true},
+  A:{base:'m2',si:true}, S:{base:'ms_',si:true}, t:{base:'s',si:true}, P:{base:'Pa',si:true},
+  E:{base:'J',si:true}, W:{base:'W',si:true}, F:{base:'N',si:true}, D:{base:'o',si:false}, Ag:{base:'rad',si:true}
+};
+// id, dim, facteur vers la base, symbole, nom, alias, usuel?, système (m métrique / i impérial)
+const RAW=[
+ ['m','L',1,'m','mètres','metre meter metres meters',1,'m'],
+ ['km','L',1e3,'km','kilomètres','kilometre kilometer kilometres',1,'m'],
+ ['cm','L',1e-2,'cm','centimètres','centimetre centimeter',1,'m'],
+ ['dm','L',.1,'dm','décimètres','decimetre decimeter',0,'m'],
+ ['mm','L',1e-3,'mm','millimètres','millimetre millimeter',1,'m'],
+ ['um','L',1e-6,'µm','micromètres','micron micrometre um',0,'m'],
+ ['nm','L',1e-9,'nm','nanomètres','nanometre nanometer',0,'m'],
+ ['in','L',.0254,'in','pouces','inch inches pouce "',1,'i'],
+ ['ft','L',.3048,'ft','pieds','foot feet pied',1,'i'],
+ ['yd','L',.9144,'yd','yards','yard',1,'i'],
+ ['mi','L',1609.344,'mi','miles','mile',1,'i'],
+ ['nmi','L',1852,'NM','milles nautiques','nmi mille nautique nautical mile',0,'o'],
+ ['au','L',1.495978707e11,'au','unités astronomiques','ua unite astronomique astronomical unit',0,'o'],
+ ['ly','L',9.4607304725808e15,'al','années-lumière','ly annee lumiere light year',0,'o'],
+
+ ['kg','M',1,'kg','kilogrammes','kilo kilos kilogramme kilogram',1,'m'],
+ ['g','M',1e-3,'g','grammes','gramme gram',1,'m'],
+ ['mg','M',1e-6,'mg','milligrammes','milligramme milligram',0,'m'],
+ ['t','M',1e3,'t','tonnes','tonne ton',1,'m'],
+ ['lb','M',.45359237,'lb','livres','lbs pound pounds livre',1,'i'],
+ ['oz','M',.028349523125,'oz','onces','ounce ounces once',1,'i'],
+ ['st','M',6.35029318,'st','stones','stone',0,'i'],
+ ['ct','M',2e-4,'ct','carats','carat',0,'o'],
+
+ ['C','T','C','°C','degrés Celsius','c celsius degc',1,'m'],
+ ['Fh','T','F','°F','degrés Fahrenheit','f fahrenheit degf',1,'i'],
+ ['K','T','K','K','kelvins','kelvin',0,'m'],
+ ['R','T','R','°R','degrés Rankine','rankine',0,'i'],
+
+ ['m3','V',1,'m³','mètres cubes','m3 metre cube cubic meter',0,'m'],
+ ['L','V',1e-3,'L','litres','l litre liter litres liters',1,'m'],
+ ['mL','V',1e-6,'mL','millilitres','ml millilitre milliliter',1,'m'],
+ ['cL','V',1e-5,'cL','centilitres','cl centilitre',0,'m'],
+ ['dL','V',1e-4,'dL','décilitres','dl decilitre',0,'m'],
+ ['cm3','V',1e-6,'cm³','centimètres cubes','cm3 cc',0,'m'],
+ ['gal','V',3.785411784e-3,'gal','gallons US','gallon gallons us gal',1,'i'],
+ ['galuk','V',4.54609e-3,'gal UK','gallons impériaux','imperial gallon uk',0,'i'],
+ ['floz','V',2.95735295625e-5,'fl oz','onces liquides US','fl oz floz fluid ounce',1,'i'],
+ ['cup','V',2.365882365e-4,'cup','tasses US','cups tasse',0,'i'],
+ ['pt','V',4.73176473e-4,'pt','pintes US','pint pinte',0,'i'],
+ ['qt','V',9.46352946e-4,'qt','quarts US','quart',0,'i'],
+ ['ft3','V',.028316846592,'ft³','pieds cubes','ft3 cubic foot cu ft',0,'i'],
+ ['bbl','V',.158987294928,'bbl','barils','baril barrel',0,'o'],
+
+ ['m2','A',1,'m²','mètres carrés','m2 metre carre square meter',0,'m'],
+ ['km2','A',1e6,'km²','kilomètres carrés','km2',1,'m'],
+ ['cm2','A',1e-4,'cm²','centimètres carrés','cm2',0,'m'],
+ ['ha','A',1e4,'ha','hectares','hectare',1,'m'],
+ ['are','A',100,'a','ares','are',0,'m'],
+ ['ft2','A',.09290304,'ft²','pieds carrés','ft2 sq ft square foot',1,'i'],
+ ['in2','A',6.4516e-4,'in²','pouces carrés','in2 sq in',0,'i'],
+ ['acre','A',4046.8564224,'acre','acres','acres',0,'i'],
+ ['mi2','A',2589988.110336,'mi²','miles carrés','mi2 sq mi',1,'i'],
+
+ ['ms_','S',1,'m/s','mètres par seconde','ms m/s mps',0,'m'],
+ ['kmh','S',1/3.6,'km/h','kilomètres heure','kmh kph km/h',1,'m'],
+ ['mph','S',.44704,'mph','miles par heure','mi/h',1,'i'],
+ ['kn','S',1852/3600,'kn','nœuds','noeud noeuds knot knots nd',1,'o'],
+ ['fts','S',.3048,'ft/s','pieds par seconde','fps ft/s',0,'i'],
+
+ ['s','t',1,'s','secondes','seconde second sec',0,'m'],
+ ['msec','t',1e-3,'ms','millisecondes','milliseconde millisecond',0,'m'],
+ ['min','t',60,'min','minutes','minute mn',1,'m'],
+ ['h','t',3600,'h','heures','heure hour hours hr',1,'m'],
+ ['d','t',86400,'j','jours','jour jours day days d',1,'m'],
+ ['wk','t',604800,'sem.','semaines','semaine week sem',1,'m'],
+ ['yr','t',31557600,'an','années (365,25 j)','annee annees year years ans',1,'m'],
+
+ ['Pa','P',1,'Pa','pascals','pascal',0,'m'],
+ ['hPa','P',100,'hPa','hectopascals','hectopascal',0,'m'],
+ ['kPa','P',1e3,'kPa','kilopascals','kilopascal',0,'m'],
+ ['MPa','P',1e6,'MPa','mégapascals','megapascal',0,'m'],
+ ['bar','P',1e5,'bar','bars','bars',1,'m'],
+ ['mbar','P',100,'mbar','millibars','millibar',0,'m'],
+ ['atm','P',101325,'atm','atmosphères','atmosphere',0,'o'],
+ ['psi','P',6894.757293168,'psi','livres par pouce carré','lb/in2',1,'i'],
+ ['mmHg','P',133.322387415,'mmHg','millimètres de mercure','torr mmhg',0,'o'],
+
+ ['J','E',1,'J','joules','joule',0,'m'],
+ ['kJ','E',1e3,'kJ','kilojoules','kilojoule',1,'m'],
+ ['MJ','E',1e6,'MJ','mégajoules','megajoule',0,'m'],
+ ['Wh','E',3600,'Wh','wattheures','wattheure watt hour',0,'m'],
+ ['kWh','E',3.6e6,'kWh','kilowattheures','kilowattheure kilowatt hour',1,'m'],
+ ['cal','E',4.184,'cal','calories','calorie',0,'o'],
+ ['kcal','E',4184,'kcal','kilocalories','kilocalorie Cal',1,'o'],
+ ['BTU','E',1055.05585262,'BTU','BTU','btu british thermal unit',1,'i'],
+ ['eV','E',1.602176634e-19,'eV','électronvolts','electronvolt',0,'o'],
+
+ ['W','W',1,'W','watts','watt',0,'m'],
+ ['kW','W',1e3,'kW','kilowatts','kilowatt',1,'m'],
+ ['MW','W',1e6,'MW','mégawatts','megawatt',0,'m'],
+ ['hp','W',745.69987158227,'hp','chevaux-vapeur (impériaux)','horsepower bhp',1,'i'],
+ ['ch','W',735.49875,'ch','chevaux (métriques)','cheval chevaux cv ps',1,'m'],
+ ['btuh','W',.29307107,'BTU/h','BTU par heure','btu/h btuh',0,'i'],
+
+ ['N','F',1,'N','newtons','newton',0,'m'],
+ ['kN','F',1e3,'kN','kilonewtons','kilonewton',0,'m'],
+ ['kgf','F',9.80665,'kgf','kilogrammes-force','kilogramme force kp',1,'m'],
+ ['lbf','F',4.4482216152605,'lbf','livres-force','pound force',1,'i'],
+ ['dyn','F',1e-5,'dyn','dynes','dyne',0,'m'],
+
+ ['rad','Ag',1,'rad','radians','radian',1,'m'],
+ ['deg','Ag',Math.PI/180,'°','degrés','deg degre degres degree degrees',1,'m'],
+ ['grad','Ag',Math.PI/200,'gon','grades','grad grade gon gr',0,'m'],
+ ['tr','Ag',2*Math.PI,'tr','tours','tour tours turn turns rev revolution',1,'m'],
+ ['pct','Ag','PCT','%','pente','pourcent pourcentage pente percent slope grade',1,'o'],
+ ['mrad','Ag',1e-3,'mrad','milliradians','milliradian mil',0,'m'],
+ ['amin','Ag',Math.PI/10800,'′','minutes d\'arc','arcmin minute arc',0,'m'],
+ ['asec','Ag',Math.PI/648000,'″','secondes d\'arc','arcsec seconde arc',0,'m'],
+
+ ['o','D',1,'o','octets','octet B byte bytes',0,'m'],
+ ['bit','D',.125,'bit','bits','bits b',0,'m'],
+ ['ko','D',1e3,'ko','kilooctets','kb kB kilooctet kilobyte',1,'m'],
+ ['Mo','D',1e6,'Mo','mégaoctets','mb MB megaoctet megabyte',1,'m'],
+ ['Go','D',1e9,'Go','gigaoctets','gb GB gigaoctet gigabyte',1,'m'],
+ ['To','D',1e12,'To','téraoctets','tb TB teraoctet terabyte',1,'m'],
+ ['Kio','D',1024,'Kio','kibioctets','kib kibibyte',0,'m'],
+ ['Mio','D',1048576,'Mio','mébioctets','mib mebibyte',0,'m'],
+ ['Gio','D',1073741824,'Gio','gibioctets','gib gibibyte',0,'m'],
+];
+const POP=['m','km','cm','mm','kg','g','lb','C','Fh','L','mi','in','ft','kmh','mph','oz','mL','h','min','t','m2','ha','kWh','kcal','bar','psi','yd','gal','floz','d','s','kW','hp','ch','Go','Mo','acre','ft2','kn','atm','deg','pct','rad','J','W','N','K','tr','grad'];
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/²/g,'2').replace(/³/g,'3').replace(/[µμ]/g,'u').replace(/°/g,'').replace(/\s+/g,' ').trim();
+const U={};
+RAW.forEach(r=>{const [id,d,f,sym,name,al,usual,sys]=r;
+  U[id]={id,d,f,sym,name,usual:!!usual,sys,nsym:norm(sym),words:[norm(sym),norm(name),...norm(al).split(' ')].filter(Boolean),pop:POP.indexOf(id)<0?999:POP.indexOf(id)};});
+
+// ---------- Calcul ----------
+// Multiples décimaux de l'unité de base : pas de ligne « SI » pour eux (10 km ≠ besoin de 10 000 m)
+const PREFIXED=new Set(['km','dm','cm','mm','um','nm','g','mg','t','L','mL','cL','dL','cm3','km2','cm2','ha','are','msec','hPa','kPa','MPa','bar','mbar','kJ','MJ','kW','MW','kN','mrad','ko','Mo','Go','To']);
+function toBase(v,u){if(u.f==='PCT')return Math.atan(v/100);
+  if(u.d!=='T')return v*u.f;
+  return u.f==='C'?v+273.15:u.f==='F'?(v-32)*5/9+273.15:u.f==='R'?v*5/9:v;}
+function fromBase(b,u){if(u.f==='PCT'){const c=Math.cos(b);return Math.abs(c)<1e-12?Infinity:Math.tan(b)*100;}
+  if(u.d!=='T')return b/u.f;
+  return u.f==='C'?b-273.15:u.f==='F'?(b-273.15)*9/5+32:u.f==='R'?b*9/5:b;}
+const nf=new Intl.NumberFormat('fr-FR',{maximumSignificantDigits:6});
+function fmt(v){
+  if(!isFinite(v))return isNaN(v)?'—':(v<0?'−':'')+'∞'; if(v===0)return '0';
+  const a=Math.abs(v);
+  if(a>=1e9||a<1e-4){let e=Math.floor(Math.log10(a));let m=Number((v/Math.pow(10,e)).toPrecision(4));
+    if(Math.abs(m)>=10){m/=10;e++;}
+    return new Intl.NumberFormat('fr-FR',{maximumSignificantDigits:4}).format(m)+'&#8239;×&#8239;10<sup>'+(e<0?'−':'')+Math.abs(e)+'</sup>';}
+  return nf.format(v);
+}
+function plain(v){if(!isFinite(v))return '∞';return String(Number(v.toPrecision(6))).replace('.',',');}
+
+function rowsFor(card){
+  const u=U[card.u], b=toBase(card.v,u), base=U[DIMS[u.d].base], out=[], seen=new Set([u.id]);
+  // seen = unités réellement affichées ; la base n'y entre que si sa ligne est affichée
+  // longueurs : jamais de ligne en mètres par défaut
+  // surfaces : m² toujours en premier (sauf saisie en m²)
+  if(u.id!==base.id&&(u.d==='A'||!PREFIXED.has(u.id)&&u.d!=='L'&&u.d!=='M')){out.push({u:base,v:b,k:DIMS[u.d].si?'SI':'réf.',si:true});seen.add(base.id);}
+  let mixed=false;
+  if(u.d==='L'&&b!==0){const mx=mixedImp(b);
+    if(mx&&mx.text!==plain(card.v).replace(',','.')+' '+u.sym){out.push({html:mx.html,copy:mx.text,k:'imp.',name:mx.name});mixed=true;}}
+  const val=x=>fromBase(b,x);
+  // valeur « lisible » : entre 1 et 1000 de préférence
+  const ugly=x=>{const a=Math.abs(val(x));if(!isFinite(a)||a===0)return 0;const l=Math.log10(a);return l<0?-l:l>3?l-3:0;};
+  const byNice=(x,y)=>ugly(x)-ugly(y)||x.pop-y.pop;
+  const cand=Object.values(U).filter(x=>x.d===u.d&&x.usual&&(x.id!==base.id||u.d==='M')&&!seen.has(x.id));  // masse : kg, g ou t, le mieux adapté
+  let list;
+  if(u.sys==='m'){const o=cand.filter(x=>x.sys!=='m').sort(byNice);list=o.length?o.concat(cand.filter(x=>x.sys==='m').sort(byNice)):cand.sort(byNice);}
+  else{const met=cand.filter(x=>x.sys==='m').sort(byNice);list=met.slice(0,u.d==='A'?0:1).concat(cand.filter(x=>x.sys!=='m').sort(byNice));}
+  // longueur métrique : la notation impériale mixte suffit
+  const max=(u.d==='L'&&u.sys==='m'&&mixed)?0:mixed?2:3;
+  const mixText=mixed?out[out.length-1].copy:null;
+  let pick=list.filter(x=>plain(val(x)).replace(',','.')+' '+x.sym!==mixText).filter(x=>{if(u.d==='T'||card.v===0)return true;const a=Math.abs(val(x));return !isFinite(a)||(a>=.01&&a<1e6);});
+  // pour une source métrique, on ne montre que l'autre système s'il en existe
+  if(u.sys==='m'&&pick.some(x=>x.sys!=='m'))pick=pick.filter(x=>x.sys!=='m');
+  pick=pick.slice(0,max);
+  if(max&&!pick.length)list.forEach(x=>{if(!pick.length&&ugly(x)<3&&!pick.includes(x))pick.push(x);});
+  if(!pick.length&&!out.length&&list.length)pick=[list[0]];   // jamais de carte vide
+  pick.forEach(x=>{out.push({u:x,v:val(x),k:''});seen.add(x.id);});
+  (card.extra||[]).forEach(id=>{if(!seen.has(id)&&U[id]){out.push({u:U[id],v:val(U[id]),k:'+'});seen.add(id);}});
+  return out;
+}
+
+// Notation impériale mixte : mi / ft / in + fraction au 1/16 de pouce
+function mixedImp(meters){
+  const neg=meters<0, abs=Math.abs(meters), big=abs>=1609.344;
+  let r=Math.round(abs/.0254*(big?1:16));           // en pouces (≥ 1 mile) ou en seizièmes
+  const per=big?1:16;
+  if(r===0)return null;                               // trop petit pour la notation au 1/16
+  const mi=big?Math.floor(r/(63360*per)):0; r-=mi*63360*per;
+  const ft=Math.floor(r/(12*per)); r-=ft*12*per;
+  const inch=Math.floor(r/per); let num=r-inch*per, den=per;
+  while(num&&num%2===0&&den>1){num/=2;den/=2;}
+  const h=[],t=[];
+  if(mi){h.push('<b>'+nf.format(mi)+'</b>&nbsp;mi');t.push(mi+' mi');}
+  if(ft){h.push('<b>'+nf.format(ft)+'</b>&nbsp;ft');t.push(ft+' ft');}
+  if(inch||num||(!mi&&!ft)){
+    const f=num?'<span class="frac"><span>'+num+'</span><span>'+den+'</span></span>':'';
+    h.push('<b>'+(inch||!num?inch:'')+'</b>'+(inch&&num?'&#8202;':'')+f+'&nbsp;in');
+    t.push((inch||!num?inch:'')+(num?(inch?' ':'')+num+'/'+den:'')+' in');}
+  return {html:(neg?'−':'')+h.join(' '),text:(neg?'-':'')+t.join(' '),name:big?'miles, pieds, pouces':'pieds, pouces (au 1/16)'};
+}
+
+// ---------- Saisie ----------
+function parse(str){
+  str=canon(str).replace(/−/g,'-').replace(/(\d)[\s  ](?=\d{3}(\D|$))/g,'$1');
+  const fr=str.match(/^\s*([-+]?)(?:(\d+)\s+)?(\d+)\/(\d+)\s*(.*)$/);
+  if(fr&&+fr[4]>0){const v=(+(fr[2]||0))+fr[3]/fr[4];return {v:fr[1]==='-'?-v:v,unit:fr[5]};}
+  const m=str.match(/^\s*([-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[-+]?\d+)?)\s*(.*)$/i);
+  if(!m)return null;
+  return {v:parseFloat(m[1].replace(',','.')),unit:m[2]};
+}
+// Les claviers mobiles produisent des variantes de ° et % : on les ramène aux caractères standard
+function canon(s){return s.replace(/[º˚⁰∘]/g,'°').normalize('NFKC').replace(/′′/g,'″').replace(/[٪﹪]/g,'%').replace(/[’‘´`]/g,"'").replace(/[”“]/g,'"');}
+function suggest(q,dim,exclude){
+  const raw=canon(q).trim(), n=norm(raw);
+  let list=Object.values(U).filter(u=>(!dim||u.d===dim)&&!(exclude&&exclude.has(u.id)));
+  if(!raw)return list.sort((a,b)=>a.pop-b.pop).slice(0,dim?8:6);
+  const sc=u=>{
+    if(raw===u.sym)return 100;
+    if(!n||!u.nsym&&!u.words.length)return 0;
+    if(!u.nsym&&!u.words.slice(1).some(w=>w.startsWith(n)))return 0;
+    if(n===u.nsym&&raw.length>1)return 95;
+    if(u.words.slice(1).includes(n))return 90;
+    if(u.nsym.startsWith(n))return 70;
+    if(u.words.some(w=>w.startsWith(n)))return 60;
+    if(u.words.some(w=>w.includes(n)))return 30;
+    return 0;};
+  return list.map(u=>[sc(u),u]).filter(p=>p[0]>0).sort((a,b)=>b[0]-a[0]||a[1].pop-b[1].pop).slice(0,6).map(p=>p[1]);
+}
+function chipHTML(list,hint){
+  if(!list.length)return '<span class="hint">'+(hint||'Unité inconnue')+'</span>';
+  return list.map((u,i)=>'<button type="button" class="chip'+(i===0?' first':'')+'" data-u="'+u.id+'"><b>'+u.sym+'</b><span>'+u.name+'</span></button>').join('');
+}
+
+// ---------- État ----------
+let cards=[];
+try{cards=(JSON.parse(localStorage.getItem('conv-cards')||'[]')||[]).filter(c=>c.id!=='ex'&&U[c.u]);}catch(e){cards=[];}
+// unités ajoutées à la main, par grandeur : reprises sur les conversions suivantes
+let pins={};
+try{pins=JSON.parse(localStorage.getItem('conv-pins')||'{}')||{};}catch(e){pins={};}
+function save(){try{localStorage.setItem('conv-cards',JSON.stringify(cards.slice(-40)));localStorage.setItem('conv-pins',JSON.stringify(pins));}catch(e){}}
+
+const $list=document.getElementById('list'),$q=document.getElementById('q'),$chips=document.getElementById('chips');
+
+function render(){
+  $list.innerHTML=cards.map(c=>{
+    const u=U[c.u];
+    const rows=rowsFor(c).map(r=>r.html
+      ?'<li class="row mix" tabindex="0" data-copy="'+r.copy+'"><span class="k">'+r.k+'</span><span class="v">'+r.html+'</span><span class="n">'+r.name+'</span></li>'
+      :'<li class="row'+(r.si?' si':'')+'" tabindex="0" data-copy="'+plain(r.v)+'"><span class="k">'+(r.k==='+'?'<button class="unpin" type="button" aria-label="Ne plus afficher '+r.u.sym+'" data-unpin="'+r.u.id+'" data-card="'+c.id+'">×</button>':r.k)+'</span><span class="v"><b>'+fmt(r.v)+'</b>&nbsp;'+r.u.sym+'</span><span class="n">'+r.u.name+'</span></li>').join('');
+    return '<article class="card" data-id="'+c.id+'"><div class="head"><div class="src">'+fmt(c.v)+'&nbsp;'+u.sym+'<small>'+u.name+'</small></div>'+
+      '<button class="x" type="button" aria-label="Supprimer" data-del="'+c.id+'">×</button>'+
+      '</div><ul class="rows">'+rows+'</ul><div class="more"><button class="addbtn" type="button" data-add="'+c.id+'">+ autre unité</button></div></article>';
+  }).join('');
+}
+function refreshChips(){
+  const val=$q.value;
+  if(!val.trim()){$chips.innerHTML='<span class="hint">Tapez un nombre puis une unité</span>';return;}
+  const p=parse(val);
+  if(!p){$chips.innerHTML='<span class="hint">Commencez par un nombre</span>';return;}
+  $chips.innerHTML=chipHTML(suggest(p.unit));
+}
+function convert(uid){
+  const p=parse($q.value); if(!p||!U[uid])return;
+  cards.push({id:Date.now().toString(36),v:p.v,u:uid,extra:(pins[U[uid].d]||[]).filter(id=>id!==uid&&U[id])});
+  save();render();$q.value='';refreshChips();$q.focus();
+  $q.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}
+$q.addEventListener('input',refreshChips);
+$q.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const f=$chips.querySelector('.chip');if(f)convert(f.dataset.u);}});
+$chips.addEventListener('mousedown',e=>{if(e.target.closest('.chip'))e.preventDefault();});
+$chips.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)convert(c.dataset.u);});
+
+// copie, suppression, ajout d'unité
+let toastT;
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),1200);}
+function copy(t){const done=()=>toast('Copié : '+t);
+  try{navigator.clipboard.writeText(t).then(done,()=>toast(t));}catch(e){toast(t);}}
+$list.addEventListener('click',e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){cards=cards.filter(c=>c.id!==del.dataset.del);save();render();return;}
+  const add=e.target.closest('[data-add]');
+  if(add){openAdder(add.dataset.add,add.parentElement);return;}
+  const ch=e.target.closest('.chip[data-add-u]');
+  if(ch){const c=cards.find(x=>x.id===ch.dataset.card),id=ch.dataset.addU,d=U[c.u].d;
+    c.extra=(c.extra||[]).concat(id);pins[d]=(pins[d]||[]).filter(x=>x!==id).concat(id);save();render();return;}
+  const un=e.target.closest('[data-unpin]');
+  if(un){const c=cards.find(x=>x.id===un.dataset.card),id=un.dataset.unpin,d=U[c.u].d;
+    c.extra=(c.extra||[]).filter(x=>x!==id);pins[d]=(pins[d]||[]).filter(x=>x!==id);save();render();toast('Unité retirée des suivantes');return;}
+  const row=e.target.closest('.row');
+  if(row)copy(row.dataset.copy);
+});
+$list.addEventListener('keydown',e=>{const row=e.target.closest('.row');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();copy(row.dataset.copy);}});
+function openAdder(cid,box){
+  const c=cards.find(x=>x.id===cid), u=U[c.u];
+  const shown=new Set([u.id,...rowsFor(c).filter(r=>r.u).map(r=>r.u.id)]);
+  box.innerHTML='<div class="field"><input class="q small" id="add-'+cid+'" type="text" placeholder="Unité (ex. yd, pied, nœud)" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Unité supplémentaire"><div class="chips"></div></div>';
+  const inp=box.querySelector('input'), ch=box.querySelector('.chips');
+  const upd=()=>{const l=suggest(inp.value,u.d,shown);
+    ch.innerHTML=l.length?l.map((x,i)=>'<button type="button" class="chip'+(i===0?' first':'')+'" data-add-u="'+x.id+'" data-card="'+cid+'"><b>'+x.sym+'</b><span>'+x.name+'</span></button>').join(''):'<span class="hint">Aucune autre unité de ce type</span>';};
+  inp.addEventListener('input',upd);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const f=ch.querySelector('.chip');if(f)f.click();}if(e.key==='Escape')render();});
+  ch.addEventListener('mousedown',e=>{if(e.target.closest('.chip'))e.preventDefault();});
+  upd();inp.focus();
+}
+
+render();refreshChips();$q.focus();
+</script>
+
+</body></html>
