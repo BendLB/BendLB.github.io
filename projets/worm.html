@@ -75,6 +75,25 @@ input[type=range]{width:100%;accent-color:var(--worm);margin:2px 0}
 @media (max-width:420px){.g .l{font-size:.62rem}}
 @media (prefers-reduced-motion:reduce){.g .f,.toast{transition:none}}
 .top{padding-top:8px}
+/* Ordinateur : infos compactes dans le ciel, instincts en petit panneau sur le côté */
+@media (min-width:900px){
+  .top{grid-template-columns:max-content minmax(0,880px);gap:18px;align-items:start;padding-top:10px;padding-right:12px}
+  .top .head{flex-direction:column;align-items:flex-start;gap:4px}
+  .top .tag{text-align:left}
+  .top .chip{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;padding:7px 12px}
+  .top .gauges{grid-column:1/-1}
+  .top .line{margin-top:5px;min-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #panel{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 58px);width:250px;max-height:calc(100vh - 290px);gap:7px;padding:9px 11px}
+  #panel h2{font-size:.85rem}
+  #panel .sliders{grid-template-columns:1fr;gap:5px}
+  #panel .s .row{font-size:.74rem}
+  #panel .s .row span{font-size:.66rem}
+  #panel .s .ends{font-size:.6rem}
+  #panel .legend{font-size:.6rem}
+  #panel .legend i{width:70px}
+  #panel .status{font-size:.66rem}
+  #panel button{font-size:.7rem;padding:5px 8px}
+}
 </style>
 
 <div class="game">
@@ -171,9 +190,10 @@ function setupDims() {
   document.querySelector('.game').style.top = top + 'px';
   const vw = Math.max(320, window.innerWidth), vh = Math.max(400, window.innerHeight - top);
   const cs = Math.sqrt(vw * vh / 6800);
+  const wide = window.innerWidth >= 900, hudH = wide ? document.querySelector('.hud.top').offsetHeight + 12 : 0;
   GW = Math.max(40, Math.round(vw / cs));
   const rows = Math.round(vh / cs);
-  SKYR = Math.max(6, Math.ceil(125 / cs));
+  SKYR = Math.max(6, Math.ceil(Math.max(125, hudH) / cs));
   GH = Math.max(30, rows - SKYR);
   N = GW * GH;
 }
@@ -597,6 +617,7 @@ function loop() {
   if (frame++ % 6 === 0) updateUI();
   requestAnimationFrame(loop);
 }
+if (window.innerWidth >= 900) { $('#panel').hidden = false; $('#instincts').setAttribute('aria-pressed', 'true'); }
 newGame(); setLegend(); updateUI(); loop();
 })();
 </script>
