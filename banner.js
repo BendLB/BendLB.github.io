@@ -7,6 +7,7 @@
     ["worm", "Worm Simulation"],
     ["fourmis", "Fourmilière"],
     ["balance", "Balance énergie"],
+    ["carbone", "Balance carbone"],
     ["calcul", "Calcul mental"],
     ["brown", "Grains de Brown"],
     ["vie", "Jeu de la vie"],

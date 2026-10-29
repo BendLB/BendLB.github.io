@@ -1,0 +1,451 @@
+<!doctype html><html><head><style>:where(html,body,*){touch-action:manipulation}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><meta name="theme-color" content="#0E1320"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Book BdLB"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<title>Balance carbone</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<script>
+window.MathJax = {
+  svg: { fontCache: 'local' },
+  startup: { ready: () => { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => { window.__mj = true; renderAllTex(); }); } }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async></script>
+<style>
+/* Layout: duel of two tall tiles (side by side, stacked on phones), each with a log-scale "smoke gauge" revealed after the tap; explanation below; ladder at the bottom */
+:root{
+  --bg:#EEF2F4; --panel:#FFFFFF; --ink:#13202A; --muted:#5B6B77; --line:#D3DCE2;
+  --sky:#2C6CA6; --sky-soft:#DCE8F3; --smog:#6E5A82; --smog-soft:#E7E0EE;
+  --hot:#D9592A; --good:#23845A; --bad:#C23B3B;
+  --f-display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0D141A; --panel:#151F27; --ink:#E6EDF2; --muted:#8A9BA8; --line:#26343F;
+  --sky:#7DB4E6; --sky-soft:#1A2D3E; --smog:#B9A2D2; --smog-soft:#2A2235;
+  --hot:#F0875A; --good:#5CC994; --bad:#F07C7C; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0D141A; --panel:#151F27; --ink:#E6EDF2; --muted:#8A9BA8; --line:#26343F;
+  --sky:#7DB4E6; --sky-soft:#1A2D3E; --smog:#B9A2D2; --smog-soft:#2A2235;
+  --hot:#F0875A; --good:#5CC994; --bad:#F07C7C; color-scheme:dark }
+
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 96px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:800;font-size:1.5rem;letter-spacing:-.01em;margin:0;line-height:1.1}
+h1 small{display:block;font-family:var(--f-body);font-weight:600;font-size:.85rem;letter-spacing:0;color:var(--muted);margin-top:4px}
+.score{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.score b{font-family:var(--f-display);font-size:1.4rem;color:var(--ink);font-weight:800}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.dots i{height:5px;border-radius:3px;background:var(--line)}
+.dots i.now{background:var(--ink)} .dots i.ok{background:var(--good)} .dots i.ko{background:var(--bad)}
+
+.duel{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vs{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:44px;height:44px;border-radius:50%;
+  background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.8rem;pointer-events:none}
+.tile{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:14px;text-align:left;
+  min-height:230px;padding:18px 16px;border-radius:18px;border:2px solid transparent;cursor:pointer;font:inherit;color:var(--ink);min-width:0;
+  transition:transform .18s, border-color .18s, box-shadow .18s}
+.tile.a{background:var(--sky-soft)} .tile.b{background:var(--smog-soft)}
+.tile:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 10px 24px -14px rgb(0 0 0 / .45)}
+.tile.a:hover:not(:disabled){border-color:var(--sky)} .tile.b:hover:not(:disabled){border-color:var(--smog)}
+.tile:focus-visible{outline:3px solid var(--hot);outline-offset:3px}
+.tile:disabled{cursor:default}
+.tile .emo{font-size:2.6rem;line-height:1}
+.tile .nm{font-family:var(--f-display);font-weight:500;font-size:1rem;line-height:1.25;text-wrap:balance;position:relative;z-index:1}
+.tile.a .nm{color:var(--sky)} .tile.b .nm{color:var(--smog)}
+.tile .hint{font-size:.8rem;color:var(--muted);position:relative;z-index:1}
+/* gauge: smoke column rising from the bottom, height on a log scale */
+.tile .gauge{position:absolute;inset:auto 0 0 0;height:0;transition:height .9s cubic-bezier(.2,.8,.2,1);z-index:0}
+.tile.a .gauge{background:color-mix(in srgb, var(--sky) 22%, transparent)}
+.tile.b .gauge{background:color-mix(in srgb, var(--smog) 22%, transparent)}
+.tile .num{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:1.55rem;line-height:1;font-variant-numeric:tabular-nums;min-height:1.6rem}
+.tile .num span{font-family:var(--f-mono);font-weight:500;font-size:.75rem;color:var(--muted);margin-left:4px}
+.tile .badge{position:absolute;top:14px;right:14px;z-index:1;font-family:var(--f-mono);font-size:.78rem;padding:3px 8px;border-radius:999px;background:var(--hot);color:var(--panel)}
+.tile.win{border-color:var(--hot)}
+.tile.picked::after{content:attr(data-pick);position:absolute;bottom:14px;right:14px;z-index:1;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tile.picked.right::after{color:var(--good)} .tile.picked.wrong::after{color:var(--bad)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.verdict{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.verdict .t{font-family:var(--f-display);font-weight:800;font-size:1.3rem}
+.verdict .t.good{color:var(--good)} .verdict .t.bad{color:var(--bad)}
+.verdict .p{font-size:.95rem;color:var(--muted);text-wrap:balance}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.row{min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:12px;border-top:1px solid var(--line)}
+.row b{font-size:.95rem} .row b.a{color:var(--sky)} .row b.b{color:var(--smog)}
+.row p{margin:0;font-size:.88rem;color:var(--muted)}
+.math{overflow-x:auto;overflow-y:hidden;max-width:100%;padding:2px 0}
+button.go{font-family:var(--f-display);font-weight:500;font-size:.95rem;border-radius:999px;padding:12px 18px;cursor:pointer;min-height:48px;
+  background:var(--ink);color:var(--bg);border:0;width:100%}
+button.go:hover{background:var(--hot)}
+button.go:focus-visible{outline:3px solid var(--hot);outline-offset:3px}
+.end h2{font-family:var(--f-display);font-weight:800;font-size:2.6rem;margin:0;line-height:1}
+.end p{margin:0}
+.hist{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;font-size:.9rem}
+.hist .ok{color:var(--good);font-weight:700} .hist .ko{color:var(--bad);font-weight:700}
+.hist em{font-style:normal;color:var(--muted)}
+
+.ladder-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ladder-head h2{font-family:var(--f-display);font-weight:800;font-size:1.1rem;margin:0}
+.ladder-head span{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.ladder{display:flex;flex-direction:column;gap:12px}
+.rung,.axis{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:center}
+.rung .e{font-size:1.35rem;text-align:center}
+.rung .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;min-width:0}
+.rung .top .v{color:var(--muted);flex-shrink:0;font-family:var(--f-mono);font-size:.75rem}
+.track{position:relative;height:6px;border-radius:3px;margin-top:5px;background:var(--bg);
+  background-image:repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px calc(100% / 18))}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--muted);opacity:.55}
+.rung.new .track i{background:var(--hot);opacity:1}
+.axis .lab{position:relative;height:1.4rem;font-size:.7rem;color:var(--muted);font-family:var(--f-mono)}
+.axis .lab span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.empty{font-size:.9rem;color:var(--muted);margin:0}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+.note a{color:var(--sky)}
+
+@media (max-width:460px){
+  .duel{grid-template-columns:1fr}
+  .tile{min-height:150px}
+  .tile .emo{font-size:2.2rem}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Balance carbone<small>Touchez celui qui émet le plus de CO₂e</small></h1>
+    <div class="score">score <b id="score">0</b> / 10</div>
+  </header>
+  <div class="dots" id="dots"></div>
+
+  <section id="game" style="display:flex;flex-direction:column;gap:18px">
+    <div class="duel">
+      <button class="tile a" id="cA"><span class="badge" id="xA" hidden></span><span class="emo" id="eA"></span><span class="nm" id="nA"></span><span class="num" id="vA"></span><span class="gauge" id="gA"></span></button>
+      <span class="vs">VS</span>
+      <button class="tile b" id="cB"><span class="badge" id="xB" hidden></span><span class="emo" id="eB"></span><span class="nm" id="nB"></span><span class="num" id="vB"></span><span class="gauge" id="gB"></span></button>
+    </div>
+
+    <div class="panel" id="result" hidden>
+      <div class="verdict"><span class="t" id="vt"></span><span class="p" id="vp"></span></div>
+      <div class="row"><b class="a" id="wA"></b><p id="dA"></p><div class="math" id="fA"></div></div>
+      <div class="row"><b class="b" id="wB"></b><p id="dB"></p><div class="math" id="fB"></div></div>
+      <div class="row"><b>Rapport</b><div class="math" id="fR"></div></div>
+      <button class="go" id="next">Manche suivante</button>
+    </div>
+  </section>
+
+  <section class="panel end" id="end" hidden>
+    <div class="lbl">Partie terminée</div>
+    <h2 id="final"></h2>
+    <p id="rank"></p>
+    <div class="hist" id="hist"></div>
+    <button class="go" id="again">Rejouer</button>
+  </section>
+
+  <section class="panel">
+    <div class="ladder-head"><h2>Échelle carbone</h2><span id="found"></span></div>
+    <div class="axis"><span></span><div class="lab" id="axis"></div></div>
+    <div class="ladder" id="ladder"></div>
+  </section>
+
+  <p class="note">Ordres de grandeur en CO₂ équivalent, cycle de vie quand c'est possible. Les chiffres varient selon les méthodes et le mix électrique. Sources principales : <a href="https://impactco2.fr" target="_blank" rel="noopener">ADEME Impact CO2</a>, Base Empreinte et Agribalyse, rapport environnemental Apple de l'iPhone 15, chiffres publiés par OpenAI et Google.</p>
+</div>
+
+<script>
+const R = String.raw;
+// [emoji, libellé, kg CO2e, calcul, description]
+const ITEMS_RAW = [
+['✈️',"aller-retour Paris – New York en avion",1780,R`2 \times 5\,840\ \text{km} \times 0{,}152\ \tfrac{\text{kg}}{\text{km}} \approx 1\,780\ \text{kg}`,"Par passager en classe économique, effet des traînées de condensation inclus."],
+['🛫',"aller-retour Paris – Nice en avion",317,R`2 \times 690\ \text{km} \times 0{,}23\ \tfrac{\text{kg}}{\text{km}} \approx 317\ \text{kg}`,"Vol court-courrier, par passager. Le décollage pèse lourd sur les petits trajets."],
+['🚄',"Paris – Lyon en TGV",1.36,R`465\ \text{km} \times 0{,}002\,93\ \tfrac{\text{kg}}{\text{km}} \approx 1{,}4\ \text{kg}`,"Par passager. Le TGV roule à l'électricité française, très peu carbonée."],
+['🚗',"100 km en voiture thermique",21.8,R`100\ \text{km} \times 0{,}218\ \tfrac{\text{kg}}{\text{km}} = 21{,}8\ \text{kg}`,"Conducteur seul, fabrication du véhicule et production du carburant inclus."],
+['🔌',"100 km en voiture électrique",10.3,R`100\ \text{km} \times 0{,}103\ \tfrac{\text{kg}}{\text{km}} = 10{,}3\ \text{kg}`,"Conducteur seul, avec la fabrication de la batterie répartie sur la vie du véhicule."],
+['🚲',"100 km en vélo électrique",1.1,R`100\ \text{km} \times 0{,}011\ \tfrac{\text{kg}}{\text{km}} = 1{,}1\ \text{kg}`,"Surtout la fabrication du vélo et de sa batterie."],
+['🚇',"100 km en métro",0.44,R`100\ \text{km} \times 0{,}004\,4\ \tfrac{\text{kg}}{\text{km}} = 0{,}44\ \text{kg}`,"Par voyageur, réseau électrique français."],
+['📱',"fabrication d'un iPhone 15",44,R`56\ \text{kg} \times 79\,\% \approx 44\ \text{kg}`,"Apple annonce 56 kg sur tout le cycle de vie, dont 79 % pour la fabrication."],
+['💻',"fabrication d'un ordinateur portable",156,R`m_{\text{CO}_2\text{e}} \approx 156\ \text{kg}`,"Fabrication seule, surtout l'écran, la carte mère et les puces."],
+['🔍',"recherche Google",0.0002,R`0{,}3\ \text{Wh} \times 0{,}67\ \tfrac{\text{kg}}{\text{kWh}} \approx 0{,}2\ \text{g}`,"Estimation publiée par Google en 2009 pour une recherche classique."],
+['🤖',"requête ChatGPT",0.00014,R`0{,}34\ \text{Wh} \times 0{,}4\ \tfrac{\text{kg}}{\text{kWh}} \approx 0{,}14\ \text{g}`,"Consommation moyenne annoncée par OpenAI, sur un réseau électrique type américain. Les estimations varient beaucoup."],
+['📧',"e-mail court",0.0003,R`m_{\text{CO}_2\text{e}} \approx 0{,}3\ \text{g}`,"Envoyé et lu sur ordinateur, sans pièce jointe."],
+['📺',"1 heure de streaming vidéo",0.055,R`m_{\text{CO}_2\text{e}} \approx 55\ \text{g}`,"Réseau, serveurs et écran inclus, moyenne européenne."],
+['🔋',"recharge complète d'un smartphone",0.0009,R`15\ \text{Wh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 0{,}9\ \text{g}`,"Avec l'électricité française."],
+['🥩',"1 kg de bœuf",30,R`1\ \text{kg} \times 30\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 30\ \text{kg}`,"Le méthane rejeté par les vaches pèse plus que le transport ou l'emballage."],
+['🍗',"1 kg de poulet",6,R`1\ \text{kg} \times 6\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 6\ \text{kg}`,"Élevage standard, surtout l'alimentation des volailles."],
+['🍚',"1 kg de riz",2.7,R`1\ \text{kg} \times 2{,}7\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 2{,}7\ \text{kg}`,"Les rizières inondées émettent du méthane."],
+['🥔',"1 kg de pommes de terre",0.25,R`1\ \text{kg} \times 0{,}25\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}25\ \text{kg}`,"Culture locale de plein champ."],
+['🍅',"1 kg de tomates sous serre chauffée",2.2,R`1\ \text{kg} \times 2{,}2\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 2{,}2\ \text{kg}`,"Hors saison. Le chauffage de la serre domine."],
+['🍌',"1 kg de bananes",0.9,R`1\ \text{kg} \times 0{,}9\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}9\ \text{kg}`,"Importées par bateau, ce qui pèse peu."],
+['🥛',"1 litre de lait",1.2,R`1\ \text{L} \times 1{,}2\ \tfrac{\text{kg CO}_2\text{e}}{\text{L}} = 1{,}2\ \text{kg}`,"Lait de vache, élevage français."],
+['🍔',"repas avec du bœuf",7.26,R`m_{\text{CO}_2\text{e}} \approx 7{,}3\ \text{kg}`,"Repas complet type ADEME, avec une portion de bœuf."],
+['🍽️',"repas avec du poulet",1.58,R`m_{\text{CO}_2\text{e}} \approx 1{,}6\ \text{kg}`,"Repas complet type ADEME, avec une portion de poulet."],
+['🥗',"repas végétarien",0.51,R`m_{\text{CO}_2\text{e}} \approx 0{,}5\ \text{kg}`,"Repas complet type ADEME, sans viande ni poisson."],
+['👖',"un jean",23,R`m_{\text{CO}_2\text{e}} \approx 23\ \text{kg}`,"Culture du coton, teinture et confection."],
+['👕',"un T-shirt en coton",5.2,R`m_{\text{CO}_2\text{e}} \approx 5{,}2\ \text{kg}`,"De la culture du coton à la boutique."],
+['⛽',"1 litre d'essence brûlé",2.8,R`1\ \text{L} \times 2{,}8\ \tfrac{\text{kg}}{\text{L}} = 2{,}8\ \text{kg}`,"Combustion plus extraction et raffinage du pétrole."],
+['🔥',"1 m³ de gaz naturel brûlé",2.2,R`1\ \text{m}^3 \times 2{,}2\ \tfrac{\text{kg}}{\text{m}^3} = 2{,}2\ \text{kg}`,"Combustion dans une chaudière, avec les fuites en amont."],
+['💡',"1 kWh d'électricité en France",0.06,R`1\ \text{kWh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 60\ \text{g}`,"Mix surtout nucléaire et hydraulique."],
+['🏭',"1 kWh d'électricité en Pologne",0.7,R`1\ \text{kWh} \times 0{,}7\ \tfrac{\text{kg}}{\text{kWh}} = 700\ \text{g}`,"Mix encore dominé par le charbon."],
+['🚿',"douche chaude de 10 minutes (gaz)",0.61,R`\frac{80\ \text{L} \times 26\ \text{K} \times 1{,}16\ \tfrac{\text{Wh}}{\text{L·K}}}{0{,}9} \times 0{,}227\ \tfrac{\text{kg}}{\text{kWh}} \approx 0{,}6\ \text{kg}`,"80 L d'eau chauffés de 12 °C à 38 °C par une chaudière au gaz."],
+['🏠',"chauffage au gaz d'une maison pendant 1 an",3400,R`15\,000\ \text{kWh} \times 0{,}227\ \tfrac{\text{kg}}{\text{kWh}} \approx 3{,}4\ \text{t}`,"Maison moyenne, chaudière gaz."],
+['🧍',"empreinte d'un Français pendant 1 an",9200,R`m_{\text{CO}_2\text{e}} \approx 9{,}2\ \text{t}`,"Tout compris : transport, alimentation, logement, achats, services publics."],
+['🚙',"fabrication d'une citadine thermique",6000,R`m_{\text{CO}_2\text{e}} \approx 6\ \text{t}`,"Acier, plastiques, assemblage."],
+['🔋',"fabrication d'une voiture électrique",10000,R`6\ \text{t} + 50\ \text{kWh} \times 80\ \tfrac{\text{kg}}{\text{kWh}} = 10\ \text{t}`,"Une citadine plus sa batterie de 50 kWh."],
+['🏗️',"construction d'une maison de 100 m²",64000,R`100\ \text{m}^2 \times 640\ \tfrac{\text{kg}}{\text{m}^2} = 64\ \text{t}`,"Ordre de grandeur pour une maison neuve classique (béton, matériaux, chantier)."],
+['🧲',"1 tonne d'acier",1900,R`1\ \text{t} \times 1{,}9\ \tfrac{\text{t CO}_2\text{e}}{\text{t}} = 1{,}9\ \text{t}`,"Moyenne mondiale, surtout en haut-fourneau au charbon."],
+['🚀',"lancement d'une fusée Falcon 9",390000,R`123\ \text{t} \times 3{,}15\ \tfrac{\text{t CO}_2}{\text{t}} \approx 390\ \text{t}`,"Combustion des 123 t de kérosène du premier et du second étage."],
+['⚽',"Coupe du monde de football 2022",3.6e9,R`m_{\text{CO}_2\text{e}} \approx 3{,}6\ \text{Mt}`,"Estimation de la FIFA, stades et vols des supporters compris."],
+// --- Transport ---
+['🚌',"100 km en bus urbain thermique",11.3,R`100\ \text{km} \times 0{,}113\ \tfrac{\text{kg}}{\text{km}} = 11{,}3\ \text{kg}`,"Par voyageur, avec le remplissage moyen des bus de ville."],
+['🚆',"100 km en TER",2.5,R`100\ \text{km} \times 0{,}025\ \tfrac{\text{kg}}{\text{km}} = 2{,}5\ \text{kg}`,"Par voyageur. Une partie des TER roule encore au diesel."],
+['🛵',"100 km en scooter thermique",7.6,R`100\ \text{km} \times 0{,}076\ \tfrac{\text{kg}}{\text{km}} = 7{,}6\ \text{kg}`,"Scooter 50 cm³, fabrication incluse."],
+['🏍️',"100 km à moto",19,R`100\ \text{km} \times 0{,}19\ \tfrac{\text{kg}}{\text{km}} = 19\ \text{kg}`,"Moto de cylindrée moyenne, pilote seul."],
+['🛴',"100 km en trottinette électrique personnelle",2.5,R`100\ \text{km} \times 0{,}025\ \tfrac{\text{kg}}{\text{km}} = 2{,}5\ \text{kg}`,"Surtout la fabrication de la trottinette et de sa batterie."],
+['🚘',"100 km en covoiturage à 4 (thermique)",5.45,R`\frac{100\ \text{km} \times 0{,}218\ \tfrac{\text{kg}}{\text{km}}}{4} \approx 5{,}5\ \text{kg}`,"Les émissions de la voiture partagées entre quatre passagers."],
+['🚍',"Paris – Lyon en autocar",13.7,R`465\ \text{km} \times 0{,}029\,5\ \tfrac{\text{kg}}{\text{km}} \approx 13{,}7\ \text{kg}`,"Par passager, car longue distance au gazole."],
+['🚄',"Paris – Marseille en TGV",2.2,R`750\ \text{km} \times 0{,}002\,93\ \tfrac{\text{kg}}{\text{km}} \approx 2{,}2\ \text{kg}`,"Par passager, électricité française."],
+['🚗',"Paris – Marseille en voiture, seul",169,R`775\ \text{km} \times 0{,}218\ \tfrac{\text{kg}}{\text{km}} \approx 169\ \text{kg}`,"Conducteur seul, fabrication et carburant inclus."],
+['🚄',"Bruxelles – Paris en train à grande vitesse",1.2,R`300\ \text{km} \times 0{,}004\ \tfrac{\text{kg}}{\text{km}} = 1{,}2\ \text{kg}`,"Par passager, sur réseau électrique belge puis français."],
+['🛫',"aller-retour Paris – Londres en avion",156,R`2 \times 340\ \text{km} \times 0{,}23\ \tfrac{\text{kg}}{\text{km}} \approx 156\ \text{kg}`,"Vol court, par passager, traînées incluses."],
+['🛫',"aller-retour Bruxelles – Barcelone en avion",410,R`2 \times 1\,080\ \text{km} \times 0{,}19\ \tfrac{\text{kg}}{\text{km}} \approx 410\ \text{kg}`,"Vol moyen-courrier, par passager."],
+['✈️',"aller-retour Paris – Tokyo en avion",2950,R`2 \times 9\,700\ \text{km} \times 0{,}152\ \tfrac{\text{kg}}{\text{km}} \approx 2{,}95\ \text{t}`,"Par passager en classe économique."],
+['✈️',"aller-retour Paris – Sydney en avion",5160,R`2 \times 16\,960\ \text{km} \times 0{,}152\ \tfrac{\text{kg}}{\text{km}} \approx 5{,}2\ \text{t}`,"Par passager en classe économique : près de deux tours du monde."],
+['💺',"Paris – New York aller-retour en classe affaires",5340,R`1\,780\ \text{kg} \times 3 \approx 5{,}3\ \text{t}`,"Un siège affaires prend environ trois fois la place d'un siège économique."],
+['🚁',"1 heure d'hélicoptère",380,R`120\ \text{kg} \times 3{,}15\ \tfrac{\text{kg CO}_2}{\text{kg}} \approx 380\ \text{kg}`,"Combustion d'environ 150 L de kérosène en une heure de vol."],
+['🛩️',"1 heure de jet privé",1500,R`480\ \text{kg} \times 3{,}15\ \tfrac{\text{kg CO}_2}{\text{kg}} \approx 1{,}5\ \text{t}`,"Jet d'affaires de taille moyenne, environ 600 L de kérosène par heure."],
+['🚙',"1 an de voiture thermique (12 000 km)",2620,R`12\,000\ \text{km} \times 0{,}218\ \tfrac{\text{kg}}{\text{km}} \approx 2{,}6\ \text{t}`,"Kilométrage annuel moyen en France, conducteur seul."],
+['🔌',"1 an de voiture électrique (12 000 km)",1240,R`12\,000\ \text{km} \times 0{,}103\ \tfrac{\text{kg}}{\text{km}} \approx 1{,}2\ \text{t}`,"Même kilométrage, fabrication de la batterie incluse."],
+['🚗',"1 an de trajets domicile-travail en voiture (20 km/jour)",959,R`20\ \text{km} \times 220\ \text{j} \times 0{,}218\ \tfrac{\text{kg}}{\text{km}} \approx 960\ \text{kg}`,"Aller-retour de 20 km, 220 jours travaillés."],
+['🚇',"1 an de trajets domicile-travail en métro (20 km/jour)",19,R`20\ \text{km} \times 220\ \text{j} \times 0{,}004\,4\ \tfrac{\text{kg}}{\text{km}} \approx 19\ \text{kg}`,"Même trajet que la voiture, en métro."],
+// --- Numérique ---
+['📺',"fabrication d'une télévision 50 pouces",400,R`m_{\text{CO}_2\text{e}} \approx 400\ \text{kg}`,"L'écran et l'électronique pèsent bien plus que l'électricité consommée ensuite."],
+['🖥️',"fabrication d'un écran d'ordinateur",200,R`m_{\text{CO}_2\text{e}} \approx 200\ \text{kg}`,"Écran de bureau de 24 pouces environ."],
+['🎮',"fabrication d'une console de jeu",90,R`m_{\text{CO}_2\text{e}} \approx 90\ \text{kg}`,"Console de salon, emballage et transport compris."],
+['⌚',"fabrication d'une montre connectée",30,R`m_{\text{CO}_2\text{e}} \approx 30\ \text{kg}`,"Boîtier, écran, puce et batterie."],
+['🎧',"fabrication d'écouteurs sans fil",10,R`m_{\text{CO}_2\text{e}} \approx 10\ \text{kg}`,"Les deux écouteurs et leur boîtier de charge."],
+['📲',"fabrication d'une tablette",60,R`m_{\text{CO}_2\text{e}} \approx 60\ \text{kg}`,"Tablette de 10 pouces."],
+['🌐',"box internet allumée 1 an (France)",5.3,R`10\ \text{W} \times 8\,760\ \text{h} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} \approx 5{,}3\ \text{kg}`,"Électricité seule, box jamais éteinte."],
+['🖼️',"image générée par une IA",0.0012,R`2{,}9\ \text{Wh} \times 0{,}4\ \tfrac{\text{kg}}{\text{kWh}} \approx 1{,}2\ \text{g}`,"Une image produite par un modèle de diffusion, sur un réseau type américain."],
+['🎥',"1 heure de visioconférence",0.15,R`m_{\text{CO}_2\text{e}} \approx 150\ \text{g}`,"Caméra allumée, réseau et serveurs compris."],
+['📱',"1 an de recharge d'un smartphone (France)",0.33,R`365 \times 15\ \text{Wh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} \approx 0{,}33\ \text{kg}`,"Une recharge complète par jour."],
+['🧠',"entraînement du modèle GPT-3 (2020)",552000,R`1\,287\ \text{MWh} \times 0{,}429\ \tfrac{\text{t}}{\text{MWh}} \approx 552\ \text{t}`,"Estimation publiée par des chercheurs de Google pour l'entraînement complet."],
+// --- Alimentation ---
+['🐑',"1 kg d'agneau",24,R`1\ \text{kg} \times 24\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 24\ \text{kg}`,"Comme le bœuf, un ruminant qui rejette du méthane."],
+['🐖',"1 kg de porc",7,R`1\ \text{kg} \times 7\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 7\ \text{kg}`,"Surtout l'alimentation des porcs et la gestion du lisier."],
+['🐟',"1 kg de saumon d'élevage",6,R`1\ \text{kg} \times 6\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 6\ \text{kg}`,"Les farines qui nourrissent les poissons pèsent le plus."],
+['🧈',"1 kg de beurre",9,R`1\ \text{kg} \times 9\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 9\ \text{kg}`,"Il faut environ 20 L de lait pour 1 kg de beurre."],
+['🥚',"un œuf",0.18,R`60\ \text{g} \times 3\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} \approx 0{,}18\ \text{kg}`,"Œuf de poule d'élevage standard."],
+['☕',"une tasse de café",0.11,R`7\ \text{g} \times 16\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} \approx 0{,}11\ \text{kg}`,"Surtout la culture du café, souvent liée à la déforestation."],
+['🍷',"une bouteille de vin",1.2,R`m_{\text{CO}_2\text{e}} \approx 1{,}2\ \text{kg}`,"La bouteille en verre pèse presque autant que la culture de la vigne."],
+['🍺',"une pinte de bière (50 cL)",0.45,R`0{,}5\ \text{L} \times 0{,}9\ \tfrac{\text{kg}}{\text{L}} = 0{,}45\ \text{kg}`,"Orge, brassage et emballage."],
+['🥤',"une canette de soda",0.17,R`m_{\text{CO}_2\text{e}} \approx 170\ \text{g}`,"La canette en aluminium compte plus que la boisson."],
+['🧃',"1,5 L d'eau en bouteille plastique",0.2,R`m_{\text{CO}_2\text{e}} \approx 200\ \text{g}`,"Plastique de la bouteille et transport par camion."],
+['🚰',"1,5 L d'eau du robinet",0.0005,R`1{,}5\ \text{L} \times 0{,}3\ \tfrac{\text{g}}{\text{L}} \approx 0{,}5\ \text{g}`,"Pompage et traitement de l'eau : environ 400 fois moins que l'eau en bouteille."],
+['🥖',"une baguette",0.15,R`250\ \text{g} \times 0{,}6\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}15\ \text{kg}`,"Culture du blé et cuisson au four."],
+['🥐',"un croissant",0.2,R`m_{\text{CO}_2\text{e}} \approx 200\ \text{g}`,"Le beurre fait l'essentiel de l'empreinte."],
+['🍕',"une pizza margherita",1,R`m_{\text{CO}_2\text{e}} \approx 1\ \text{kg}`,"La mozzarella pèse le plus."],
+['🍔',"un cheeseburger",3,R`m_{\text{CO}_2\text{e}} \approx 3\ \text{kg}`,"Le steak de bœuf de 100 g en représente l'essentiel."],
+['🥪',"un sandwich jambon-beurre",0.6,R`m_{\text{CO}_2\text{e}} \approx 0{,}6\ \text{kg}`,"Pain, jambon, beurre et emballage."],
+['🥑',"1 kg d'avocats",1.3,R`1\ \text{kg} \times 1{,}3\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 1{,}3\ \text{kg}`,"Importés par bateau. L'eau d'irrigation pose plus de problème que le carbone."],
+['🥭',"1 kg de mangues importées par avion",10,R`1\ \text{kg} \times 9\,000\ \text{km} \times 0{,}001\,1\ \tfrac{\text{kg}}{\text{kg·km}} \approx 10\ \text{kg}`,"Le fret aérien multiplie l'empreinte d'un fruit par dix ou plus."],
+['🍎',"1 kg de pommes locales",0.3,R`1\ \text{kg} \times 0{,}3\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}3\ \text{kg}`,"Verger européen, transport par camion."],
+['🫘',"1 kg de lentilles",0.9,R`1\ \text{kg} \times 0{,}9\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}9\ \text{kg}`,"Les légumineuses fixent l'azote de l'air et demandent peu d'engrais."],
+['🧆',"1 kg de tofu",3,R`1\ \text{kg} \times 3\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 3\ \text{kg}`,"Culture du soja et transformation."],
+['🌾',"1 L de lait d'avoine",0.4,R`1\ \text{L} \times 0{,}4\ \tfrac{\text{kg CO}_2\text{e}}{\text{L}} = 0{,}4\ \text{kg}`,"Environ trois fois moins que le lait de vache."],
+['🌱',"repas végétalien",0.39,R`m_{\text{CO}_2\text{e}} \approx 0{,}4\ \text{kg}`,"Repas complet type ADEME, sans aucun produit animal."],
+['🐶',"nourriture d'un chien pendant 1 an",700,R`m_{\text{CO}_2\text{e}} \approx 700\ \text{kg}`,"Chien de taille moyenne nourri aux croquettes à base de viande."],
+['🐄',"méthane d'une vache pendant 1 an",2800,R`100\ \text{kg CH}_4 \times 28 = 2{,}8\ \text{t}`,"Le méthane réchauffe environ 28 fois plus que le CO₂ sur un siècle."],
+// --- Objets ---
+['👟',"une paire de baskets",14,R`m_{\text{CO}_2\text{e}} \approx 14\ \text{kg}`,"Semelle, cuir ou synthétique, assemblage en Asie."],
+['🛋️',"un canapé",200,R`m_{\text{CO}_2\text{e}} \approx 200\ \text{kg}`,"Structure, mousse, tissu et transport."],
+['🪑',"une chaise en bois",20,R`m_{\text{CO}_2\text{e}} \approx 20\ \text{kg}`,"Fabrication et transport d'une chaise simple."],
+['🧊',"fabrication d'un réfrigérateur",300,R`m_{\text{CO}_2\text{e}} \approx 300\ \text{kg}`,"Acier, isolant, compresseur et fluide frigorigène."],
+['🫧',"fabrication d'un lave-linge",330,R`m_{\text{CO}_2\text{e}} \approx 330\ \text{kg}`,"Le tambour en inox et le moteur pèsent le plus."],
+['🚲',"fabrication d'un vélo",100,R`m_{\text{CO}_2\text{e}} \approx 100\ \text{kg}`,"Vélo de ville classique avec cadre en aluminium."],
+['📖',"un livre de poche",1,R`m_{\text{CO}_2\text{e}} \approx 1\ \text{kg}`,"Papier, impression et distribution."],
+['🛍️',"un sac plastique jetable",0.03,R`m_{\text{CO}_2\text{e}} \approx 30\ \text{g}`,"Sac de caisse fin en polyéthylène."],
+['👜',"un sac en coton réutilisable",0.5,R`m_{\text{CO}_2\text{e}} \approx 0{,}5\ \text{kg}`,"Il faut s'en servir des dizaines de fois pour battre le sac plastique sur le carbone."],
+['🎄',"un sapin de Noël naturel",3.5,R`m_{\text{CO}_2\text{e}} \approx 3{,}5\ \text{kg}`,"Culture et transport, s'il est composté ensuite."],
+['🎄',"un sapin de Noël artificiel",40,R`m_{\text{CO}_2\text{e}} \approx 40\ \text{kg}`,"Plastique et métal, souvent fabriqué en Asie. Rentable après une dizaine d'années."],
+['👶',"couches jetables d'un bébé jusqu'à la propreté",550,R`m_{\text{CO}_2\text{e}} \approx 550\ \text{kg}`,"Environ 4 000 couches sur deux ans et demi."],
+['📄',"une ramette de papier A4",2.5,R`2{,}5\ \text{kg} \times 1\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 2{,}5\ \text{kg}`,"500 feuilles de papier non recyclé."],
+// --- Matériaux ---
+['🧱',"1 m³ de béton",300,R`m_{\text{CO}_2\text{e}} \approx 300\ \text{kg}`,"Le ciment, cuit à 1 450 °C, fait presque tout."],
+['🥫',"1 kg d'aluminium neuf",16,R`1\ \text{kg} \times 16\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 16\ \text{kg}`,"L'électrolyse demande énormément d'électricité, souvent au charbon."],
+['♻️',"1 kg d'aluminium recyclé",0.6,R`1\ \text{kg} \times 0{,}6\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 0{,}6\ \text{kg}`,"Refondre de l'aluminium coûte environ 25 fois moins que d'en produire du neuf."],
+['🧪',"1 kg de plastique PET",2.3,R`1\ \text{kg} \times 2{,}3\ \tfrac{\text{kg CO}_2\text{e}}{\text{kg}} = 2{,}3\ \text{kg}`,"Plastique des bouteilles, fabriqué à partir de pétrole."],
+// --- Maison et énergie ---
+['🛁',"un bain chaud (gaz)",1.1,R`\frac{150\ \text{L} \times 25\ \text{K} \times 1{,}16\ \tfrac{\text{Wh}}{\text{L·K}}}{0{,}9} \times 0{,}227\ \tfrac{\text{kg}}{\text{kWh}} \approx 1{,}1\ \text{kg}`,"150 L d'eau chauffés par une chaudière au gaz : presque deux douches."],
+['🫖',"1 L d'eau bouillie à la bouilloire (France)",0.006,R`0{,}1\ \text{kWh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 6\ \text{g}`,"Chauffer 1 L d'eau de 15 °C à 100 °C."],
+['👚',"un cycle de lave-linge (France)",0.06,R`1\ \text{kWh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 60\ \text{g}`,"Lavage à 40 °C, électricité seule."],
+['🌀',"un cycle de sèche-linge (France)",0.15,R`2{,}5\ \text{kWh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 150\ \text{g}`,"Sèche-linge à condensation, électricité seule."],
+['💡',"ampoule LED allumée 4 h par jour pendant 1 an",0.88,R`10\ \text{W} \times 1\,460\ \text{h} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} \approx 0{,}9\ \text{kg}`,"Électricité française."],
+['🧊',"réfrigérateur branché 1 an (France)",15,R`250\ \text{kWh} \times 0{,}06\ \tfrac{\text{kg}}{\text{kWh}} = 15\ \text{kg}`,"Électricité seule, réfrigérateur-congélateur récent."],
+['🔥',"chauffage au fioul d'une maison pendant 1 an",4860,R`15\,000\ \text{kWh} \times 0{,}324\ \tfrac{\text{kg}}{\text{kWh}} \approx 4{,}9\ \text{t}`,"Même besoin de chaleur que la maison chauffée au gaz."],
+['⚡',"chauffage électrique d'une maison pendant 1 an",1190,R`15\,000\ \text{kWh} \times 0{,}079\ \tfrac{\text{kg}}{\text{kWh}} \approx 1{,}2\ \text{t}`,"Radiateurs électriques en France, avec le contenu carbone plus élevé de l'électricité en hiver."],
+['🌡️',"pompe à chaleur pendant 1 an",395,R`\frac{15\,000\ \text{kWh}}{3} \times 0{,}079\ \tfrac{\text{kg}}{\text{kWh}} \approx 395\ \text{kg}`,"La pompe à chaleur fournit environ 3 kWh de chaleur pour 1 kWh d'électricité."],
+['🪵',"chauffage aux granulés de bois pendant 1 an",450,R`15\,000\ \text{kWh} \times 0{,}03\ \tfrac{\text{kg}}{\text{kWh}} = 450\ \text{kg}`,"Le CO₂ du bois brûlé est compté comme réabsorbé par la forêt."],
+['🇩🇪',"1 kWh d'électricité en Allemagne",0.38,R`1\ \text{kWh} \times 0{,}38\ \tfrac{\text{kg}}{\text{kWh}} = 380\ \text{g}`,"Mix avec encore beaucoup de charbon et de gaz."],
+['🇳🇴',"1 kWh d'électricité en Norvège",0.03,R`1\ \text{kWh} \times 0{,}03\ \tfrac{\text{kg}}{\text{kWh}} = 30\ \text{g}`,"Mix presque entièrement hydraulique."],
+['⚛️',"1 kWh d'électricité nucléaire",0.006,R`1\ \text{kWh} \times 0{,}006\ \tfrac{\text{kg}}{\text{kWh}} = 6\ \text{g}`,"Cycle de vie complet : mine d'uranium, construction, démantèlement."],
+['🌬️',"1 kWh d'électricité éolienne",0.014,R`1\ \text{kWh} \times 0{,}014\ \tfrac{\text{kg}}{\text{kWh}} = 14\ \text{g}`,"Surtout la fabrication du mât, des pales et des fondations."],
+['☀️',"1 kWh d'électricité solaire",0.044,R`1\ \text{kWh} \times 0{,}044\ \tfrac{\text{kg}}{\text{kWh}} = 44\ \text{g}`,"Panneaux photovoltaïques fabriqués surtout en Chine."],
+['🏭',"1 kWh d'électricité au charbon",1.06,R`1\ \text{kWh} \times 1{,}06\ \tfrac{\text{kg}}{\text{kWh}} \approx 1{,}1\ \text{kg}`,"Centrale à charbon, cycle de vie complet."],
+['🔥',"1 kWh d'électricité au gaz",0.42,R`1\ \text{kWh} \times 0{,}42\ \tfrac{\text{kg}}{\text{kWh}} = 420\ \text{g}`,"Centrale à cycle combiné, la plus efficace des centrales fossiles."],
+// --- Personnes et pays ---
+['🇺🇸',"empreinte d'un Américain pendant 1 an",17000,R`m_{\text{CO}_2\text{e}} \approx 17\ \text{t}`,"Empreinte de consommation moyenne aux États-Unis."],
+['🇮🇳',"empreinte d'un Indien pendant 1 an",2000,R`m_{\text{CO}_2\text{e}} \approx 2\ \text{t}`,"Empreinte moyenne en Inde, avec de très fortes inégalités."],
+['🎯',"budget annuel par personne compatible avec l'accord de Paris",2000,R`m_{\text{CO}_2\text{e}} \approx 2\ \text{t}`,"Objectif souvent retenu pour 2050 afin de limiter le réchauffement."],
+['🇧🇪',"émissions de la Belgique pendant 1 an",1.05e11,R`m_{\text{CO}_2\text{e}} \approx 105\ \text{Mt}`,"Émissions sur le territoire belge."],
+['🇫🇷',"émissions de la France pendant 1 an",3.7e11,R`m_{\text{CO}_2\text{e}} \approx 370\ \text{Mt}`,"Émissions sur le territoire français, hors importations."],
+['🌍',"émissions mondiales pendant 1 seconde",1.68e6,R`\frac{53\ \text{Gt}}{3{,}15\times10^{7}\ \text{s}} \approx 1\,680\ \text{t}`,"Toutes les émissions humaines de gaz à effet de serre, ramenées à une seconde."],
+['🌍',"émissions mondiales pendant 1 jour",1.45e11,R`\frac{53\ \text{Gt}}{365} \approx 145\ \text{Mt}`,"Presque une année d'émissions belges, chaque jour."],
+['🌍',"émissions mondiales pendant 1 an",5.3e13,R`m_{\text{CO}_2\text{e}} \approx 53\ \text{Gt}`,"Toutes les émissions humaines de gaz à effet de serre, déforestation comprise."],
+// --- Événements ---
+['🏅',"Jeux olympiques et paralympiques de Paris 2024",1.59e9,R`m_{\text{CO}_2\text{e}} \approx 1{,}59\ \text{Mt}`,"Bilan publié par les organisateurs, déplacements des spectateurs compris."],
+['🎬',"tournage d'un film à gros budget",2.84e6,R`m_{\text{CO}_2\text{e}} \approx 2\,840\ \text{t}`,"Moyenne des grosses productions hollywoodiennes : surtout les vols, les hôtels et les groupes électrogènes."],
+];
+
+const ITEMS = ITEMS_RAW.map(([emo, sg, kg, tex, desc], i) => ({id:'i'+i, emo, sg, kg, tex, desc}));
+const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const ROUNDS = 10;
+const $ = id => document.getElementById(id);
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- MathJax ---------- */
+function setTex(el, tex){ el.dataset.tex = tex; renderTex(el); }
+function renderTex(el){
+  if (window.__mj && window.MathJax && MathJax.tex2svg){
+    try { el.replaceChildren(MathJax.tex2svg(el.dataset.tex, {display:false})); return; } catch(e){}
+  }
+  el.textContent = el.dataset.tex.replace(/\\times/g,'×').replace(/\\approx/g,'≈').replace(/\{,\}/g,',').replace(/\\,|\\ /g,' ').replace(/\\t?frac|\\text|_/g,'').replace(/[{}\\]/g,'');
+}
+function renderAllTex(){ document.querySelectorAll('[data-tex]').forEach(renderTex); }
+
+/* ---------- Formatting ---------- */
+function fmt(kg){
+  let v, u;
+  if (kg >= 1e12){ v = kg/1e12; u = 'Gt'; } else if (kg >= 1e9){ v = kg/1e9; u = 'Mt'; } else if (kg >= 1e6){ v = kg/1e6; u = 'kt'; }
+  else if (kg >= 1e3){ v = kg/1e3; u = 't'; } else if (kg >= 1){ v = kg; u = 'kg'; } else { v = kg*1e3; u = 'g'; }
+  return {v, s: Number(v.toPrecision(v >= 100 ? 3 : 2)).toLocaleString('fr-FR'), u};
+}
+const fmtTxt = kg => { const f = fmt(kg); return f.s + ' ' + f.u + ' CO₂e'; };
+const fmtTex = kg => { const f = fmt(kg); return f.s.replace(',', '{,}').replace(/[\s  ]/g, '\\,') + R`\ \text{${f.u} CO}_2\text{e}`; };
+const ratioTxt = r => Number(r.toPrecision(r < 10 ? 2 : r < 1000 ? 3 : 2)).toLocaleString('fr-FR');
+
+/* compteur qui monte jusqu'à la valeur */
+function countUp(el, kg){
+  const f = fmt(kg), dec = f.s.includes(',') ? f.s.split(',')[1].length : 0;
+  const paint = v => { el.innerHTML = v.toLocaleString('fr-FR', {minimumFractionDigits:dec, maximumFractionDigits:dec}) + `<span>${f.u} CO₂e</span>`; };
+  if (reduce()){ el.innerHTML = f.s + `<span>${f.u} CO₂e</span>`; return; }
+  const t0 = performance.now(), D = 800;
+  const step = now => { const p = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - p, 3);
+    if (p < 1){ paint(f.v * e); requestAnimationFrame(step); } else el.innerHTML = f.s + `<span>${f.u} CO₂e</span>`; };
+  requestAnimationFrame(step);
+}
+
+/* ---------- Game ---------- */
+let S;
+function pickPairs(){
+  const pairs = [], seen = new Set();
+  let guard = 0;
+  while (pairs.length < ROUNDS && guard++ < 5000){
+    const a = ITEMS[Math.floor(Math.random()*ITEMS.length)];
+    if (seen.has(a.id)) continue;
+    // assez proches pour hésiter : rapport entre ×1,3 et ×1000
+    const ok = ITEMS.filter(b => b !== a && !seen.has(b.id) && Math.abs(Math.log10(a.kg / b.kg)) >= 0.11 && Math.abs(Math.log10(a.kg / b.kg)) <= 3);
+    if (!ok.length) continue;
+    const b = ok[Math.floor(Math.random()*ok.length)];
+    seen.add(a.id); seen.add(b.id);
+    pairs.push(Math.random() < .5 ? [a.id, b.id] : [b.id, a.id]);
+  }
+  return pairs;
+}
+function renderDots(){
+  $('dots').innerHTML = Array.from({length:ROUNDS}, (_, i) => {
+    const h = S.hist[i];
+    return `<i class="${h ? (h.right ? 'ok' : 'ko') : i === S.round ? 'now' : ''}"></i>`;
+  }).join('');
+}
+function newGame(){
+  S = {round:0, total:0, pairs:pickPairs(), hist:[]};
+  $('end').hidden = true; $('game').style.display = 'flex';
+  startRound();
+}
+function startRound(){
+  const [ia, ib] = S.pairs[S.round], A = byId[ia], B = byId[ib];
+  Object.assign(S, {A, B, done:false});
+  $('score').textContent = S.total; renderDots();
+  for (const [k, it] of [['A', A], ['B', B]]){
+    $('e'+k).textContent = it.emo; $('n'+k).textContent = it.sg; $('v'+k).innerHTML = '';
+    $('g'+k).style.height = '0'; $('x'+k).hidden = true;
+    const c = $('c'+k); c.disabled = false; c.className = 'tile ' + k.toLowerCase(); c.removeAttribute('data-pick');
+    c.setAttribute('aria-label', it.sg);
+  }
+  $('result').hidden = true;
+}
+function choose(side){
+  if (S.done) return; S.done = true;
+  const {A, B} = S, heavyA = A.kg > B.kg, right = (side === 'A') === heavyA;
+  const H = heavyA ? A : B, Lg = heavyA ? B : A, ratio = H.kg / Lg.kg;
+  if (right) S.total++;
+  S.hist.push({right, H, Lg, ratio});
+  $('score').textContent = S.total; renderDots();
+  $('cA').disabled = $('cB').disabled = true;
+  // jauge : le plus lourd remplit 88 %, l'autre descend d'un cran par facteur 10
+  const hL = Math.max(10, 88 - 26 * Math.log10(ratio));
+  $('gA').style.height = (heavyA ? 88 : hL) + '%'; $('gB').style.height = (heavyA ? hL : 88) + '%';
+  countUp($('vA'), A.kg); countUp($('vB'), B.kg);
+  const W = heavyA ? 'A' : 'B';
+  $('c'+W).classList.add('win'); $('x'+W).hidden = false; $('x'+W).textContent = '× ' + ratioTxt(ratio);
+  const pc = $(side === 'A' ? 'cA' : 'cB');
+  pc.classList.add('picked', right ? 'right' : 'wrong'); pc.dataset.pick = right ? 'Votre choix ✓' : 'Votre choix ✗';
+  $('vt').textContent = right ? 'Bien vu' : 'Raté';
+  $('vt').className = 't ' + (right ? 'good' : 'bad');
+  $('vp').textContent = `${H.emo} pèse ${ratioTxt(ratio)} fois plus que ${Lg.emo}`;
+  $('wA').textContent = A.emo + ' ' + A.sg; $('dA').textContent = A.desc; setTex($('fA'), A.tex);
+  $('wB').textContent = B.emo + ' ' + B.sg; $('dB').textContent = B.desc; setTex($('fB'), B.tex);
+  setTex($('fR'), R`\frac{${fmtTex(H.kg)}}{${fmtTex(Lg.kg)}} \approx ${ratioTxt(ratio).replace(',', '{,}').replace(/[\s  ]/g, '\\,')}`);
+  $('next').textContent = S.round + 1 >= ROUNDS ? 'Voir le score' : 'Manche suivante';
+  $('result').hidden = false;
+  discover([A.id, B.id]);
+}
+$('cA').onclick = () => choose('A');
+$('cB').onclick = () => choose('B');
+$('next').onclick = () => { S.round++; S.round >= ROUNDS ? endGame() : (startRound(), window.scrollTo({top:0, behavior: reduce() ? 'auto' : 'smooth'})); };
+$('again').onclick = newGame;
+
+function endGame(){
+  $('game').style.display = 'none'; $('end').hidden = false; renderDots();
+  $('final').textContent = S.total + ' / ' + ROUNDS;
+  $('rank').textContent = S.total >= 9 ? 'Bilan carbone maîtrisé.' : S.total >= 7 ? 'Bon instinct, quelques pièges en route.' : S.total >= 5 ? 'Les ordres de grandeur réservent des surprises.' : 'Le carbone ne se voit pas : rejouez pour affiner.';
+  $('hist').innerHTML = S.hist.map(h => `<span class="${h.right ? 'ok' : 'ko'}">${h.right ? '✓' : '✗'}</span><span>${h.H.emo} ${h.H.sg} <em>pèse ×${ratioTxt(h.ratio)} plus que</em> ${h.Lg.emo} ${h.Lg.sg}</span>`).join('');
+}
+
+/* ---------- Échelle carbone (gardée dans ce navigateur) ---------- */
+const LMIN = -4, LMAX = 14; // 0,1 g → 100 Gt
+const pos = kg => Math.max(0, Math.min(100, (Math.log10(kg) - LMIN) / (LMAX - LMIN) * 100));
+$('axis').innerHTML = [[1e-3,'1 g'],[1,'1 kg'],[1e3,'1 t'],[1e6,'1 kt'],[1e9,'1 Mt'],[1e12,'1 Gt']].map(([v,t]) => `<span style="left:${pos(v)}%">${t}</span>`).join('');
+let found = [];
+try { found = JSON.parse(localStorage.getItem('bc-found-v1') || '[]').filter(id => byId[id]); } catch(e){}
+function discover(ids){
+  found.push(...ids.filter(id => !found.includes(id)));
+  try { localStorage.setItem('bc-found-v1', JSON.stringify(found)); } catch(e){}
+  renderLadder(ids);
+}
+function renderLadder(hl = []){
+  $('found').textContent = found.length + ' / ' + ITEMS.length + ' découverts';
+  const lad = $('ladder');
+  if (!found.length){ lad.innerHTML = '<p class="empty">Faites votre premier choix pour commencer l\'échelle.</p>'; return; }
+  lad.innerHTML = found.map(id => byId[id]).sort((a, b) => b.kg - a.kg).map(it =>
+    `<div class="rung${hl.includes(it.id) ? ' new' : ''}"><span class="e">${it.emo}</span><div><div class="top"><span>${it.sg}</span><span class="v">${fmtTxt(it.kg)}</span></div><div class="track"><i style="width:${pos(it.kg)}%"></i></div></div></div>`
+  ).join('');
+}
+renderLadder();
+newGame();
+</script>
+
+</body></html>
