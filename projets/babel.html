@@ -220,7 +220,7 @@ footer a{color:var(--accent)}
     <section>
       <h2>La Galerie de Babel</h2>
       <p>Le même principe vaut pour les images. La Galerie contient toutes les images possibles d'une taille et d'un nombre de couleurs donnés, chacune accrochée une seule fois dans des salles hexagonales de 6 murs de 4 × 6 tableaux. En 32 × 32 pixels et 16 couleurs, il y en a \(16^{1024} \approx 10^{1233}\) : votre portrait, toutes les icônes et tous les dessins imaginables s'y trouvent, perdus dans un océan de bruit coloré.</p>
-      <p>On choisit la taille, de 2 × 2 à 32 × 32 pixels, et le nombre de couleurs, de 2 à 16. Les plus petites galeries tiennent en quelques salles, les plus grandes dépassent l'entendement. En dessinant une image, on retrouve aussitôt la salle, le mur et le tableau où elle est accrochée.</p>
+      <p>On choisit la taille, de 2 × 2 à 64 × 64 pixels, et le nombre de couleurs, de 2 à 16. Les plus petites galeries tiennent en quelques salles, les plus grandes dépassent l'entendement. En dessinant une image, on retrouve aussitôt la salle, le mur et le tableau où elle est accrochée.</p>
     </section>
     <div class="row">
       <button class="primary" id="goLib">Explorer la Bibliothèque</button>
@@ -1224,7 +1224,7 @@ function locate(T){return fromN(inverse(T))}
   let curTab="visit";
   function tab(name){curTab=name;["visit","draw"].forEach(t=>{document.getElementById("g-v-"+t).hidden=t!==name;document.getElementById("g-t-"+t).setAttribute("aria-selected",t===name)})}
   const cSize=document.getElementById("g-cSize"),cCol=document.getElementById("g-cCol");
-  for(const n of [2,3,4,16,32]){const o=document.createElement("option");o.value=n;o.textContent=`${n} × ${n}`;cSize.append(o)}
+  for(const n of [2,3,4,16,32,64]){const o=document.createElement("option");o.value=n;o.textContent=`${n} × ${n}`;cSize.append(o)}
   cSize.value="32";cCol.value="16";
   const fmtN=n=>n.toLocaleString("fr-FR");
   function countTag(sz,b){
