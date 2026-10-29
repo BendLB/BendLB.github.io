@@ -14,6 +14,7 @@
     ["traversee", "Traversée optimale"],
     ["improbable", "Comment gagner à l'EuroMillions"],
     ["pi", "Chasse à π"],
+    ["babel", "La Bibliothèque de Babel"],
     ["fourier", "Fourier Épicycles"],
     ["float", "Anatomie d'un float"],
     ["morse", "Télégraphe Morse"],
