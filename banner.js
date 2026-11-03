@@ -15,6 +15,7 @@
     ["improbable", "Comment gagner à l'EuroMillions"],
     ["pi", "Chasse à π"],
     ["babel", "La Bibliothèque de Babel"],
+    ["calendrier", "Spectacles à Bruxelles"],
     ["fourier", "Fourier Épicycles"],
     ["float", "Anatomie d'un float"],
     ["morse", "Télégraphe Morse"],

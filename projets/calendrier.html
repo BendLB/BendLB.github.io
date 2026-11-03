@@ -1,0 +1,123 @@
+<!doctype html><html lang="fr"><head><style>:where(html,body,*){touch-action:manipulation}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><meta name="theme-color" content="#0E1320"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Book BdLB"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spectacles à Bruxelles</title>
+<meta name="description" content="Agenda des spectacles, concerts, danse et théâtre à Bruxelles, mis à jour chaque jour, avec un flux à ajouter à son agenda.">
+<style>
+/* Layout : agenda en une colonne — filtres en haut, événements groupés par mois, une date par ligne */
+:root{
+  --bg:#0E1320; --surface:#1A2233; --fg:#E9EDF3; --muted:#98A3B5; --line:#2B3446;
+  --accent:#8EA2FF; --accent-soft:#141B2A; --warm:#F0A456; color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#EEF0F4; --surface:#FFFFFF; --fg:#141A26; --muted:#5A6476; --line:#D6DBE4;
+  --accent:#2944C9; --accent-soft:#E4E9F6; --warm:#B5651D; color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding:20px 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:clamp(1.8rem,6vw,2.6rem);line-height:1.05;letter-spacing:-.02em;margin:8px 0 6px}
+h1 span{color:var(--accent)}
+.intro{color:var(--muted);margin:0 0 16px;max-width:60ch}
+.sub{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.btn{font:inherit;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--fg);text-decoration:none;cursor:pointer}
+.btn.main{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}
+.bar input{grid-column:1/-1}
+select,input{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:100%}
+label.chk{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;grid-column:1/-1}
+label.chk input{width:auto}
+#count{color:var(--muted);font-size:14px;margin:4px 0 8px}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.ev{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.day{flex:none;width:48px;text-align:center;line-height:1.1}
+.day b{display:block;font-size:22px}.day small{color:var(--muted);font-size:12px;text-transform:uppercase}
+.ev h3{margin:0 0 2px;font-size:16px;line-height:1.3}
+.ev p{margin:0;color:var(--muted);font-size:14px}
+.ev a{color:var(--accent);font-weight:600;text-decoration:none}
+.full{color:var(--warm);font-weight:600}.off{text-decoration:line-through}
+.more{display:block;margin:18px auto;}
+footer{margin-top:36px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+footer p{margin:0 0 8px}
+#msg{color:var(--warm);font-size:14px}
+summary{cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}
+summary h2::after{content:" ▸";letter-spacing:0}details[open] summary h2::after{content:" ▾"}
+</style></head><body><script src="../banner.js"></script>
+<div class="wrap">
+<h1>Spectacles <span>à Bruxelles</span></h1>
+<p class="intro">Concerts, danse, théâtre, humour, expositions et festivals dans une vingtaine de salles, relus chaque jour sur leurs agendas.</p>
+<div class="sub">
+  <a class="btn main" id="webcal" href="spectacles.ics">S'abonner dans mon agenda</a>
+  <button class="btn" id="copy" type="button">Copier le lien du flux</button>
+  <span id="msg"></span>
+</div>
+<div class="bar">
+  <select id="kind" aria-label="Type"><option value="">Tous les types</option></select>
+  <select id="venue" aria-label="Salle"><option value="">Toutes les salles</option></select>
+  <input id="q" type="search" placeholder="Rechercher un titre ou une salle" aria-label="Rechercher">
+  <label class="chk"><input type="checkbox" id="avail"> Masquer les spectacles complets ou annulés</label>
+</div>
+<div id="count">Chargement…</div>
+<div id="list"></div>
+<button class="btn more" id="more" type="button" hidden>Afficher la suite</button>
+<footer>
+  <p id="maj"></p>
+  <p>Informations reprises des agendas publics des salles et de Ticketmaster, sans garantie : vérifiez toujours sur la billetterie avant de vous déplacer.</p>
+  <p>Cette page ne dépose aucun cookie et ne collecte aucune donnée sur ses visiteurs.</p>
+</footer>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const safe=u=>/^https:\/\//.test(u||'')?esc(u):'';
+const D=s=>new Date(s+'T12:00');
+const today=new Date().toLocaleDateString('sv');
+const feed=new URL('spectacles.ics',location.href).href;
+if(location.protocol=='https:')$('webcal').href=feed.replace(/^https:/,'webcal:');
+$('copy').onclick=()=>navigator.clipboard.writeText(feed).then(()=>$('msg').textContent='Lien copié.',()=>$('msg').textContent=feed);
+const SPANS=new Set(['Exposition','Festival']);
+let rows=[],shown=150;
+function expand(events){
+  // Une ligne par date à venir ; une exposition ou un festival à deux dates reste « du … au … ».
+  const out=[];
+  for(const e of events){
+    const span=SPANS.has(e.k)&&e.d.length==2;
+    const days=span?[e.d[0]<today?today:e.d[0]]:e.d.filter(d=>d>=today);
+    for(const d of days)out.push({...e,day:d,end:span?e.d[1]:null,n:span?0:e.d.length,now:span&&e.d[0]<today});
+  }
+  return out.sort((a,b)=>a.day<b.day?-1:a.day>b.day?1:a.t.localeCompare(b.t,'fr'));
+}
+function row(e){
+  const d=D(e.day),when=e.end?'jusqu’au '+D(e.end).toLocaleDateString('fr-BE',{day:'numeric',month:'long'}):e.n>1?e.n+' dates':'';
+  const st=e.s=='complet'?'<span class="full">Complet</span>':e.s=='annulé'?'<span class="full">Annulé</span>':'';
+  const bits=[esc(e.k=='Autre'?'Divers':e.k),esc(e.v),esc(e.p),esc(when),st].filter(Boolean).join(' · ');
+  const go=safe(e.u)?` · <a href="${safe(e.u)}" target="_blank" rel="noopener">Billetterie</a>`:'';
+  return `<div class="ev"><div class="day"><small>${d.toLocaleDateString('fr-BE',{weekday:'short'})}</small><b>${d.getDate()}</b></div>
+  <div><h3 class="${e.s=='annulé'?'off':''}">${esc(e.t)}</h3><p>${bits}${go}</p></div></div>`;
+}
+function draw(){
+  const k=$('kind').value,v=$('venue').value,q=$('q').value.trim().toLowerCase(),a=$('avail').checked;
+  const list=rows.filter(e=>(!k||e.k==k)&&(!v||e.v==v)&&(!a||!e.s||e.s=='places disponibles')&&(!q||(e.t+' '+e.v).toLowerCase().includes(q)));
+  $('count').textContent=list.length+(list.length>1?' dates':' date');
+  const now=list.filter(e=>e.now),later=list.filter(e=>!e.now);
+  let html=now.length?`<details><summary><h2>En ce moment · ${now.length} exposition${now.length>1?'s':''} ou festival${now.length>1?'s':''}</h2></summary>${now.map(row).join('')}</details>`:'',month='';
+  for(const e of later.slice(0,shown)){
+    const m=D(e.day).toLocaleDateString('fr-BE',{month:'long',year:'numeric'});
+    if(m!=month){html+=`<h2>${m}</h2>`;month=m}
+    html+=row(e);
+  }
+  $('list').innerHTML=html||'<p id="count">Aucun résultat.</p>';
+  $('more').hidden=later.length<=shown;
+}
+function reset(){shown=150;draw()}
+fetch('calendrier.json').then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(data=>{
+  rows=expand(data.events);
+  const fill=(id,vals)=>[...new Set(vals)].sort((a,b)=>a.localeCompare(b,'fr')).forEach(x=>$(id).add(new Option(x,x)));
+  fill('kind',data.events.map(e=>e.k));for(const o of $('kind').options)if(o.value=='Autre')o.text='Divers';fill('venue',data.events.map(e=>e.v).filter(Boolean));
+  const m=new Date(data.maj);
+  $('maj').textContent='Mis à jour le '+m.toLocaleDateString('fr-BE',{day:'numeric',month:'long',year:'numeric'})+' à '+m.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'})+'.';
+  draw();
+}).catch(err=>{$('count').textContent='Agenda indisponible pour le moment ('+err.message+').'});
+for(const id of['kind','venue','avail'])$(id).onchange=reset;
+$('q').oninput=reset;
+$('more').onclick=()=>{shown+=150;draw()};
+</script></body></html>
