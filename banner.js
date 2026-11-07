@@ -6,6 +6,7 @@
     ["livre", "(Le Livre)³"],
     ["worm", "Le jardin de Vishow"],
     ["fourmis", "Fourmilière"],
+    ["bread", "I Want Bread"],
     ["balance", "Balance énergie"],
     ["carbone", "Balance carbone"],
     ["calcul", "Calcul mental"],
