@@ -1,58 +1,79 @@
 <!doctype html><html><head><style>:where(html,body,*){touch-action:manipulation}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><meta name="theme-color" content="#0E1320"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Book BdLB"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
-<title>Worm Simulation</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Karla:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- jeu : le jardin de Vishow -->
+<title>Le jardin de Vishow</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2316110d'/%3E%3Cpath d='M12 42c8-14 16 6 24-6s14-8 16-2' stroke='%23ea8c90' stroke-width='8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
-/* Layout : la coupe de sol occupe tout l'écran ; l'état du ver flotte dans le ciel, les commandes en bas */
+/* Reprend la palette du jeu d'origine. Polices du système : rien n'est chargé depuis Internet. */
 :root{
-  --loam:#16110d; --glass:rgba(22,17,13,.78); --line:rgba(240,229,214,.16);
+  --loam:#16110d; --glass:rgba(22,17,13,.8); --line:rgba(240,229,214,.16);
   --fg:#f0e5d6; --muted:#b8a78f;
-  --worm:#ea8c90; --amber:#e3a83f; --danger:#ff6a5c; --water:#78b1d2;
-  --display:"Young Serif", Georgia, "Times New Roman", serif;
-  --body:"Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --worm:#ea8c90; --amber:#e3a83f; --danger:#ff6a5c; --water:#78b1d2; --ok:#9cc26a; --gold:#f2c94c;
+  --display:Georgia,"Times New Roman",serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,"DejaVu Sans Mono",monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 body{background:var(--loam);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.4}
 .game{position:fixed;inset:0;overflow:hidden}
-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
-.hud{position:absolute;left:0;right:0;padding-inline:max(12px, env(safe-area-inset-left, 0px));display:grid;gap:6px;pointer-events:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+.hud{position:absolute;left:0;right:0;padding-inline:max(10px, env(safe-area-inset-left, 0px));display:grid;gap:6px;pointer-events:none}
 .hud > *{pointer-events:auto}
-.top{top:0;padding-top:calc(env(safe-area-inset-top, 0px) + 8px)}
-.bottom{bottom:0;padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px)}
-.head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-h1{font-family:var(--display);font-weight:400;font-size:1.15rem;margin:0;white-space:nowrap}
+.top{top:0;padding-top:calc(env(safe-area-inset-top, 0px) + 6px);grid-template-columns:minmax(0,1fr)}
+.top > *,.chip,.mission{min-width:0}
+.bottom{bottom:0;padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px)}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+h1{font-family:var(--display);font-weight:400;font-size:1.1rem;margin:0;white-space:nowrap}
 h1 em{font-style:normal;color:var(--worm)}
-.sig{display:block;font-family:var(--display);font-style:italic;font-size:.78rem;color:var(--worm);opacity:.9;margin-top:1px}
-.tag{font-family:var(--mono);font-size:.72rem;font-variant-numeric:tabular-nums;text-align:right}
-.chip{background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:8px 10px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.tag{min-width:0;font-family:var(--body);font-size:.7rem;font-variant-numeric:tabular-nums;text-align:right}
+.chip{background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:7px 10px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .gauges{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .g{display:grid;gap:3px;min-width:0}
-.g .l{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g .t{height:6px;background:rgba(0,0,0,.45);border-radius:3px;overflow:hidden}
-.g .f{height:100%;width:50%;border-radius:3px;transition:width .2s}
-.g .v{font-family:var(--mono);font-size:.68rem;font-variant-numeric:tabular-nums}
+.g .l{font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t{height:6px;background:rgba(0,0,0,.45);border-radius:3px;overflow:hidden}
+.f{height:100%;width:50%;border-radius:3px;transition:width .2s}
+.g .v{font-family:var(--body);font-size:.66rem;font-variant-numeric:tabular-nums}
 .g.bad .l,.g.bad .v{color:var(--danger)}
-.rg.bad .l,.rg.bad .v{color:var(--danger)}
 .rt{position:relative}
 .rt .zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(20,8,8,.8) 0 2px,rgba(255,90,80,.6) 2px 4px)}
 .rt .lo{left:0} .rt .hi{right:0}
 .rt .ticks i{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
-.line{font-family:var(--mono);font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:6px}
+.line{font-family:var(--body);font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .line b{color:var(--fg);font-weight:600}
-.toast{position:absolute;left:50%;top:44%;transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:.85rem;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s;pointer-events:none}
-.toast.off{opacity:0}
+.mission{margin-top:6px;display:grid;gap:3px}
+.mission .mrow{display:flex;justify-content:space-between;gap:8px;font-size:.78rem}
+.mission .mrow span:first-child{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission .mrow span:last-child{font-family:var(--body);font-size:.68rem;color:var(--muted);white-space:nowrap}
+.mission .f{background:var(--worm)}
+.mission.done .f{background:var(--gold)}
+.mission.done .mrow span:first-child{color:var(--gold)}
+.mission.risk .f{background:var(--danger)}
+
+.toasts{position:absolute;left:50%;transform:translateX(-50%);top:200px;display:grid;gap:4px;justify-items:center;pointer-events:none;width:94%;z-index:3}
+.toast{background:var(--glass);border:1px solid var(--line);padding:5px 12px;border-radius:999px;font-size:.82rem;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .5s, transform .3s;opacity:1}
+.toast.warn{border-color:rgba(255,106,92,.6);color:#ffd2cc}
+.toast.good{border-color:rgba(242,201,76,.55);color:#ffe9a8}
+.toast.off{opacity:0;transform:translateY(6px)}
+.hint{position:absolute;left:50%;transform:translateX(-50%);bottom:140px;width:min(92%,460px);background:#2b2018;border:1px solid var(--worm);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.5);z-index:4;font-size:.84rem;line-height:1.3}
+.hint span{flex:1}
+.hint button{flex:none}
+.banner{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);font-family:var(--display);font-size:1.6rem;color:var(--gold);text-shadow:0 2px 10px rgba(0,0,0,.8);pointer-events:none;text-align:center;z-index:4;animation:pop 2.6s ease forwards;width:90%}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-40%) scale(.9)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .spacer{flex:1}
-button{font:600 .82rem var(--body);color:var(--fg);background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:8px 11px;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-button:hover{background:rgba(54,42,32,.9)}
+button{font:600 .8rem var(--body);color:var(--fg);background:var(--glass);border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);touch-action:manipulation}
+button:hover{background:rgba(54,42,32,.92)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--worm);outline-offset:2px}
 button[aria-pressed="true"]{background:var(--fg);color:var(--loam)}
 button:disabled{opacity:.45;cursor:not-allowed}
 button.primary{background:var(--worm);color:#2a1214;border-color:var(--worm)}
-.panel{display:grid;gap:10px;max-height:52vh;overflow-y:auto}
+#son[aria-pressed]{background:var(--glass);color:var(--fg)}
+button.tool b{font-family:var(--mono);font-weight:600;margin-left:2px}
+button.tool.armed{background:var(--amber);color:#2a1a08;border-color:var(--amber)}
+.panel{display:grid;gap:10px;max-height:50vh;overflow-y:auto}
 .panel h2{font-family:var(--display);font-weight:400;font-size:1rem;margin:0}
 .sliders{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:640px){.sliders{grid-template-columns:1fr 1fr}}
@@ -62,36 +83,57 @@ button.primary{background:var(--worm);color:#2a1214;border-color:var(--worm)}
 .s .ends{display:flex;justify-content:space-between;gap:12px;font-size:.7rem;color:var(--muted)}
 .s .ends span:last-child{text-align:right}
 input[type=range]{width:100%;accent-color:var(--worm);margin:2px 0}
-.legend{font-family:var(--mono);font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.legend i{display:inline-block;width:110px;height:7px;border-radius:4px}
-.status{font-size:.8rem;color:var(--muted)}
+.legend{font-family:var(--mono);font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:100px;height:7px;border-radius:4px}
+.muts{font-size:.75rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px}
+.muts span{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:5px 8px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.q{display:grid;gap:0;min-width:0;font-size:.68rem;color:var(--muted)}
+.q > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q b{color:var(--fg);font-weight:600}
+.q input{margin:2px 0 0;height:22px}
+.status{font-size:.78rem;color:var(--muted)}
 .status b{color:var(--fg)}
-.modal{position:fixed;inset:0;background:rgba(10,7,5,.72);display:grid;place-items:center;padding:16px;z-index:10}
-.modal .box{background:#211913;border:1px solid var(--line);border-radius:12px;padding:20px;max-width:420px;width:100%;display:grid;gap:12px}
-.modal h3{font-family:var(--display);font-weight:400;font-size:1.3rem;margin:0}
-.modal p{margin:0;color:var(--muted);font-size:.92rem}
-.modal .stats{font-family:var(--mono);font-size:.8rem;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+
+.modal{position:fixed;inset:0;background:rgba(10,7,5,.74);display:grid;place-items:center;padding:14px;z-index:10;overflow-y:auto}
+.modal .box{background:#211913;border:1px solid var(--line);border-radius:14px;padding:20px;max-width:480px;width:100%;display:grid;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.modal .kicker{font-family:var(--mono);font-size:.72rem;color:var(--worm);text-transform:uppercase;letter-spacing:.08em}
+.modal .kicker:empty{display:none}
+.modal h3{font-family:var(--display);font-weight:400;font-size:1.45rem;margin:0}
+.modal p{margin:0;color:#d8c9b4;font-size:.95rem;white-space:pre-line}
+.modal .stats{font-family:var(--body);font-size:.8rem;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.modal .stats:empty,.modal .cards:empty{display:none}
+.modal .stats .stars{font-size:1.1rem;letter-spacing:2px;color:var(--gold)}
+.modal .stats .obj{font-family:var(--body);font-size:.9rem;color:var(--fg);background:rgba(234,140,144,.12);border:1px solid rgba(234,140,144,.35);border-radius:8px;padding:8px 10px}
+.modal .stats .warn{color:#ffc6bd}
 .modal .acts{display:flex;gap:8px;flex-wrap:wrap}
-@media (max-width:420px){.g .l{font-size:.62rem}}
-@media (prefers-reduced-motion:reduce){.g .f,.toast{transition:none}}
-.top{padding-top:8px}
-/* Ordinateur : infos compactes dans le ciel ; boutons et instincts dans une colonne à droite, hors de l'image du sol */
+.modal .acts button{padding:10px 14px;font-size:.9rem}
+.cards{display:grid;gap:8px}
+.card{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;text-align:left;padding:10px 12px;border-radius:10px;background:#2c221a;border:1px solid var(--line)}
+.card:hover,.card:focus-visible{border-color:var(--worm);background:#3a2b20}
+.card .ic{grid-row:span 2;font-size:1.5rem;align-self:center}
+.card .nm{font-size:.95rem}
+.card .nm small{font-weight:400;color:var(--muted);margin-left:6px}
+.card .tx{font-weight:400;color:#d8c9b4;font-size:.84rem}
+@media (max-width:560px){.lg{display:none} .bar{gap:5px} .bar button{padding:8px 10px}}
+@media (max-width:420px){.g .l{font-size:.6rem} h1{font-size:1rem}}
+@media (prefers-reduced-motion:reduce){.f,.toast{transition:none}.banner{animation-duration:.01s}}
+
+/* Ordinateur : réglages dans une colonne à droite, hors de l'image du sol */
 @media (min-width:900px){
-  .game{--side:270px}
+  .game{--side:280px}
   canvas{right:var(--side);width:calc(100% - var(--side))}
-  .toast{left:calc((100% - var(--side)) / 2)}
-  .top{right:var(--side);grid-template-columns:max-content minmax(0,880px);gap:18px;align-items:start;padding-top:10px;padding-right:12px}
+  .toasts{left:calc((100% - var(--side)) / 2);top:auto;bottom:16px;width:min(70%,640px)}
+  .hint,.banner{left:calc((100% - var(--side)) / 2)}
+  .hint{top:auto;bottom:90px}
+  .top{right:var(--side);grid-template-columns:max-content minmax(0,900px);gap:18px;align-items:start;padding-top:8px;padding-right:12px}
   .top .head{flex-direction:column;align-items:flex-start;gap:4px}
   .top .tag{text-align:left}
-  .top .chip{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;padding:7px 12px}
-  .top .gauges{grid-column:1/-1}
-  .top .line{margin-top:5px;min-height:1.4em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hud.bottom{top:0;bottom:0;left:auto;right:0;width:var(--side);padding:12px;display:flex;flex-direction:column;gap:12px;
-    background:#211913;border-left:1px solid var(--line);overflow-y:auto}
+  .hud.bottom{top:0;bottom:0;left:auto;right:0;width:var(--side);padding:12px;display:flex;flex-direction:column;gap:10px;background:#211913;border-left:1px solid var(--line);overflow-y:auto}
   .hud.bottom > .bar{order:-1;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .hud.bottom > .bar .spacer,#instincts{display:none}
-  .hud.bottom > .bar button{padding:7px 8px;font-size:.76rem}
-  .hud.bottom > .bar .primary{grid-column:1/-1}
+  .hud.bottom > .bar.tools{order:-2}
+  .hud.bottom > .bar .spacer,#instincts,#quick{display:none}
+  .hud.bottom > .bar button{padding:8px 8px;font-size:.78rem}
   #panel[hidden]{display:grid!important}
   #panel{max-height:none;overflow:visible;gap:8px;padding:0;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
   #panel h2{font-size:.9rem}
@@ -101,16 +143,18 @@ input[type=range]{width:100%;accent-color:var(--worm);margin:2px 0}
   #panel .s .ends{font-size:.62rem}
   #panel .legend{font-size:.62rem}
   #panel .legend i{width:70px}
-  #panel .status{font-size:.68rem}
-  #panel button{font-size:.72rem;padding:5px 8px}
+  #panel .status{font-size:.7rem}
 }
+
 </style>
+<div class="game" id="game">
+  <canvas id="cv" aria-label="Coupe du sol sous le potager, avec les vers"></canvas>
 
-<div class="game">
-  <canvas id="cv" aria-label="Coupe de sol avec le ver"></canvas>
-
-  <div class="hud top">
-    <div class="head"><div><h1>Worm <em>Simulation</em></h1><span class="sig">Vishow l’asticot</span></div><span class="tag" id="clock"></span></div>
+  <div class="hud top" id="hudTop">
+    <div class="head">
+      <div><h1>Le jardin de <em>Vishow</em></h1></div>
+      <span class="tag" id="clock"></span>
+    </div>
     <div class="chip">
       <div class="gauges">
         <div class="g" id="g-e"><span class="l">Énergie</span><div class="t"><div class="f" style="background:var(--amber)"></div></div><span class="v"></span></div>
@@ -119,349 +163,1346 @@ input[type=range]{width:100%;accent-color:var(--worm);margin:2px 0}
         <div class="g" id="g-age"><span class="l">Âge</span><div class="t"><div class="f" style="background:var(--muted)"></div></div><span class="v"></span></div>
       </div>
       <div class="line" id="stage"></div>
-      <div class="line" id="readout"></div>
+      <div class="mission" id="mission">
+        <div class="mrow"><span id="m-name"></span><span id="m-left"></span></div>
+        <div class="t"><div class="f" id="m-bar"></div></div>
+      </div>
     </div>
   </div>
 
-  <div class="toast off" id="toast"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div class="hint" id="hint" hidden><span id="hint-text"></span><button id="hint-ok" aria-label="Fermer le conseil">OK</button></div>
+  <div class="banner" id="banner" hidden></div>
 
-  <div class="hud bottom">
+  <div class="hud bottom" id="hudBottom">
     <div class="chip panel" id="panel" hidden>
-      <h2>Instincts du ver</h2>
+      <h2>Instincts des vers</h2>
       <div class="sliders">
-        <div class="s"><div class="row"><label for="w-chaleur">Chaleur</label><span id="o-chaleur"></span></div><input type="range" id="w-chaleur" min="0" max="100"><div class="ends"><span>Ignore la chaleur</span><span>Fonce vers le chaud</span></div></div>
-        <div class="s"><div class="row"><label for="w-eau">Eau</label><span id="o-eau"></span></div><input type="range" id="w-eau" min="0" max="100"><div class="ends"><span>Ignore l'humidité</span><span>Cherche l'eau dès qu'il a soif</span></div></div>
-        <div class="s"><div class="row"><label for="w-nutri">Nutriments</label><span id="o-nutri"></span></div><input type="range" id="w-nutri" min="0" max="100"><div class="ends"><span>Ignore la nourriture</span><span>Cherche à manger dès qu'il a faim</span></div></div>
-        <div class="s"><div class="row"><label for="w-prud">Prudence</label><span id="o-prud"></span></div><input type="range" id="w-prud" min="0" max="100"><div class="ends"><span>Prend tous les risques</span><span>Fuit le chaud et le gel, mais se fatigue</span></div></div>
+        <div class="s"><div class="row"><label for="w-chaleur">🔥 Chaleur</label><span id="o-chaleur"></span></div><input type="range" id="w-chaleur" min="0" max="100"><div class="ends"><span>Ignore la chaleur</span><span>Cherche le chaud (grandit et pond plus vite, mais risque de brûler)</span></div></div>
+        <div class="s"><div class="row"><label for="w-eau">💧 Eau</label><span id="o-eau"></span></div><input type="range" id="w-eau" min="0" max="100"><div class="ends"><span>Ignore l'humidité</span><span>Cherche l'eau dès qu'il a soif</span></div></div>
+        <div class="s"><div class="row"><label for="w-nutri">🍂 Nourriture</label><span id="o-nutri"></span></div><input type="range" id="w-nutri" min="0" max="100"><div class="ends"><span>Ignore la nourriture</span><span>Cherche à manger dès qu'il a faim</span></div></div>
+        <div class="s"><div class="row"><label for="w-prud">🛡️ Prudence</label><span id="o-prud"></span></div><input type="range" id="w-prud" min="0" max="100"><div class="ends"><span>Prend tous les risques</span><span>Fuit chaud, gel et prédateurs, mais se fatigue</span></div></div>
       </div>
       <div class="legend" id="legend"></div>
-      <div class="bar"><span class="status" id="score"></span><span class="spacer"></span><button id="restart">Nouvelle partie</button></div>
+      <div class="muts" id="muts"></div>
+      <div class="bar"><span class="status" id="score"></span><span class="spacer"></span><button id="menu">Menu</button></div>
+    </div>
+    <div class="bar tools">
+      <button id="t-compost" class="tool" title="Compost : touche ensuite la surface" aria-label="Compost"><span aria-hidden="true">🍂</span><span class="lg"> Compost</span> <b id="c-compost"></b></button>
+      <button id="t-eau" class="tool" title="Arrosoir : touche ensuite une plante ou la surface" aria-label="Arroser"><span aria-hidden="true">💧</span><span class="lg"> Arroser</span> <b id="c-eau"></b></button>
+      <span class="spacer"></span>
+      <button class="primary" id="mate">Pondre</button>
+    </div>
+    <div class="quick" id="quick" aria-label="Instincts des vers">
+      <label class="q"><span><span aria-hidden="true">🔥</span> Chaleur <b id="q-o-chaleur"></b></span><input type="range" id="q-chaleur" min="0" max="100"></label>
+      <label class="q"><span><span aria-hidden="true">💧</span> Eau <b id="q-o-eau"></b></span><input type="range" id="q-eau" min="0" max="100"></label>
+      <label class="q"><span><span aria-hidden="true">🍂</span> Nourr. <b id="q-o-nutri"></b></span><input type="range" id="q-nutri" min="0" max="100"></label>
+      <label class="q"><span><span aria-hidden="true">🛡️</span> Prud. <b id="q-o-prud"></b></span><input type="range" id="q-prud" min="0" max="100"></label>
     </div>
     <div class="bar">
-      <button id="pause">Pause</button>
+      <button id="pause" aria-label="Pause"></button>
       <button id="speed">×1</button>
-      <button id="map">Carte : Terre</button>
-      <button id="instincts" aria-pressed="false">Instincts</button>
-      <span class="spacer"></span>
-      <button id="auto" aria-pressed="false">Auto : off</button>
-      <button class="primary" id="mate">Pondre 1 œuf</button>
+      <button id="map" title="Changer de carte"></button>
+      <button id="instincts" aria-pressed="false" aria-label="Réglages"><span aria-hidden="true">⚙️</span><span class="lg"> Réglages</span></button>
+      <button id="son" aria-pressed="true" aria-label="Son"></button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="modal" hidden>
-  <div class="box">
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="kicker" id="m-kicker"></div>
     <h3 id="m-title"></h3>
     <p id="m-text"></p>
     <div class="stats" id="m-stats"></div>
+    <div class="cards" id="m-cards"></div>
     <div class="acts" id="m-acts"></div>
   </div>
 </div>
 
 <script>
-(() => {
-const DAY = 144, MAXTURN = 0.09;
+/* Moteur de la campagne « Le jardin de Vishow ».
+   Aucune dépendance au navigateur : le même fichier tourne dans la page et dans les tests (Node). */
+(function (root) {
+'use strict';
+
+/* ---------- temps ---------- */
+const STEPS_PER_SEC = 60;          // pas fixe : même vitesse sur un écran 60 Hz ou 120 Hz
+const DAY = 144;                    // 2,4 s par jour à vitesse ×1
+const SEASON_DAYS = 45;             // 108 s par saison à ×1
+const SEASON_LEN = DAY * SEASON_DAYS;
+const NSEASONS = 12;                // 3 ans
+const MAXTURN = 0.09;
 const DIRS = [-1.0, -0.65, -0.35, -0.15, 0, 0.15, 0.35, 0.65, 1.0];
-let GW = 96, GH = 64, SKYR = 9, N = GW * GH;
-const SEASON_LEN = DAY * 20;
+const MAXPOP = 15;
+const NPLANTS = 5;
+
 const SEASONS = [
-  { label: 'Printemps', rainP: 0.65, rainInt: 1.35, sun: [0.8, 2.5], evap: 1, dry: 0.00015, roots: 0.0003, off: 0, regen: 1, deep: 3, top: 1, grass: '#5f8a2e', msg: 'Printemps : les nutriments se reforment en profondeur' },
-  { label: 'Été', rainP: 0.2, rainInt: 1, sun: [2, 5], evap: 2.6, dry: 0.0012, roots: 0.002, off: 7, regen: 0.6, deep: 0.2, top: 1, grass: '#9c9a3c', msg: 'Été : le haut du sol s\'assèche, l\'eau est plus profonde' },
-  { label: 'Automne', rainP: 0.6, rainInt: 1.1, sun: [0.8, 2.5], evap: 0.8, dry: 0.0001, roots: 0.0001, off: -1, regen: 0.8, deep: 0.2, top: 5, grass: '#b0692a', msg: 'Automne : les feuilles mortes enrichissent la surface' },
-  { label: 'Hiver', rainP: 0.6, rainInt: 1, sun: [0.6, 2], evap: 0.4, dry: 0, roots: 0, off: -24, regen: 0.6, deep: 0.8, top: 1, grass: '#7d8a80', msg: 'Hiver : le haut du sol gèle, il faut descendre' }
+  { label: 'Printemps', rainP: 0.65, rainInt: 1.35, sun: [0.8, 2.5], evap: 1, roots: 0.0003, off: 0, regen: 1, deep: 3, top: 1, grow: 1, grass: '#5f8a2e' },
+  { label: 'Été', rainP: 0.32, rainInt: 1, sun: [2, 4.5], evap: 1.7, roots: 0.001, off: 7, regen: 0.6, deep: 0.2, top: 1, grow: 1.15, grass: '#9c9a3c' },
+  { label: 'Automne', rainP: 0.6, rainInt: 1.1, sun: [0.8, 2.5], evap: 0.8, roots: 0.0001, off: -1, regen: 0.8, deep: 0.2, top: 5, grow: 0.45, grass: '#b0692a' },
+  { label: 'Hiver', rainP: 0.6, rainInt: 1, sun: [0.6, 2], evap: 0.4, roots: 0, off: -24, regen: 0.6, deep: 0.8, top: 1, grow: 0, grass: '#7d8a80' }
 ];
-let lastSeason = 0, seasonOff = 0, autoBreed = false, lastAnn = -1;
-const EVENTS = {
-  0: { name: 'Déluge', ann: 'Demain : déluge, la nappe va remonter et lessiver le fond', start: 'Déluge : la nappe remonte et emporte les nutriments du fond', rain: 2.6, flood: 0.3 },
-  1: { name: 'Canicule', ann: 'Demain : canicule, la chaleur va descendre et le sol sécher', start: 'Canicule : le sol chauffe et sèche', off: 8, glob: 2, evap: 2.5 },
-  3: { name: 'Grand froid', ann: 'Demain : grand froid, le gel va descendre profondément', start: 'Grand froid : le gel descend', off: -30, glob: -6 }
+
+const PLANT_TYPES = [
+  { name: 'Tomate', fruit: '#e0442f' },
+  { name: 'Courge', fruit: '#ee8b2a' },
+  { name: 'Fraisier', fruit: '#d72d52' },
+  { name: 'Haricot', fruit: '#8cc04b' },
+  { name: 'Aubergine', fruit: '#6a3a8c' }
+];
+
+/* Événements annoncés la veille. k : intensité. */
+const EVENT_TYPES = {
+  deluge: { name: 'Déluge', prevu: 'Déluge prévu', ann: 'Demain : déluge. La nappe va remonter : gardez les vers loin du fond.', start: 'Déluge : la nappe remonte et noie le fond du sol', rain: 2.6, flood: 0.3 },
+  canicule: { name: 'Canicule', prevu: 'Canicule prévue', ann: 'Demain : canicule. Arrosez les plantes et faites descendre les vers.', start: 'Canicule : le sol chauffe et sèche', off: 8, glob: 2, evap: 2.5 },
+  froid: { name: 'Grand froid', prevu: 'Grand froid prévu', ann: 'Demain : grand froid. Le gel va descendre profondément.', start: 'Grand froid : le gel descend', off: -30, glob: -6 },
+  secheresse: { name: 'Sécheresse', prevu: 'Sécheresse prévue', ann: 'Demain : sécheresse. Plus une goutte pendant des jours.', start: 'Sécheresse : le haut du sol se dessèche', off: 4, glob: 1, evap: 3, norain: true }
 };
-const EV_DAY = 8, EV_LEN = 5;
-const seasonDay = () => ((tick + seasonOff) % SEASON_LEN) / DAY;
-const curEvent = () => { const e = EVENTS[seasonIdx()], d = seasonDay(); return e && d >= EV_DAY && d < EV_DAY + EV_LEN ? e : null; };
-const seasonIdx = () => Math.floor((tick + seasonOff) / SEASON_LEN) % 4;
-const season = () => SEASONS[seasonIdx()];
-const $ = s => document.querySelector(s);
+const EV_DAY = 25, EV_LEN = 7;
+
+/* ---------- les douze missions ---------- */
+const MISSIONS = [
+  { title: 'Premiers sillons', intro: 'Vishow sort de son cocon dans un potager tout neuf. Nourris-le, guide-le et fonde une famille.',
+    kind: 'reach', metric: 'pop', target: 4, unit: 'vers', tuto: true },
+  { title: 'Premières fleurs', intro: 'Les plantes du potager ont besoin de l\'humus que laissent tes vers sous leurs racines, et d\'eau. Attention à la canicule.',
+    kind: 'reach', metric: 'bloom', target: 3, unit: 'plantes en fleur', event: ['canicule', 0.6] },
+  { title: 'Feuilles mortes', intro: 'L\'automne couvre le sol de feuilles : un festin en surface. Profites-en pour agrandir la famille.',
+    kind: 'reach', metric: 'births', target: 8, unit: 'naissances', birds: 0.15 },
+  { title: 'Le premier hiver', intro: 'Le haut du sol va geler. Fais descendre tes vers et tiens jusqu\'au printemps.',
+    kind: 'hold', metric: 'pop', target: 6, unit: 'vers à la fin de l\'hiver', event: ['froid', 0.75] },
+  { title: 'Le merle', intro: 'Un merle a repéré le potager. Touche-le pour le chasser et récolte les premiers fruits.',
+    kind: 'reach', metric: 'fruitsSeason', target: 10, unit: 'fruits récoltés', birds: 0.6, event: ['deluge', 0.8] },
+  { title: 'Plein été', intro: 'Le soleil tape. Arrose quand il le faut et fais fleurir tout le potager.',
+    kind: 'reach', metric: 'bloom', target: 5, unit: 'plantes en fleur en même temps', birds: 0.35, event: ['canicule', 1] },
+  { title: 'La taupe', intro: 'Une taupe creuse sous le potager. Elle sent les vibrations : touche-la pour l\'effrayer.',
+    kind: 'hold', metric: 'pop', target: 10, unit: 'vers à la fin de l\'automne', birds: 0.3, moles: 1 },
+  { title: 'Profondeurs', intro: 'Deuxième hiver, plus rude. Une taupe rôde encore en profondeur.',
+    kind: 'hold', metric: 'pop', target: 8, unit: 'vers à la fin de l\'hiver', moles: 1, event: ['froid', 1] },
+  { title: 'Le grand déluge', intro: 'Un printemps de pluies diluviennes s\'annonce. Les fruits n\'attendent pas.',
+    kind: 'reach', metric: 'fruitsSeason', target: 14, unit: 'fruits récoltés', birds: 0.7, moles: 1, event: ['deluge', 1.2] },
+  { title: 'Sécheresse', intro: 'Pas de pluie en vue. Garde le potager en vie et récolte.',
+    kind: 'reach', metric: 'fruitsSeason', target: 10, unit: 'fruits récoltés', birds: 0.5, moles: 1, event: ['secheresse', 1] },
+  { title: 'Les taupes', intro: 'Deux taupes cette fois. Une dernière grande famille avant l\'hiver.',
+    kind: 'reach', metric: 'births', target: 10, unit: 'naissances', birds: 0.4, moles: 2 },
+  { title: 'Le dernier hiver', intro: 'Le plus grand froid de tous. Si la famille passe l\'hiver, le jardin est sauvé.',
+    kind: 'hold', metric: 'pop', target: 10, unit: 'vers à la fin de l\'hiver', moles: 1, event: ['froid', 1.25] }
+];
+
+/* ---------- mutations (une carte choisie à chaque fin de saison) ---------- */
+const CARDS = [
+  { id: 'peau', name: 'Peau épaisse', icon: '☀️', text: 'Supporte 2 °C de chaleur en plus.', max: 3 },
+  { id: 'antigel', name: 'Sang antigel', icon: '❄️', text: 'Supporte 2,5 °C de froid en plus.', max: 3 },
+  { id: 'estomac', name: 'Estomac d\'or', icon: '🍂', text: 'Tire 30 % d\'énergie en plus de chaque bouchée.', max: 3 },
+  { id: 'mucus', name: 'Mucus', icon: '💧', text: 'Perd 25 % d\'eau en moins.', max: 2 },
+  { id: 'fecond', name: 'Fécondité', icon: '🥚', text: 'Chaque cocon donne un bébé de plus.', max: 2 },
+  { id: 'croissance', name: 'Croissance', icon: '📈', text: 'Les bébés deviennent adultes 35 % plus vite.', max: 2 },
+  { id: 'longevite', name: 'Longévité', icon: '⏳', text: 'Vit 25 % plus longtemps.', max: 3 },
+  { id: 'humus', name: 'Turricules', icon: '🌱', text: 'Les déjections des vers (les turricules) font 50 % d\'humus en plus : les plantes poussent plus vite.', max: 3 },
+  { id: 'sens', name: 'Vibrations', icon: '〰️', text: 'Sent venir merles et taupes, et les fuit plus tôt.', max: 2 },
+  { id: 'fouisseur', name: 'Fouisseur', icon: '⛏️', text: 'Creuse 15 % plus vite.', max: 2 },
+  { id: 'outils', name: 'Jardinier', icon: '🧺', text: 'Une charge de compost et d\'arrosoir en plus, rechargées plus vite.', max: 2 },
+  { id: 'appel', name: 'Phéromones', icon: '🎯', text: 'Quand tu touches le sol pour appeler tes vers, ils viennent de 40 % plus loin et suivent l\'appel plus longtemps.', max: 2 }
+];
+
+const CAUSE = { faim: 'de faim', soif: 'de soif', chaud: 'de chaud', froid: 'de froid', age: 'de vieillesse', noye: 'noyé', merle: 'mangé par le merle', taupe: 'mangé par la taupe' };
+
+/* ---------- utilitaires ---------- */
 const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
-const rand = (a, b) => a + Math.random() * (b - a);
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const FIELDS = ['T0', 'perm', 'fcap', 'water', 'nutr', 'ncap', 'visit', 'fert', 'surfF', 'surfS', 'soil', 'tunnel'];
+const LOAM = 0, CLAY = 1, SAND = 2;
 
-const W = { chaleur: 60, eau: 25, nutri: 25, prud: 25 };
-const EXPLO = 0.4;
-let T0, perm, fcap, water, nutr, ncap, visit, surfF, surfS;
-let weather, worms = [], cocoons = [], deaths = {}, peak = 1, born = 0, bestPeak = 0, tick, paused = false, speed = 1, mode = 'terre', gen, offspring, over, modalOpen;
-let best = 0;
-try { best = +localStorage.getItem('worm-best') || 0; } catch (e) {}
-try { bestPeak = +localStorage.getItem('worm-best-peak') || 0; } catch (e) {}
+function createGame(opts) {
+  opts = opts || {};
+  let seed = opts.seed != null ? opts.seed : (Math.random() * 2 ** 31) | 0;
+  let rnd = mulberry32(seed);
+  const rand = (a, b) => a + rnd() * (b - a);
+  const listeners = [];
+  const emit = (type, data) => { for (const f of listeners) f(type, data || {}); };
 
-/* ---------- dimensions : la grille épouse l'écran ---------- */
-function setupDims() {
-  /* Le bandeau du book occupe le haut de l'écran : le jeu commence juste en dessous. */
-  const bn = document.getElementById('book-banner'), top = bn ? Math.round(bn.getBoundingClientRect().bottom) : 0;
-  document.querySelector('.game').style.top = top + 'px';
-  const vw = Math.max(320, window.innerWidth - (window.innerWidth >= 900 ? 270 : 0)), vh = Math.max(400, window.innerHeight - top);
-  const cs = Math.sqrt(vw * vh / 6800);
-  const wide = window.innerWidth >= 900, hudH = wide ? document.querySelector('.hud.top').offsetHeight + 12 : 0;
-  GW = Math.max(40, Math.round(vw / cs));
-  const rows = Math.round(vh / cs);
-  SKYR = Math.max(6, Math.ceil(Math.max(125, hudH) / cs));
-  GH = Math.max(30, rows - SKYR);
-  N = GW * GH;
-}
+  let G = null, retry = { season: -1, n: 0 };
+  let mask = null;   // 1 = case occupée par un caillou (recalculée, jamais sauvegardée)
+  let rootD = null;  // distance à la racine, calculée une fois
+  let shade = null;  // ombre de pluie sous les cailloux : l'eau n'y arrive presque pas
 
-/* ---------- monde ---------- */
-function noise(cell) {
-  const cw = Math.ceil(GW / cell) + 2, ch = Math.ceil(GH / cell) + 2;
-  const g = new Float32Array(cw * ch); for (let i = 0; i < g.length; i++) g[i] = Math.random();
-  const out = new Float32Array(N);
-  const sm = t => t * t * (3 - 2 * t);
-  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-    const fx = x / cell, fy = y / cell, ix = fx | 0, iy = fy | 0, tx = sm(fx - ix), ty = sm(fy - iy);
-    const a = g[iy * cw + ix], b = g[iy * cw + ix + 1], c = g[(iy + 1) * cw + ix], d = g[(iy + 1) * cw + ix + 1];
-    const top = a + (b - a) * tx, bot = c + (d - c) * tx;
-    out[y * GW + x] = top + (bot - top) * ty;
+  /* ---------- cailloux ---------- */
+  const inRock = (r, x, y) => ((x - r.x) / r.rx) ** 2 + ((y - r.y) / r.ry) ** 2 <= 1;
+  function rootDist(x, y) {
+    let best = 1e9;
+    for (const sg of G.root || []) {
+      const dx = sg.x2 - sg.x1, dy = sg.y2 - sg.y1, L2 = dx * dx + dy * dy;
+      const t = clamp(((x - sg.x1) * dx + (y - sg.y1) * dy) / L2);
+      const d = Math.hypot(x - (sg.x1 + dx * t), y - (sg.y1 + dy * t)) - (sg.r1 + (sg.r2 - sg.r1) * t);
+      if (d < best) best = d;
+    }
+    return best;
   }
-  return out;
-}
-function fbm() {
-  const a = noise(16), b = noise(7), c = noise(3), o = new Float32Array(N);
-  for (let i = 0; i < N; i++) o[i] = a[i] * 0.6 + b[i] * 0.3 + c[i] * 0.1;
-  return o;
-}
-function initWorld() {
-  T0 = new Float32Array(N); perm = new Float32Array(N); fcap = new Float32Array(N); water = new Float32Array(N);
-  nutr = new Float32Array(N); ncap = new Float32Array(N); visit = new Float32Array(N); surfF = new Float32Array(N); surfS = new Float32Array(N);
-  const nz = fbm(), fz = fbm(), pz = fbm(), mz = fbm();
-  const pockets = [], np = Math.max(4, Math.round(5 * N / 6200));
-  for (let k = 0; k < np; k++) pockets.push({ x: rand(6, GW - 6), y: GH * rand(0.1, 0.52), a: rand(7, 12), r: rand(3.5, 7.5) });
-  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-    const i = y * GW + x, f = y / (GH - 1);
-    let t = 8 + 28 * Math.pow(f, 1.3) + (nz[i] - 0.5) * 5;
-    for (const p of pockets) { const d2 = (x - p.x) ** 2 + (y - p.y) ** 2; t += p.a * Math.exp(-d2 / (2 * p.r * p.r)); }
-    T0[i] = t;
-    perm[i] = 0.25 + 1.1 * pz[i];
-    fcap[i] = clamp(0.47 - 0.17 * perm[i], 0.24, 0.44);
-    water[i] = clamp(fcap[i] + 0.12 * (mz[i] - 0.5) + 0.04, 0.12, 0.7);
-    const n = clamp((fz[i] - 0.42) * 2.6) * 0.9 + 0.18 * Math.exp(-y / 8);
-    ncap[i] = clamp(n); nutr[i] = ncap[i];
-    surfF[i] = Math.exp(-y / 5);
-    surfS[i] = Math.exp(-y / (GH * 0.35));
+  function placeRoot() {
+    // une racine d'arbre entre par un bord, juste sous la surface, et plonge en se ramifiant
+    const left = rnd() < 0.5, dir = left ? 1 : -1, k = Math.sqrt(G.N / 5400);
+    G.tree = { left };
+    const segs = [];
+    let x = left ? -1 : G.GW, y = 1.5, a = 0.5, r = 1.9 * k;
+    for (let n = 0; n < 6; n++) {
+      const len = rand(5, 8) * k, nx = x + dir * Math.cos(a) * len, ny = y + Math.sin(a) * len, nr = r * 0.82;
+      segs.push({ x1: x, y1: y, x2: nx, y2: ny, r1: r, r2: nr });
+      if (n === 2 || n === 4) { const ba = a - 0.7, bl = len * 0.9; segs.push({ x1: nx, y1: ny, x2: nx + dir * Math.cos(ba) * bl, y2: ny + Math.sin(ba) * bl + 2, r1: nr * 0.6, r2: nr * 0.3 }); }
+      x = nx; y = ny; r = nr; a = clamp(a + rand(-0.15, 0.3), 0.3, 1.1);
+    }
+    G.root = segs; G.mush = [];
   }
-}
-const temp = i => T0[i] + weather.surf * surfF[i] + weather.seas * surfS[i] + weather.glob;
-const cell = (x, y) => (clamp(Math.round(y), 0, GH - 1) * GW + clamp(Math.round(x), 0, GW - 1));
-
-/* ---------- météo et sol ---------- */
-const WEATHER_LABEL = { soleil: 'Ensoleillé', nuages: 'Nuageux', pluie: 'Pluie' };
-function setWeather(s) {
-  weather.state = s;
-  const S = season();
-  weather.left = s === 'soleil' ? rand(DAY * S.sun[0], DAY * S.sun[1]) : s === 'nuages' ? rand(DAY * 0.4, DAY * 1.2) : rand(DAY * 0.3, DAY * 1.3);
-  weather.int = rand(0.6, 1.4) * S.rainInt;
-  if (s === 'pluie') toast('Il pleut : l\'eau s\'infiltre dans le sol');
-}
-function updateWeather() {
-  const w = weather;
-  if (--w.left <= 0) setWeather(w.state === 'soleil' ? 'nuages' : w.state === 'pluie' ? 'nuages' : (Math.random() < season().rainP ? 'pluie' : 'soleil'));
-  const ev = curEvent();
-  if (ev && ev.rain) { if (w.state !== 'pluie') { w.state = 'pluie'; } w.int = ev.rain; w.left = Math.max(w.left, 2); }
-  w.glob += ((ev && ev.glob || 0) - w.glob) * 0.006;
-  w.seas += (season().off + (ev && ev.off || 0) - w.seas) * (ev && ev.off ? 0.006 : 0.002);
-  w.rain += ((w.state === 'pluie' ? w.int : 0) - w.rain) * 0.02;
-  w.surf += ((w.state === 'soleil' ? 4 : w.state === 'pluie' ? -4 : 0) - w.surf) * 0.004;
-  w.sun += ((w.state === 'soleil' ? 1 : w.state === 'nuages' ? 0.3 : 0) - w.sun) * 0.02;
-}
-function updateSoil() {
-  const S = season(), ev0 = curEvent();
-  if (ev0 && ev0.flood) {
-    const prog = clamp((seasonDay() - EV_DAY) / (EV_LEN * 0.9)), top = Math.floor(GH * (1 - ev0.flood * prog));
-    for (let y = top; y < GH; y++) for (let x = 0, i = y * GW; x < GW; x++, i++) { water[i] += 0.012 * (1 - water[i]); nutr[i] *= 0.996; }
+  function buildMask() {
+    const { GW, GH } = G, old = mask;
+    mask = new Uint8Array(G.N);
+    if (G.root && !rootD) { rootD = new Float32Array(G.N); for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) rootD[y * GW + x] = rootDist(x, y); }
+    if (rootD) for (let i = 0; i < G.N; i++) if (rootD[i] < 0) mask[i] = 2;
+    for (const r of G.rocks || []) {
+      for (let y = Math.max(0, Math.floor(r.y - r.ry)); y <= Math.min(GH - 1, Math.ceil(r.y + r.ry)); y++)
+        for (let x = Math.max(0, Math.floor(r.x - r.rx)); x <= Math.min(GW - 1, Math.ceil(r.x + r.rx)); x++)
+          if (inRock(r, x, y)) mask[y * GW + x] = 1;
+    }
+    shade = new Float32Array(G.N);
+    for (let x = 0; x < GW; x++) {
+      let below = -1;
+      for (let y = 0; y < GH; y++) {
+        const i = y * GW + x;
+        if (mask[i] === 1) { below = 0; continue; }
+        if (mask[i]) continue;
+        if (below >= 0) { below++; shade[i] = Math.max(0, 1 - below / 14); }
+      }
+    }
+    if (!old || old.length !== mask.length) return;
+    // la terre qui était sous le caillou se découvre : riche en matière organique
+    let freed = 0;
+    for (let i = 0; i < mask.length; i++) {
+      if (mask[i]) { if (mask[i] === 1) G.water[i] = 0; continue; }
+      if (old[i]) { G.nutr[i] = 1; G.ncap[i] = Math.max(G.ncap[i], 0.75); G.fert[i] = Math.min(1, G.fert[i] + 0.15); G.water[i] = 0.3; freed++; }
+    }
+    if (freed && !G.seen.caillou) { G.seen.caillou = true; emit('hint', { text: 'Le caillou a bougé ! La terre qui était dessous est très riche. Appelle tes vers de l\'autre côté du caillou pour le pousser.' }); }
   }
-  const r = weather.rain;
-  if (r > 0.01) for (let x = 0; x < GW; x++) {
-    water[x] += r * 0.02 * (1 - water[x]);
-    water[x + GW] += r * 0.01 * (1 - water[x + GW]);
-    water[x + 2 * GW] += r * 0.004 * (1 - water[x + 2 * GW]);
+  const blocked = (x, y) => mask && mask[cell(x, y)] > 0;
+  function placeRocks() {
+    G.rocks = [];
+    const sizes = [[9, 5.5], [6, 3.8]];
+    for (const [rx0, ry0] of sizes) {
+      const k = Math.sqrt(G.GW * G.GH / 5400), rx = rx0 * k, ry = ry0 * k;
+      for (let t = 0; t < 200; t++) {
+        const r = { x: rand(rx + 3, G.GW - rx - 3), y: rand(G.GH * 0.3, G.GH * 0.62), rx, ry, px: 0, py: 0, shape: rnd() };
+        if (G.rocks.every(o => Math.hypot(o.x - r.x, o.y - r.y) > o.rx + r.rx + 6) && rootDist(r.x, r.y) > r.rx + 3) { G.rocks.push(r); break; }
+      }
+    }
+    buildMask();
+    for (let i = 0; i < mask.length; i++) if (mask[i]) G.water[i] = 0;
   }
-  const ev = curEvent(), evap = (weather.state === 'soleil' ? 0.0016 : weather.state === 'nuages' ? 0.0005 : 0.0006 * (ev && ev.evap ? 1 : 0)) * S.evap * (ev && ev.evap || 1);
-  if (evap) for (let y = 0; y < 3; y++) for (let x = 0; x < GW; x++) { const i = y * GW + x; water[i] -= evap * (1 - y / 3) * water[i] * 2; }
-  if (S.roots) { const ry = GH * 0.4; for (let y = 0; y < ry; y++) { const k = S.roots * (1 - y / ry); for (let x = 0, i = y * GW; x < GW; x++, i++) water[i] -= k * water[i]; } }
-  for (let y = GH - 2; y >= 0; y--) for (let x = 0; x < GW; x++) {
-    const i = y * GW + x, ex = water[i] - fcap[i];
-    if (ex > 0) { const f = ex * 0.035 * perm[i] * (1 - water[i + GW]); water[i] -= f; water[i + GW] += f; }
-  }
-  for (let x = 0; x < GW; x++) { const i = (GH - 1) * GW + x; water[i] -= 0.0004 * water[i]; }
-  if (tick % 3 === 0) for (let y = 0; y < GH; y++) {
-    const o = y * GW;
-    for (let x = 1; x < GW - 1; x++) { const i = o + x; water[i] += 0.05 * (water[i - 1] + water[i + 1] - 2 * water[i]); }
-  }
-  const base = 0.00003 * S.regen, dy = GH * 0.45, ty = GH * 0.2;
-  for (let y = 0; y < GH; y++) {
-    let rate = base, bonus = 0;
-    if (y > dy) { rate *= S.deep; bonus = S.deep > 1 ? 0.25 : 0; }
-    if (S.top > 1 && y < ty) { rate *= S.top; bonus = 0.4 * (1 - y / ty); }
-    for (let x = 0, i = y * GW; x < GW; x++, i++) {
-      nutr[i] += rate * (Math.min(1, ncap[i] + bonus) - nutr[i]);
-      visit[i] *= 0.9993;
+  function updateRoot() {
+    if (!G.root || G.tick % 8) return;
+    const si = seasonIdx(), pump = si === 1 ? 0.012 : si === 0 ? 0.004 : 0;
+    if (pump) for (let y = 0; y < G.GH * 0.75; y++) for (let x = 0; x < G.GW; x++) {
+      const i = y * G.GW + x; if (mask[i]) continue;
+      const d = rootD[i]; if (d < 5) G.water[i] -= pump * (1 - d / 5) * G.water[i];
+    }
+    // champignons le long de la racine
+    G.mush = (G.mush || []).filter(m => { m.t -= 8; return m.t > 0 && G.nutr[cell(m.x, m.y)] > 0.25; });
+    if ((si === 0 || si === 2) && G.mush.length < 4 && rnd() < 8 / (DAY * 3)) {
+      const sg = G.root[Math.floor(rnd() * G.root.length)], t = rnd();
+      const x = sg.x1 + (sg.x2 - sg.x1) * t, y = sg.y1 + (sg.y2 - sg.y1) * t + sg.r1 + 1.2;
+      if (x > 1 && x < G.GW - 2 && y < G.GH - 2 && !blocked(x, y)) {
+        G.mush.push({ x, y, t: DAY * 15 });
+        dropNutrients(x, y, 2.2, 0.9);
+        if (!G.seen.champi) { G.seen.champi = true; emit('hint', { text: 'Des champignons poussent le long de la racine : un festin pour tes vers. Mais en été, la racine pompe l\'eau du sol autour d\'elle.' }); }
+      }
     }
   }
+  function pushRock(x, y, a, force) {
+    for (const r of G.rocks) if (inRock(r, x, y)) { r.px += Math.cos(a) * force; r.py += Math.sin(a) * force; return; }
+  }
+  function updateRocks() {
+    let moved = false;
+    for (const r of G.rocks) {
+      if (Math.hypot(r.px, r.py) < 0.003) { r.px *= 0.9; r.py *= 0.9; continue; }
+      const mass = r.rx * r.ry / 14;
+      let nx = r.x + r.px / mass, ny = r.y + r.py / mass * 0.6;   // plus dur à soulever qu'à pousser
+      nx = clamp(nx, r.rx + 1, G.GW - r.rx - 2); ny = clamp(ny, r.ry + 2.5, G.GH - r.ry - 1.5);
+      if (G.rocks.every(o => o === r || Math.hypot(o.x - nx, o.y - ny) > o.rx + r.rx)) { r.x = nx; r.y = ny; moved = true; }
+      r.px *= 0.6; r.py *= 0.6;
+    }
+    if (moved) {
+      buildMask();
+      // ce qui se trouve sur le passage du caillou est poussé de côté
+      for (const o of [...G.worms, ...G.cocoons]) for (const r of G.rocks) if (inRock(r, o.x, o.y)) {
+        const a = Math.atan2((o.y - r.y) / r.ry, (o.x - r.x) / r.rx);
+        o.x = r.x + Math.cos(a) * (r.rx + 0.6); o.y = r.y + Math.sin(a) * (r.ry + 0.6);
+      }
+    }
+  }
+
+  /* ---------- monde ---------- */
+  function noise(cellSz) {
+    const { GW, GH, N } = G;
+    const cw = Math.ceil(GW / cellSz) + 2, ch = Math.ceil(GH / cellSz) + 2;
+    const g = new Float32Array(cw * ch); for (let i = 0; i < g.length; i++) g[i] = rnd();
+    const out = new Float32Array(N), sm = t => t * t * (3 - 2 * t);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const fx = x / cellSz, fy = y / cellSz, ix = fx | 0, iy = fy | 0, tx = sm(fx - ix), ty = sm(fy - iy);
+      const a = g[iy * cw + ix], b = g[iy * cw + ix + 1], c = g[(iy + 1) * cw + ix], d = g[(iy + 1) * cw + ix + 1];
+      const top = a + (b - a) * tx, bot = c + (d - c) * tx;
+      out[y * GW + x] = top + (bot - top) * ty;
+    }
+    return out;
+  }
+  function fbm() {
+    const a = noise(16), b = noise(7), c = noise(3), o = new Float32Array(G.N);
+    for (let i = 0; i < G.N; i++) o[i] = a[i] * 0.6 + b[i] * 0.3 + c[i] * 0.1;
+    return o;
+  }
+  function initWorld() {
+    const { GW, GH, N } = G;
+    for (const f of FIELDS) G[f] = new Float32Array(N);
+    const nz = fbm(), fz = fbm(), pz = fbm(), mz = fbm();
+    // couches : terre meuble, une couche d'argile en profondeur, des poches de sable
+    const cz = noise(9), sands = [];
+    for (let k = 0; k < 2; k++) sands.push({ x: rand(GW * 0.15, GW * 0.85), y: GH * rand(0.12, 0.38), rx: rand(6, 10) * Math.sqrt(N / 5400), ry: rand(3, 5) * Math.sqrt(N / 5400) });
+    const pockets = [], np = Math.max(4, Math.round(5 * N / 6200));
+    for (let k = 0; k < np; k++) pockets.push({ x: rand(6, GW - 6), y: GH * rand(0.15, 0.55), a: rand(6, 10), r: rand(3.5, 7) });
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const i = y * GW + x, f = y / (GH - 1);
+      let t = 8 + 28 * Math.pow(f, 1.3) + (nz[i] - 0.5) * 5;
+      for (const p of pockets) { const d2 = (x - p.x) ** 2 + (y - p.y) ** 2; t += p.a * Math.exp(-d2 / (2 * p.r * p.r)); }
+      G.T0[i] = t;
+      const ct = 0.52 + 0.1 * (cz[i] - 0.5) * 2, cb = 0.72 + 0.08 * (cz[i] - 0.5) * 2;
+      let soil = f > ct && f < cb ? CLAY : LOAM;
+      for (const sd of sands) if (((x - sd.x) / sd.rx) ** 2 + ((y - sd.y) / sd.ry) ** 2 + (nz[i] - 0.5) * 0.6 < 1) soil = SAND;
+      G.soil[i] = soil;
+      G.perm[i] = soil === CLAY ? 0.08 + 0.1 * pz[i] : soil === SAND ? 1.6 + 0.4 * pz[i] : 0.25 + 1.1 * pz[i];
+      G.fcap[i] = soil === CLAY ? 0.5 : soil === SAND ? 0.14 : clamp(0.47 - 0.17 * G.perm[i], 0.24, 0.44);
+      G.water[i] = clamp(G.fcap[i] + 0.12 * (mz[i] - 0.5) + 0.04, 0.12, 0.7);
+      const n = (clamp((fz[i] - 0.42) * 2.6) * 0.9 + 0.22 * Math.exp(-y / 8)) * (soil === SAND ? 0.35 : soil === CLAY ? 0.7 : 1);
+      G.ncap[i] = clamp(n); G.nutr[i] = G.ncap[i];
+      G.surfF[i] = Math.exp(-y / 5);
+      G.surfS[i] = Math.exp(-y / (GH * 0.35));
+    }
+    placeRoot();
+    placeRocks();
+    G.plants = [];
+    const sp = GW / NPLANTS;
+    for (let k = 0; k < NPLANTS; k++) G.plants.push({ x: sp * (k + 0.5), hw: Math.min(4.5, sp * 0.34), type: k, g: 0, health: 1, fert: 0, wet: 0.3, fruitT: 0, lastBloom: false });
+  }
+
+  const temp = i => G.T0[i] + G.weather.surf * G.surfF[i] + G.weather.seas * G.surfS[i] + G.weather.glob;
+  const cell = (x, y) => (clamp(Math.round(y), 0, G.GH - 1) * G.GW + clamp(Math.round(x), 0, G.GW - 1));
+  const seasonNo = () => G.season;
+  const seasonIdx = () => seasonNo() % 4;
+  const season = () => SEASONS[seasonIdx()];
+  const seasonDay = () => G.stick / DAY;
+  const mission = () => MISSIONS[seasonNo()];
+  function curEvent() {
+    const m = mission(); if (!m.event) return null;
+    const d = seasonDay();
+    if (d < EV_DAY || d >= EV_DAY + EV_LEN) return null;
+    return { ...EVENT_TYPES[m.event[0]], k: m.event[1], id: m.event[0] };
+  }
+  const mut = id => G.mut[id] || 0;
+
+  /* ---------- météo et sol ---------- */
+  function setWeather(s) {
+    const w = G.weather, S = season(), ev = curEvent();
+    if (s === 'pluie' && ev && ev.norain) s = 'soleil';
+    w.state = s;
+    w.left = s === 'soleil' ? rand(DAY * S.sun[0], DAY * S.sun[1]) : s === 'nuages' ? rand(DAY * 0.4, DAY * 1.2) : rand(DAY * 0.3, DAY * 1.3);
+    w.int = rand(0.6, 1.4) * S.rainInt;
+    if (s === 'pluie') emit('info', { text: 'Il pleut : l\'eau s\'infiltre dans le sol' });
+  }
+  function updateWeather() {
+    const w = G.weather, ev = curEvent();
+    if (--w.left <= 0) setWeather(w.state === 'soleil' ? 'nuages' : w.state === 'pluie' ? 'nuages' : (rnd() < season().rainP ? 'pluie' : 'soleil'));
+    if (ev && ev.rain) { w.state = 'pluie'; w.int = ev.rain * Math.min(1, ev.k); w.left = Math.max(w.left, 2); }
+    if (ev && ev.norain && w.state !== 'soleil') { w.state = 'soleil'; w.left = Math.max(w.left, DAY); }
+    const k = ev ? ev.k : 0;
+    w.glob += (((ev && ev.glob) || 0) * k - w.glob) * 0.006;
+    w.seas += (season().off + ((ev && ev.off) || 0) * k - w.seas) * (ev && ev.off ? 0.006 : 0.002);
+    w.rain += ((w.state === 'pluie' ? w.int : 0) - w.rain) * 0.02;
+    w.surf += ((w.state === 'soleil' ? 4 : w.state === 'pluie' ? -4 : 0) - w.surf) * 0.004;
+    w.sun += ((w.state === 'soleil' ? 1 : w.state === 'nuages' ? 0.3 : 0) - w.sun) * 0.02;
+  }
+  function updateSoil() {
+    const { GW, GH, water, nutr, ncap, visit, fert, fcap, perm } = G;
+    const S = season(), ev = curEvent();
+    G.floodTop = GH;
+    if (ev && ev.flood) {
+      const prog = clamp((seasonDay() - EV_DAY) / (EV_LEN * 0.9)), top = Math.floor(GH * (1 - ev.flood * ev.k * prog));
+      G.floodTop = top;
+      for (let y = top; y < GH; y++) for (let x = 0, i = y * GW; x < GW; x++, i++) { water[i] += 0.012 * (1 - water[i]); nutr[i] *= 0.997; }
+    }
+    const r = G.weather.rain;
+    if (r > 0.01) for (let x = 0; x < GW; x++) {
+      water[x] += r * 0.02 * (1 - water[x]);
+      water[x + GW] += r * 0.01 * (1 - water[x + GW]);
+      water[x + 2 * GW] += r * 0.004 * (1 - water[x + 2 * GW]);
+    }
+    const st = G.weather.state;
+    const evap = (st === 'soleil' ? 0.0016 : st === 'nuages' ? 0.0005 : 0) * S.evap * ((ev && ev.evap) ? ev.evap * ev.k : 1);
+    if (evap) for (let y = 0; y < 3; y++) for (let x = 0; x < GW; x++) { const i = y * GW + x; water[i] -= evap * (1 - y / 3) * water[i] * 2; }
+    const slow = G.tick % 4 === 0;
+    if (S.roots && slow) { const ry = GH * 0.4; for (let y = 0; y < ry; y++) { const k = 4 * S.roots * (1 - y / ry); for (let x = 0, i = y * GW; x < GW; x++, i++) water[i] -= k * water[i]; } }
+    if (G.tick % 2 === 0) for (let y = GH - 2; y >= 0; y--) for (let x = 0, i = y * GW; x < GW; x++, i++) {
+      const ex = water[i] - fcap[i];
+      if (ex > 0 && !mask[i] && !mask[i + GW]) { const f = ex * 0.07 * perm[i] * (1 - water[i + GW]); water[i] -= f; water[i + GW] += f; }
+    }
+    for (let x = 0; x < GW; x++) { const i = (GH - 1) * GW + x; water[i] -= 0.0004 * water[i]; }
+    if (slow) for (let i = 0; i < G.N; i++) if (shade[i] > 0) water[i] -= 0.0012 * shade[i] * water[i];
+    if (G.tick % 3 === 0) for (let y = 0; y < GH; y++) {
+      const o = y * GW;
+      for (let x = 1; x < GW - 1; x++) { const i = o + x; if (mask[i] || mask[i - 1] || mask[i + 1]) continue; water[i] += 0.05 * (1 - 0.92 * shade[i]) * (water[i - 1] + water[i + 1] - 2 * water[i]); }
+    }
+    if (!slow) return;
+    const base = 4 * 0.00007 * S.regen, dy = GH * 0.45, ty = GH * 0.2, dv = 0.9993 ** 4, dtn = 0.99985 ** 4, df = 0.99997 ** 4;
+    for (let y = 0; y < GH; y++) {
+      let rate = base, bonus = 0;
+      if (y > dy) { rate *= S.deep; bonus = S.deep > 1 ? 0.25 : 0; }
+      if (S.top > 1 && y < ty) { rate *= S.top; bonus = 0.4 * (1 - y / ty); }
+      for (let x = 0, i = y * GW; x < GW; x++, i++) {
+        nutr[i] += rate * (Math.min(1, ncap[i] + bonus) - nutr[i]);
+        visit[i] *= dv; G.tunnel[i] *= dtn;
+        fert[i] *= df;
+      }
+    }
+  }
+
+  /* ---------- potager ---------- */
+  function updatePlants() {
+    if (G.tick % 12) return;
+    const { GW, fert, water, visit } = G, S = season(), dt = 12;
+    for (const p of G.plants) {
+      const depth = Math.round(3 + 2.4 * Math.min(p.g, 4));
+      let sf = 0, sw = 0, sv = 0, n = 0;
+      const x0 = Math.max(0, Math.round(p.x - p.hw)), x1 = Math.min(GW - 1, Math.round(p.x + p.hw));
+      for (let y = 0; y <= depth; y++) for (let x = x0; x <= x1; x++) { const i = y * GW + x; sf += fert[i]; sw += water[i]; sv += visit[i]; n++; }
+      p.fert = sf / n; p.wet = sw / n; p.air = sv / n;
+      // croissance : l'humus des vers est l'engrais, l'eau est indispensable
+      const fF = clamp(0.25 + p.fert / 0.2, 0, 1.6) + Math.min(0.25, p.air * 0.8);
+      const fW = clamp((p.wet - 0.1) / 0.14);
+      const dry = p.wet < 0.13;
+      if (dry && S.grow > 0) p.health -= 0.0007 * dt * (G.weather.state === 'soleil' ? 1 : 0.4);
+      else p.health = Math.min(1, p.health + 0.0006 * dt);
+      if (p.health <= 0) {
+        p.health = 0.5; const was = p.g; p.g = Math.max(0.6, Math.min(p.g, 3) - 1.3); p.fruitT = 0;
+        if (was > 1) emit('plantDry', { text: `${PLANT_TYPES[p.type].name} se dessèche : arrose-la vite`, plant: p });
+        continue;
+      }
+      if (S.grow > 0 && p.g < 4) {
+        const rate = 0.00135 * S.grow * fF * fW * (0.4 + 0.6 * p.health) * (p.g >= 3 ? 0.4 : 1);
+        p.g = Math.min(4, p.g + rate * dt);
+        if (rate > 0) for (let y = 1; y <= depth; y += 2) for (let x = x0; x <= x1; x++) { const i = y * GW + x; fert[i] = Math.max(0, fert[i] - rate * dt * 0.015); }
+        if (p.g >= 4) harvest(p);
+      } else if (p.g >= 4) {
+        // un fruit pas cueilli finit par tomber et pourrir
+        p.fruitT += dt;
+        if (p.fruitT > DAY * 9) { p.g = 3.2; p.fruitT = 0; dropNutrients(p.x, 1, 3, 0.5); emit('info', { text: `Un fruit est tombé et a pourri (${PLANT_TYPES[p.type].name})` }); }
+      }
+      const bloom = p.g >= 3;
+      if (bloom && !p.lastBloom) emit('bloom', { text: `${PLANT_TYPES[p.type].name} est en fleur`, plant: p });
+      p.lastBloom = bloom;
+    }
+  }
+  function harvest(p) {
+    if (!p || p.g < 4) return false;
+    p.g = 3.0; p.fruitT = 0;
+    G.fruits++; G.fruitsSeason++;
+    emit('harvest', { text: `+1 ${PLANT_TYPES[p.type].name.toLowerCase()} récoltée`, plant: p });
+    return true;
+  }
+
+  /* ---------- ver ---------- */
+  const sizeOf = w => Math.min(1, 0.35 + 0.65 * w.age / w.adultAge);
+  function newWorm(x, y, adult) {
+    const adultAge = DAY * 22 / (1 + 0.35 * mut('croissance'));
+    return { id: G.nextId++, x, y, a: rand(0, Math.PI * 2), age: adult ? adultAge : 0, adultAge, life: DAY * rand(102, 120) * (1 + 0.25 * mut('longevite')), nextMate: 0,
+      e: adult ? 0.85 : 0.75, h: adult ? 0.85 : 0.75, heat: 0, cold: 0, drown: 0, trail: [], dead: null, deadT: 0 };
+  }
+  function limits(s) {
+    return { Tmax: 29 - 3 * (1 - s) + 2 * mut('peau'), Tmin: 3 + 2 * (1 - s) - 2.5 * mut('antigel') };
+  }
+  function lureNow() {
+    const L = G.lure; if (!L || L.t <= 0) return null;
+    return { x: L.x, y: L.y, R: L.R, k: Math.min(1, L.t / (L.dur * 0.25)) };
+  }
+  function threats() {
+    const out = [], sens = mut('sens');
+    for (const b of G.birds) if (b.state === 'sol') out.push({ kind: 'b', x: b.x, R: 7 + 5 * sens });
+    for (const m of G.moles) if (m.state !== 'part') out.push({ kind: 'm', x: m.x, y: m.y, R: 9 + 7 * sens });
+    return out;
+  }
+  function score(px, py, c) {
+    const { GW, GH } = G;
+    if (px < 1 || px > GW - 2 || py < 0.8 || py > GH - 2) return -6;
+    const i = cell(px, py), T = temp(i), n = G.nutr[i], v = G.visit[i];
+    // les instincts réglés par le joueur décident de tout : aucun réflexe de survie caché
+    let s = c.wH * (T - 16) / 7;
+    s += c.wF * (0.5 + c.needF * 1.5) * n * 3;
+    s -= 0.4 * v * 2.5;
+    s += c.wW * (0.5 + c.needW * 1.5) * (G.water[i] - 0.3) * 6;
+    if (G.water[i] > 0.8) s -= 1.5 * (G.water[i] - 0.8) * (1 + 3 * c.wP);
+    const tw = c.Tmax - 0.5 - 8 * c.wP; if (T > tw) s -= (0.08 + c.wP) * (T - tw) * 0.6;
+    const tc = c.Tmin + 0.5 + 6 * c.wP; if (T < tc) s -= (0.08 + c.wP) * (tc - T) * 0.6;
+    if (c.lure) { const d = Math.hypot(px - c.lure.x, py - c.lure.y); s += 3.4 * c.lure.k * Math.max(0, 1 - d / c.lure.R) + 0.6 * c.lure.k * Math.max(0, 1 - d / (c.lure.R * 2.2)); }
+    for (const t of c.threats) {
+      if (t.kind === 'b') { if (py < 5.5 && Math.abs(px - t.x) < t.R) s -= (0.6 + 2 * c.wP + c.sens) * (5.5 - py) / 5.5 * 2; }
+      else { const d = Math.hypot(px - t.x, py - t.y); if (d < t.R) s -= (0.8 + 2 * c.wP + c.sens) * (1 - d / t.R) * 3; }
+    }
+    return s;
+  }
+  function updateWorm(w, th, lure) {
+    const s = sizeOf(w), L = limits(s), W = G.instincts;
+    const distress = w.h < 0.4 || w.e < 0.3 || w.heat > 0.3 || w.cold > 0.3;
+    const dl = lure ? Math.hypot(w.x - lure.x, w.y - lure.y) : 1e9;
+    const nearLure = lure && !distress && dl < lure.R * 2.2 ? lure : null;
+    // plus loin, l'appel donne seulement une direction générale
+    const farAng = lure && !distress && dl < lure.R * 4.5 && dl > 2 ? Math.atan2(lure.y - w.y, lure.x - w.x) : null;
+    const nearTh = th.filter(t => t.kind === 'b' ? Math.abs(w.x - t.x) < t.R + 4 && w.y < 9 : Math.hypot(w.x - t.x, w.y - t.y) < t.R + 4);
+    const c = { wH: W.chaleur / 100, wW: W.eau / 100, wF: W.nutri / 100, wP: W.prud / 100,
+      needF: 1 - w.e, needW: 1 - w.h, Tmax: L.Tmax, Tmin: L.Tmin, lure: nearLure, threats: nearTh, inHeat: Math.min(1, w.heat * 4), inCold: Math.min(1, w.cold * 4), sens: 0.6 * mut('sens') };
+    // le ver ne réévalue sa direction qu'un pas sur deux (moitié moins de calcul, même comportement)
+    if (w.goal == null || (G.tick + w.id) % 2 === 0) {
+      let bestS = -1e9, bestA = w.a;
+      for (const da of DIRS) {
+        const a = w.a + da;
+        let sc = score(w.x + Math.cos(a) * 2.5, w.y + Math.sin(a) * 2.5, c) * 0.6 + score(w.x + Math.cos(a) * 5, w.y + Math.sin(a) * 5, c) * 0.4;
+        sc -= Math.abs(da) * 0.04; sc += (rnd() - 0.5) * 0.08;
+        if (farAng !== null) sc += 0.5 * lure.k * Math.cos(a - farAng);
+        if (sc > bestS) { bestS = sc; bestA = a; }
+      }
+      w.goal = bestA;
+    }
+    const turn = MAXTURN * (nearTh.length ? 1.6 : 1);
+    const dA = clamp(w.goal - w.a, -turn, turn);
+    w.a += dA;
+    const ci = cell(w.x, w.y), tun = G.tunnel[ci], sl = G.soil[ci];
+    const soilK = sl === CLAY ? 0.55 + 0.45 * tun : sl === SAND ? 1.1 : 1;   // l'argile est dure à creuser, sauf dans une galerie
+    const sp = (0.13 + 0.09 * s) * (1 + 0.15 * mut('fouisseur')) * (nearTh.length ? 1.25 : 1) * soilK * (1 + 0.3 * tun);
+    let nx = w.x + Math.cos(w.a) * sp, ny = w.y + Math.sin(w.a) * sp;
+    if (nx < 0.5 || nx > G.GW - 1.5) { w.a = Math.PI - w.a; nx = w.x; w.goal = null; }
+    if (ny < 0.6 || ny > G.GH - 1.5) { w.a = -w.a; ny = w.y; w.goal = null; }
+    if (blocked(nx, ny)) {
+      // le ver cogne le caillou : il le pousse un tout petit peu et glisse le long
+      pushRock(nx, ny, w.a, 0.02 * (0.4 + s) * (1 + 0.15 * mut('fouisseur')));
+      const side = blocked(w.x + Math.cos(w.a + 0.8) * sp, w.y + Math.sin(w.a + 0.8) * sp) ? -0.8 : 0.8;
+      w.a += side * 0.25; nx = w.x; ny = w.y;
+    }
+    w.x = nx; w.y = ny;
+    w.trail.push(+w.x.toFixed(2), +w.y.toFixed(2));
+    const maxPts = Math.ceil((3 + 5 * s) / sp) * 2;
+    if (w.trail.length > maxPts) w.trail.splice(0, w.trail.length - maxPts);
+
+    const i = cell(w.x, w.y), T = temp(i), k = 1 + 0.5 * (1 - s);
+    const take = Math.min(G.nutr[i], 0.03 * G.nutr[i] * Math.max(0, 1.1 - w.e));
+    G.nutr[i] = Math.max(0, G.nutr[i] - take * 3);
+    const kT = clamp(0.3 + (T - 8) / 12, 0.3, 2.2);
+    const dig = 1.3 - 0.5 * Math.min(1, G.visit[i] * 3);
+    w.e = Math.min(1, w.e + take * 0.3 * (1 + 0.3 * mut('estomac'))) - 0.0005 * k * kT * dig * (G.soil[i] === CLAY ? 1.35 : 1) * (1 - 0.25 * G.tunnel[i]) * (1 + 0.5 * W.prud / 100);
+    // turricules : l'humus sort derrière le ver
+    G.fert[i] = Math.min(1, G.fert[i] + (take * 1.5 + 0.0015 * s) * (1 + 0.5 * mut('humus')));
+    const m = G.water[i];
+    w.h -= 0.00055 * k * (0.5 + 0.5 * kT) * (1 - 0.25 * mut('mucus'));
+    if (m > 0.2) { const g = (m - 0.2) * 0.015 * Math.max(0, 1.05 - w.h); w.h += g; G.water[i] = Math.max(0, m - g * 0.6); }
+    if (m < 0.12) w.h -= 0.0008 * (1 - 0.25 * mut('mucus'));
+    w.h = Math.min(1, w.h);
+    w.heat = T > L.Tmax ? w.heat + (T - L.Tmax) * 0.004 : Math.max(0, w.heat - 0.003);
+    w.cold = T < L.Tmin ? w.cold + (L.Tmin - T) * 0.03 : Math.max(0, w.cold - 0.003);
+    w.drown = m > 0.85 && w.y >= G.floodTop ? w.drown + 0.004 : Math.max(0, w.drown - 0.004);
+    G.visit[i] = Math.min(1, G.visit[i] + 0.06);
+    G.tunnel[i] = Math.min(1, G.tunnel[i] + 0.12);
+    w.age++;
+    if (w.e <= 0) w.dead = 'faim';
+    else if (w.h <= 0) w.dead = 'soif';
+    else if (w.heat >= 1) w.dead = 'chaud';
+    else if (w.cold >= 1) w.dead = 'froid';
+    else if (w.drown >= 1) w.dead = 'noye';
+    else if (w.age >= w.life) w.dead = 'age';
+    if (w.dead) onDeath(w);
+  }
+
+  /* ---------- prédateurs ---------- */
+  function spawnBird() {
+    const fromLeft = rnd() < 0.5;
+    G.birds.push({ x: fromLeft ? -3 : G.GW + 3, tx: rand(G.GW * 0.15, G.GW * 0.85), dir: fromLeft ? 1 : -1, state: 'vol', t: DAY * rand(3.5, 5.5), peck: 0, fy: 0 });
+    if (!G.seen.merle) { G.seen.merle = true; emit('hint', { text: 'Un merle arrive ! Touche-le pour le chasser avant qu\'il ne picore tes vers.' }); }
+    else emit('info', { text: 'Un merle se pose sur le potager' });
+  }
+  function updateBirds() {
+    const m = mission(), S = seasonIdx();
+    if (m.birds && S !== 3) {
+      const wetBoost = G.weather.rain > 0.3 || G.weather.state === 'pluie' ? 2 : 1;
+      if (G.birds.length < 2 && rnd() < m.birds * wetBoost / DAY) spawnBird();
+    }
+    for (const b of G.birds) {
+      if (b.state === 'vol') {
+        b.x += b.dir * 0.12;
+        if ((b.dir > 0 && b.x >= b.tx) || (b.dir < 0 && b.x <= b.tx)) b.state = 'sol';
+      } else if (b.state === 'sol') {
+        b.t--;
+        if (b.peck > 0) b.peck--;
+        if (G.tick % 3 === 0) b.x = clamp(b.x + (rnd() - 0.5) * 0.5 + b.dir * 0.03, 2, G.GW - 2);
+        if (rnd() < 0.004) b.dir = -b.dir;
+        for (const w of G.worms) {
+          if (w.dead || w.y > 3.2 || Math.abs(w.x - b.x) > 3.5) continue;
+          if (rnd() < 0.02) { b.peck = 20; w.dead = 'merle'; onDeath(w, true); break; }
+        }
+        if (b.t <= 0) { b.state = 'part'; b.dir = b.x < G.GW / 2 ? -1 : 1; }
+      } else { b.x += b.dir * 0.35; b.fy += 0.08; }
+    }
+    G.birds = G.birds.filter(b => b.state !== 'part' || (b.x > -6 && b.x < G.GW + 6));
+  }
+  function spawnMole() {
+    const left = rnd() < 0.5;
+    G.moles.push({ x: left ? 1 : G.GW - 2, y: G.GH * rand(0.3, 0.6), a: left ? 0 : Math.PI, state: 'chasse', t: DAY * rand(9, 12), full: 0, scared: 0, sx: 0, sy: 0, eaten: 0 });
+    if (!G.seen.taupe) { G.seen.taupe = true; emit('hint', { text: 'Une taupe ! Elle chasse tes vers sous terre. Touche-la pour l\'effrayer et appelle tes vers loin d\'elle.' }); }
+    else emit('info', { text: 'Une taupe creuse vers le potager' });
+  }
+  function updateMoles() {
+    const m = mission();
+    const d = seasonDay();
+    if (m.moles) {
+      if (!G.molePlan) { G.molePlan = []; for (let k = 0; k < m.moles; k++) G.molePlan.push(rand(4 + k * 8, SEASON_DAYS - 14)); }
+      G.molePlan = G.molePlan.filter(t => { if (d >= t && t >= 0) { spawnMole(); return false; } return true; });
+    }
+    for (const mo of G.moles) {
+      let tx, ty, sp = 0.075;
+      if (mo.state === 'part') {
+        tx = mo.x < G.GW / 2 ? -5 : G.GW + 5; ty = mo.y; sp = 0.1;
+      } else if (mo.scared > 0) {
+        mo.scared--; tx = mo.x + (mo.x - mo.sx) * 3; ty = mo.y + (mo.y - mo.sy) * 3 + 3; sp = 0.16;
+      } else if (mo.full > 0) {
+        mo.full--; tx = mo.x + Math.cos(mo.a) * 5; ty = mo.y + Math.sin(mo.a) * 5; sp = 0.04;
+      } else {
+        let best = null, bd = 32;
+        for (const w of G.worms) { if (w.dead) continue; const dd = Math.hypot(w.x - mo.x, w.y - mo.y); if (dd < bd) { bd = dd; best = w; } }
+        if (best) { tx = best.x; ty = best.y; } else { tx = mo.x + Math.cos(mo.a) * 5; ty = mo.y + Math.sin(mo.a) * 5; }
+      }
+      const want = Math.atan2(ty - mo.y, tx - mo.x);
+      let da = want - mo.a; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+      mo.a += clamp(da, -0.06, 0.06) + (rnd() - 0.5) * 0.04;
+      if (blocked(mo.x + Math.cos(mo.a) * sp * 3, mo.y + Math.sin(mo.a) * sp * 3)) mo.a += 0.5;
+      else { mo.x += Math.cos(mo.a) * sp; mo.y += Math.sin(mo.a) * sp; }
+      if (mo.state !== 'part') {
+        mo.x = clamp(mo.x, 1, G.GW - 2);
+        if (mo.y < 4) { mo.y = 4; mo.a = Math.abs(mo.a); }
+        if (mo.y > G.GH - 2) { mo.y = G.GH - 2; mo.a = -Math.abs(mo.a); }
+      }
+      // tunnel
+      const R = 1.5, cx0 = Math.round(mo.x), cy0 = Math.round(mo.y);
+      for (let y = cy0 - 1; y <= cy0 + 1; y++) for (let x = cx0 - 1; x <= cx0 + 1; x++) {
+        if (x < 0 || y < 0 || x >= G.GW || y >= G.GH) continue;
+        const i = y * G.GW + x; G.visit[i] = Math.min(1, G.visit[i] + 0.03); G.nutr[i] *= 0.995;
+      }
+      if (mo.state !== 'part' && mo.full <= 0 && mo.scared <= 0) for (const w of G.worms) {
+        if (w.dead) continue;
+        if (Math.hypot(w.x - mo.x, w.y - mo.y) < R) { w.dead = 'taupe'; onDeath(w, true); mo.full = DAY * 1.2; mo.eaten++; break; }
+      }
+      if (mo.state !== 'part' && --mo.t <= 0) { mo.state = 'part'; emit('info', { text: 'La taupe s\'en va' }); }
+    }
+    G.moles = G.moles.filter(mo => mo.state !== 'part' || (mo.x > -4 && mo.x < G.GW + 4));
+  }
+
+  /* ---------- population ---------- */
+  const alive = () => G.worms.filter(w => !w.dead);
+  const canBreed = w => !w.dead && sizeOf(w) >= 1 && w.e > 0.55 && w.h > 0.45 && w.age >= w.nextMate;
+  function breed(all) {
+    let ready = alive().filter(canBreed);
+    if (!ready.length) return 0;
+    const room = MAXPOP - alive().length - G.cocoons.reduce((a, c) => a + c.n, 0);
+    if (room <= 0) { emit('info', { text: 'Le potager est plein : pas de place pour plus de vers' }); return 0; }
+    if (!all) ready = [ready[Math.floor(rnd() * ready.length)]];
+    const n = 1 + mut('fecond');
+    let laid = 0;
+    for (const w of ready) {
+      if (laid * n >= room) break;
+      w.e -= 0.5; w.h -= 0.25; w.nextMate = w.age + DAY * 14;
+      G.cocoons.push({ x: w.x, y: w.y, t: DAY * 4, n });
+      laid++;
+    }
+    if (!G.seen.cocon) { G.seen.cocon = true; emit('info', { text: 'Un cocon incube pendant 4 jours' }); }
+    else emit('info', { text: laid === 1 ? 'Un cocon incube' : `${laid} cocons incubent` });
+    G.stats.laid += laid;
+    return laid;
+  }
+  function onDeath(w, predator) {
+    w.deadT = DAY * 0.6;
+    const R = 4, cx0 = Math.round(w.x), cy0 = Math.round(w.y), amp = predator ? 0.1 : 0.35 + 0.4 * sizeOf(w);
+    for (let y = Math.max(0, cy0 - R); y <= Math.min(G.GH - 1, cy0 + R); y++) for (let x = Math.max(0, cx0 - R); x <= Math.min(G.GW - 1, cx0 + R); x++) {
+      const d2 = (x - w.x) ** 2 + (y - w.y) ** 2; if (d2 > R * R) continue;
+      const i = y * G.GW + x; G.nutr[i] = Math.min(1, G.nutr[i] + amp * Math.exp(-d2 / 5));
+    }
+    G.deaths[w.dead] = (G.deaths[w.dead] || 0) + 1;
+    if (w.name) emit('hint', { text: `${w.name} est mort ${CAUSE[w.dead]}. Sa descendance continue l'aventure.` });
+    G.stats.deaths++;
+    emit('death', { text: `Un ver est mort ${CAUSE[w.dead]}`, cause: w.dead, x: w.x, y: w.y });
+  }
+
+  /* ---------- outils du joueur ---------- */
+  function dropNutrients(cx, depth, R, amp) {
+    for (let y = 0; y <= depth + R; y++) for (let x = Math.max(0, Math.round(cx - R * 1.6)); x <= Math.min(G.GW - 1, Math.round(cx + R * 1.6)); x++) {
+      const d2 = ((x - cx) / 1.6) ** 2 + (y - depth) ** 2; if (d2 > R * R * 1.5) continue;
+      const i = y * G.GW + x; G.nutr[i] = Math.min(1, G.nutr[i] + amp * Math.exp(-d2 / (R * R * 0.6)));
+    }
+  }
+  function lure(x, y) {
+    const k = mut('appel');
+    G.lure = { x: clamp(x, 1, G.GW - 2), y: clamp(y, 1, G.GH - 2), R: 18 * (1 + 0.4 * k), dur: DAY * (2.5 + 1 * k), t: DAY * (2.5 + 1 * k) };
+    G.stats.lures++;
+    return true;
+  }
+  const maxCharge = () => 3 + mut('outils');
+  const rechargeDays = () => 6 - 1.5 * mut('outils');
+  function compost(x) {
+    if (G.charges.compost < 1) return false;
+    G.charges.compost--;
+    dropNutrients(x, 1, 4.5, 0.9);
+    for (let y = 0; y < 2; y++) for (let dx = -5; dx <= 5; dx++) { const xx = Math.round(x + dx); if (xx >= 0 && xx < G.GW) G.fert[y * G.GW + xx] = Math.min(1, G.fert[y * G.GW + xx] + 0.15); }
+    emit('info', { text: 'Compost déposé : un festin pour tes vers' });
+    return true;
+  }
+  function arrose(x) {
+    if (G.charges.eau < 1) return false;
+    G.charges.eau--;
+    for (let y = 0; y < 10; y++) for (let dx = -6; dx <= 6; dx++) {
+      const xx = Math.round(x + dx); if (xx < 0 || xx >= G.GW) continue;
+      const i = y * G.GW + xx, k = Math.exp(-(dx * dx) / 18) * (1 - y / 11);
+      G.water[i] = Math.min(0.75, G.water[i] + 0.38 * k);
+    }
+    emit('info', { text: 'Arrosage : l\'eau descend vers les racines' });
+    return true;
+  }
+  function scareBird(b) {
+    if (!b || b.state === 'part') return false;
+    b.state = 'part'; b.dir = b.x < G.GW / 2 ? -1 : 1;
+    G.stats.scared++;
+    emit('scare', { text: 'Le merle s\'envole !' });
+    return true;
+  }
+  function scareMole(mo, x, y) {
+    if (!mo || mo.state === 'part') return false;
+    mo.scared = DAY * 1.6; mo.sx = x; mo.sy = y;
+    G.stats.scared++;
+    emit('scare', { text: 'La taupe prend peur et s\'enfuit' });
+    return true;
+  }
+
+  /* ---------- missions ---------- */
+  function metric(name) {
+    if (name === 'pop') return alive().length;
+    if (name === 'bloom') return G.plants.filter(p => p.g >= 3).length;
+    if (name === 'fruitsSeason') return G.fruitsSeason;
+    if (name === 'births') return G.stats.births;
+    return 0;
+  }
+  function checkMission() {
+    const m = mission(), M = G.mission;
+    const v = metric(m.metric);
+    M.value = v; M.best = Math.max(M.best, v);
+    if (m.kind === 'reach' && !M.done && v >= m.target) {
+      M.done = true;
+      emit('missionDone', { text: `Mission réussie : ${m.title} ★` });
+    }
+  }
+  function endSeason() {
+    const m = mission(), M = G.mission;
+    if (m.kind === 'hold') M.done = metric(m.metric) >= m.target;
+    G.stars[seasonNo()] = M.done ? 1 : 0;
+    G.phase = 'bilan';
+    const last = seasonNo() === NSEASONS - 1;
+    emit('seasonEnd', { success: M.done, mission: m, last, stats: { ...G.stats }, fruitsSeason: G.fruitsSeason });
+  }
+  function offerCards(success) {
+    const pool = CARDS.filter(c => mut(c.id) < c.max);
+    const out = [];
+    while (out.length < (success ? 3 : 2) && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+    return out;
+  }
+  function takeCard(id) { if (id) G.mut[id] = mut(id) + 1; }
+
+  function startSeason() {
+    // appelé au tout début et après chaque bilan
+    if (G.phase === 'bilan') G.season++;
+    G.phase = 'jeu'; G.stick = 0;
+    G.fruitsSeason = 0;
+    G.molePlan = null;
+    G.mission = { done: false, value: 0, best: 0 };
+    G.stats = { births: 0, deaths: 0, laid: 0, lures: 0, scared: 0 };
+    G.annDone = {};
+    const S = seasonIdx();
+    if (S === 3) for (const p of G.plants) { p.g = Math.min(p.g, 1.2); p.fruitT = 0; }   // l'hiver rabat les plantes
+    if (S === 0 && seasonNo() > 0) for (const p of G.plants) p.health = 1;
+    for (const w of G.worms) if (w.dead) w.deadT = 0;
+    G.worms = G.worms.filter(w => !w.dead);
+    G.charges.compost = Math.max(G.charges.compost, Math.min(maxCharge(), G.charges.compost + 1));
+    G.charges.eau = Math.max(G.charges.eau, Math.min(maxCharge(), G.charges.eau + 1));
+    G.checkpoint = serialize();
+    emit('seasonStart', { mission: mission(), no: seasonNo() });
+  }
+
+  /* ---------- pas de simulation ---------- */
+  function step() {
+    if (G.phase !== 'jeu') return;
+    G.tick++; G.stick++;
+    const d = seasonDay(), ev = mission().event;
+    if (ev) {
+      const E = EVENT_TYPES[ev[0]];
+      if (d >= EV_DAY - 1 && !G.annDone.a) { G.annDone.a = true; emit('event', { text: E.ann, ann: true }); }
+      if (d >= EV_DAY && !G.annDone.s) { G.annDone.s = true; emit('event', { text: E.start }); }
+      if (d >= EV_DAY + EV_LEN && !G.annDone.e) { G.annDone.e = true; emit('info', { text: `${E.name} : c'est fini` }); }
+    }
+    updateWeather(); updateSoil();
+    const th = threats(), lu = lureNow();
+    for (const w of G.worms) if (!w.dead) updateWorm(w, th, lu);
+    const LC = limits(1);
+    for (const c of G.cocoons) {
+      const ci = cell(c.x, c.y), cT = temp(ci), cw = G.water[ci];
+      const bad = cT > LC.Tmax + 1 ? 'chaud' : cT < LC.Tmin - 1 ? 'froid' : cw < 0.13 ? 'sec' : cw > 0.85 ? 'noye' : null;
+      c.harm = bad ? (c.harm || 0) + 1 / DAY : Math.max(0, (c.harm || 0) - 0.5 / DAY);
+      if (c.harm >= 1) { c.done = c.lost = true; emit('cocoonLost', { text: `Un cocon est perdu (${bad === 'chaud' ? 'trop chaud' : bad === 'froid' ? 'gelé' : bad === 'sec' ? 'trop sec' : 'noyé'})`, cause: bad }); }
+    }
+    for (const c of G.cocoons) if (!c.lost && --c.t <= 0) {
+      for (let k = 0; k < c.n; k++) if (alive().length < MAXPOP) { G.worms.push(newWorm(c.x + (k - (c.n - 1) / 2) * 0.8, c.y, false)); G.born++; G.stats.births++; }
+      c.done = true;
+    }
+    if (G.cocoons.some(c => c.done)) { const born = G.cocoons.some(c => c.done && !c.lost); G.cocoons = G.cocoons.filter(c => !c.done); if (born) emit('birth', { text: 'Naissance : un bébé sort du cocon' }); }
+    for (const w of G.worms) if (w.dead) w.deadT--;
+    G.worms = G.worms.filter(w => !w.dead || w.deadT > 0);
+    if (G.lure && G.lure.t > 0) G.lure.t--;
+    updatePlants(); updateBirds(); updateMoles(); updateRocks(); updateRoot();
+    const rd = rechargeDays() * DAY;
+    if (G.tick % Math.round(rd) === 0) {
+      if (G.charges.compost < maxCharge()) G.charges.compost++;
+      if (G.charges.eau < maxCharge()) G.charges.eau++;
+    }
+    G.peak = Math.max(G.peak, alive().length);
+    checkMission();
+    if (!alive().length && !G.cocoons.length) { G.phase = 'eteint'; emit('extinct', {}); return; }
+    if (G.stick >= SEASON_LEN) endSeason();
+  }
+
+  /* ---------- sauvegarde ---------- */
+  function serialize() {
+    const o = {};
+    for (const k of Object.keys(G)) {
+      if (k === 'checkpoint') continue;
+      const v = G[k];
+      if (v instanceof Float32Array) o[k] = Array.from(v, x => Math.round(x * 1000) / 1000);
+      else o[k] = v;
+    }
+    o.seed = seed;
+    return JSON.stringify(o);
+  }
+  function load(str) {
+    const o = JSON.parse(str);
+    G = {};
+    for (const k of Object.keys(o)) G[k] = FIELDS.includes(k) ? Float32Array.from(o[k]) : o[k];
+    G.N = G.GW * G.GH;
+    for (const f of FIELDS) if (!G[f]) G[f] = new Float32Array(G.N);
+    mask = null; rootD = null; if (!G.rocks) G.rocks = []; buildMask();
+    seed = (o.seed + o.tick + 17) | 0; rnd = mulberry32(seed);
+    G.checkpoint = str;
+    emit('loaded', {});
+  }
+
+  function newGame(GW, GH, instincts) {
+    G = { GW, GH, N: GW * GH, tick: 0, stick: 0, season: 0, nextId: 1, worms: [], cocoons: [], birds: [], moles: [], deaths: {}, peak: 1, born: 0,
+      fruits: 0, fruitsSeason: 0, stars: [], mut: {}, charges: { compost: 2, eau: 2 }, lure: null, seen: {}, phase: 'jeu',
+      autoBreed: false, floodTop: GH,
+      instincts: instincts || { chaleur: 60, eau: 25, nutri: 25, prud: 25 } };
+    mask = null; rootD = null;
+    initWorld();
+    G.weather = { state: 'soleil', left: 0, rain: 0, surf: 0, seas: 0, glob: 0, sun: 1, int: 1 };
+    setWeather('soleil');
+    let x = G.GW / 2, y = G.GH * 0.25;
+    for (let k = 0; k < 400; k++) {
+      const tx = rand(8, G.GW - 8), ty = rand(4, G.GH * 0.45), i = cell(tx, ty), T = G.T0[i];
+      if (T > 16 && T < 24 && G.water[i] > 0.3 && G.water[i] < 0.6 && !blocked(tx, ty)) { x = tx; y = ty; break; }
+    }
+    const v = newWorm(x, y, true); v.name = 'Vishow'; G.worms.push(v);
+    startSeason();
+  }
+
+  function finalScore() {
+    const stars = G.stars.reduce((a, b) => a + (b || 0), 0);
+    const pop = alive().length;
+    return { stars, fruits: G.fruits, pop, born: G.born, peak: G.peak, points: stars * 100 + G.fruits * 10 + pop * 5 };
+  }
+
+  return {
+    on: f => listeners.push(f),
+    newGame, load, step, startSeason, offerCards, takeCard, endSeason,
+    lure, compost, arrose, harvest, scareBird, scareMole, breed,
+    restartSeason() {
+      load(G.checkpoint); G.phase = 'jeu';
+      // à chaque nouvel essai, des vers voisins viennent aider : on ne reste jamais bloqué
+      retry = retry.season === G.season ? { season: G.season, n: retry.n + 1 } : { season: G.season, n: 1 };
+      const add = Math.min(10, 2 + 2 * retry.n), si = seasonIdx();
+      for (let k = 0, tries = 0; k < add && tries < 3000; tries++) {
+        const x = rand(4, G.GW - 4), y = rand(3, G.GH - 3), i = cell(x, y), T = G.T0[i] + (si === 3 ? -6 : si === 1 ? 3 : 0) * G.surfS[i] * 4;
+        if (T > 12 && T < 23 && G.water[i] > 0.22 && G.water[i] < 0.65 && !blocked(x, y)) { G.worms.push(newWorm(x, y, true)); k++; }
+      }
+      G.charges.compost = maxCharge(); G.charges.eau = maxCharge();
+      emit('seasonStart', { mission: mission(), no: seasonNo(), retry: true, renfort: add });
+    },
+    get G() { return G; }, temp, cell, sizeOf, canBreed, alive, limits, season, seasonIdx, seasonNo, seasonDay, mission, curEvent, metric, finalScore, serialize, maxCharge,
+    mut,
+    isRock: i => !!(mask && mask[i] === 1), isRoot: i => !!(mask && mask[i] === 2)
+  };
 }
 
-/* ---------- ver ---------- */
-const sizeOf = w => Math.min(1, 0.35 + 0.65 * w.age / w.adultAge);
-function newWorm(x, y, adult) {
-  const adultAge = DAY * 18;
-  return { x, y, a: rand(0, Math.PI * 2), age: adult ? adultAge : 0, adultAge, life: DAY * rand(102, 120), nextMate: 0,
-    e: adult ? 0.8 : 0.75, h: adult ? 0.8 : 0.75, heat: 0, cold: 0, wet: 0, trail: [], dead: null };
-}
-function limits(s) { return { Tmax: 29 - 3 * (1 - s), Tmin: 3 + 2 * (1 - s), dthr: 0.66 - 0.06 * (1 - s) }; }
-function score(px, py, c) {
-  if (px < 1 || px > GW - 2 || py < 0.8 || py > GH - 2) return -6;
-  const i = cell(px, py), T = temp(i), n = nutr[i], v = visit[i];
-  let s = c.wH * (T - 16) / 7;
-  s += c.wF * (0.5 + c.needF * 0.8) * n * 1.5;
-  s -= EXPLO * v * 2.5;
-  s += c.wW * (0.5 + c.needW * 0.8) * (water[i] - 0.3) * 2.5;
-  const tw = c.Tmax - 0.5 - 8 * c.wP; if (T > tw) s -= (0.08 + c.wP) * (T - tw) * 0.6;
-  const tc = c.Tmin + 0.5 + 6 * c.wP; if (T < tc) s -= (0.08 + c.wP) * (tc - T) * 0.6;
-  return s;
-}
-function updateWorm(w) {
-  const s = sizeOf(w), L = limits(s);
-  const c = { wH: W.chaleur / 100, wW: W.eau / 100, wF: W.nutri / 100, wP: W.prud / 100,
-    needF: 1 - w.e, needW: 1 - w.h, Tmax: L.Tmax, Tmin: L.Tmin, dthr: L.dthr };
-  let bestS = -1e9, bestA = w.a;
-  for (const da of DIRS) {
-    const a = w.a + da;
-    let sc = score(w.x + Math.cos(a) * 2.5, w.y + Math.sin(a) * 2.5, c) * 0.6 + score(w.x + Math.cos(a) * 5, w.y + Math.sin(a) * 5, c) * 0.4;
-    sc -= Math.abs(da) * 0.04; sc += (Math.random() - 0.5) * 0.08;
-    if (sc > bestS) { bestS = sc; bestA = a; }
-  }
-  w.a += clamp(bestA - w.a, -MAXTURN, MAXTURN);
-  const sp = 0.13 + 0.09 * s;
-  let nx = w.x + Math.cos(w.a) * sp, ny = w.y + Math.sin(w.a) * sp;
-  if (nx < 0.5 || nx > GW - 1.5) { w.a = Math.PI - w.a; nx = w.x; }
-  if (ny < 0.6 || ny > GH - 1.5) { w.a = -w.a; ny = w.y; }
-  w.x = nx; w.y = ny;
-  w.trail.push(w.x, w.y);
-  const maxPts = Math.ceil((3 + 5 * s) / sp) * 2;
-  if (w.trail.length > maxPts) w.trail.splice(0, w.trail.length - maxPts);
+const API = { createGame, DAY, SEASON_DAYS, SEASON_LEN, NSEASONS, STEPS_PER_SEC, SEASONS, MISSIONS, CARDS, CAUSE, PLANT_TYPES, EVENT_TYPES, EV_DAY, EV_LEN, MAXPOP, clamp };
+if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.WormSim = API;
+})(typeof self !== 'undefined' ? self : this);
 
-  const i = cell(w.x, w.y), T = temp(i), k = 1 + 0.5 * (1 - s);
-  const take = Math.min(nutr[i], 0.03 * nutr[i] * Math.max(0, 1.1 - w.e));
-  nutr[i] = Math.max(0, nutr[i] - take * 3); const kT = clamp(0.3 + (T - 8) / 12, 0.3, 2.2);
-  const dig = 1.3 - 0.5 * Math.min(1, visit[i] * 3);
-  w.e = Math.min(1, w.e + take * 0.3) - 0.0006 * k * kT * dig * (1 + 0.5 * W.prud / 100);
-  const m = water[i];
-  w.h -= 0.00055 * k * (0.5 + 0.5 * kT);
-  if (m > 0.2) { const g = (m - 0.2) * 0.015 * Math.max(0, 1.05 - w.h); w.h += g; water[i] = Math.max(0, m - g * 0.6); }
-  if (m < 0.12) w.h -= 0.0008;
-  w.h = Math.min(1, w.h);
-  w.heat = T > L.Tmax ? w.heat + (T - L.Tmax) * 0.004 : Math.max(0, w.heat - 0.003);
-  w.cold = T < L.Tmin ? w.cold + (L.Tmin - T) * 0.03 : Math.max(0, w.cold - 0.003);
-  visit[i] = Math.min(1, visit[i] + 0.06);
-  w.age++;
-  if (w.e <= 0) w.dead = 'faim';
-  else if (w.h <= 0) w.dead = 'soif';
-  else if (w.heat >= 1) w.dead = 'chaud';
-  else if (w.cold >= 1) w.dead = 'froid';
-  else if (w.age >= w.life) w.dead = 'age';
-  if (w.dead) onDeath(w);
-}
+</script>
+<script>
+/* Interface du jardin de Vishow : dessin, commandes, écrans de mission. */
+(() => {
+'use strict';
+const S = window.WormSim, clamp = S.clamp;
+const $ = s => document.querySelector(s);
+const SAVE_KEY = 'vdt-sauvegarde', BEST_KEY = 'vdt-record';
+const sim = S.createGame();
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
 
-/* ---------- population ---------- */
-const MAXPOP = 150;
-const CAUSE = { faim: 'de faim', soif: 'de soif', chaud: 'de chaud', froid: 'de froid', age: 'de vieillesse' };
-const alive = () => worms.filter(w => !w.dead);
-const canBreed = w => !w.dead && sizeOf(w) >= 1 && w.e > 0.55 && w.h > 0.45 && w.age >= w.nextMate;
-function breed(all) {
-  let ready = alive().filter(canBreed);
-  if (!ready.length || alive().length + cocoons.length >= MAXPOP) return;
-  if (!all) ready = [ready[Math.floor(Math.random() * ready.length)]];
-  for (const w of ready) {
-    w.e -= 0.4; w.h -= 0.2; w.nextMate = w.age + DAY * 10;
-    cocoons.push({ x: w.x, y: w.y, t: DAY * 4 });
+let paused = false, speed = 1, mode = 'terre', modalOpen = true, tool = null, started = false;
+const fx = [];        // effets visuels (cercles, textes flottants)
+let tutoStep = -1, tutoT = 0, tutoDone = false;
+
+/* ---------- géométrie ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const off = document.createElement('canvas'), octx = off.getContext('2d');
+let img = null, dpr = 1, Wd = 0, Hd = 0, skyH = 0, skyFree = 80, cx = 1, cy = 1;
+const wideMQ = window.matchMedia('(min-width:900px)');
+const wide = () => wideMQ.matches;
+function skyCss() { return $('#hudTop').offsetHeight + 92; }
+function layout() {
+  // sur le site, le bandeau du book occupe le haut de l'écran : le jeu commence juste en dessous
+  const bn = document.getElementById('book-banner');
+  $('#game').style.top = bn ? Math.round(bn.getBoundingClientRect().bottom) + 'px' : '';
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (wide()) cv.style.height = '';
+  else { const hb = $('#hudBottom').getBoundingClientRect(), tb = $('.bar.tools').getBoundingClientRect(); cv.style.height = `calc(100% - ${Math.round(hb.bottom - tb.top) + 4}px)`; }
+  Wd = cv.width = Math.round(cv.clientWidth * dpr);
+  Hd = cv.height = Math.round(cv.clientHeight * dpr);
+  skyH = Math.min(Hd * 0.45, skyCss() * dpr);
+  const ht = $('#hudTop'), cr = cv.getBoundingClientRect(), hr = ht.getBoundingClientRect();
+  skyFree = Math.max(40 * dpr, skyH - Math.max(0, hr.bottom - cr.top) * dpr - 6 * dpr);
+  const G = sim.G; if (!G) return;
+  cx = Wd / G.GW; cy = (Hd - skyH) / G.GH;
+  if (!img || off.width !== G.GW || off.height !== G.GH) { off.width = G.GW; off.height = G.GH; img = octx.createImageData(G.GW, G.GH); }
+  const bh = $('#hudBottom').offsetHeight;
+  if (!wide()) { $('#toasts').style.top = (skyH / dpr + 6) + 'px'; $('#hint').style.bottom = (bh + 10) + 'px'; }
+  else { $('#toasts').style.top = ''; $('#hint').style.bottom = ''; }
+}
+function gridDims() {
+  const vw = cv.clientWidth, vh = Math.max(260, cv.clientHeight - skyCss());
+  const cs = Math.sqrt(vw * vh / 5400);
+  return [clamp(Math.round(vw / cs), 40, 110), clamp(Math.round(vh / cs), 34, 92)];
+}
+window.addEventListener('resize', () => layout());
+window.addEventListener('load', () => layout());
+const toPx = (x, y) => [(x + 0.5) * cx, skyH + (y + 0.5) * cy];
+const fromPx = (px, py) => [px / cx - 0.5, (py - skyH) / cy - 0.5];
+
+/* ---------- sons (synthétisés, aucun fichier) ---------- */
+let actx = null, sound = store.get('vdt-son') !== '0';
+function audio() {
+  if (!sound) return null;
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(notes, o) {
+  const a = audio(); if (!a) return;
+  o = o || {};
+  let t = a.currentTime + 0.01;
+  for (const f of notes) {
+    const os = a.createOscillator(), g = a.createGain(), d = o.dur || 0.11;
+    os.type = o.type || 'sine'; os.frequency.setValueAtTime(f, t);
+    if (o.slide) os.frequency.exponentialRampToValueAtTime(f * o.slide, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol || 0.07, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    os.connect(g).connect(a.destination); os.start(t); os.stop(t + d + 0.02);
+    t += o.gap || d * 0.8;
   }
-  toast(ready.length === 1 ? 'Un cocon incube pendant 4 jours' : `${ready.length} cocons incubent pendant 4 jours`);
 }
-function onDeath(w) {
-  w.deadT = DAY * 0.6;
-  const R = 4, cx0 = Math.round(w.x), cy0 = Math.round(w.y), amp = 0.35 + 0.4 * sizeOf(w);
-  for (let y = Math.max(0, cy0 - R); y <= Math.min(GH - 1, cy0 + R); y++) for (let x = Math.max(0, cx0 - R); x <= Math.min(GW - 1, cx0 + R); x++) {
-    const d2 = (x - w.x) ** 2 + (y - w.y) ** 2; if (d2 > R * R) continue;
-    const i = y * GW + x; nutr[i] = Math.min(1, nutr[i] + amp * Math.exp(-d2 / 5));
+const SFX = {
+  harvest: () => tone([660, 990], { dur: 0.09 }),
+  birth: () => tone([520, 780], { dur: 0.08, vol: 0.04 }),
+  mission: () => tone([523, 659, 784, 1046], { dur: 0.16, vol: 0.06 }),
+  scare: () => tone([1400, 1900, 1500], { dur: 0.05, type: 'triangle', vol: 0.04 }),
+  warn: () => tone([330, 247], { dur: 0.22, type: 'triangle', vol: 0.06 }),
+  death: () => tone([220], { dur: 0.18, slide: 0.6, vol: 0.035 }),
+  lure: () => tone([400], { dur: 0.06, slide: 1.5, vol: 0.025 }),
+  tool: () => tone([300, 450], { dur: 0.07, type: 'triangle', vol: 0.04 }),
+  end: () => tone([392, 523, 659, 784, 1046, 784, 1046], { dur: 0.18, vol: 0.06 })
+};
+
+/* ---------- messages ---------- */
+const toastBox = $('#toasts');
+let deathAgg = {}, deathT = null, birthAgg = 0, birthT = null;
+const recent = new Map();
+function toast(msg, kind) {
+  const now = performance.now();
+  if (!kind && recent.has(msg) && now - recent.get(msg) < 15000) return;
+  recent.set(msg, now);
+  const live = [...toastBox.children];
+  const same = live.find(el => el.dataset.msg === msg && !el.classList.contains('off'));
+  if (same) { clearTimeout(same._t); same._t = setTimeout(() => fade(same), 3200); return; }
+  if (live.length >= 3) live[0].remove();
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : ''); el.textContent = msg; el.dataset.msg = msg;
+  toastBox.appendChild(el);
+  el._t = setTimeout(() => fade(el), kind === 'warn' ? 4500 : 3200);
+}
+function fade(el) { el.classList.add('off'); setTimeout(() => el.remove(), 500); }
+function banner(text) { const b = $('#banner'); b.hidden = true; void b.offsetWidth; b.textContent = text; b.hidden = false; clearTimeout(b._t); b._t = setTimeout(() => b.hidden = true, 2700); }
+let hintQueue = [], hintCur = null;
+function hint(text, opts) {
+  opts = opts || {};
+  if (hintCur && hintCur.text === text) return;
+  if (opts.now || !hintCur) showHint({ text, ...opts }); else if (!hintQueue.some(h => h.text === text)) hintQueue.push({ text, ...opts });
+}
+function showHint(h) {
+  hintCur = h; $('#hint-text').textContent = h.text; $('#hint').hidden = false;
+  clearTimeout(showHint._t);
+  if (!h.sticky) showHint._t = setTimeout(closeHint, h.ms || 9000);
+}
+function closeHint() { $('#hint').hidden = true; hintCur = null; if (hintQueue.length) setTimeout(() => { if (!hintCur && hintQueue.length) showHint(hintQueue.shift()); }, 400); }
+$('#hint-ok').onclick = () => { if (hintCur && hintCur.tuto) tutoAdvance(true); closeHint(); };
+
+/* ---------- conseils : relier chaque malheur à un réglage ---------- */
+const DEATH_TIP = {
+  soif: 'Mort de soif : monte 💧 Eau pour que tes vers cherchent l\'humidité (carte Eau). En été, l\'eau est plus profonde.',
+  chaud: 'Mort de chaud : baisse 🔥 Chaleur ou monte 🛡️ Prudence. Le fond du sol est brûlant, surtout en été (carte Chaleur).',
+  froid: 'Mort de froid : le haut du sol gèle. Monte 🔥 Chaleur pour que tes vers descendent, et 🛡️ Prudence pour qu\'ils fuient le gel.',
+  faim: 'Mort de faim : monte 🍂 Nourriture, ou dépose du compost. Trop de vers épuisent vite le sol (carte Nourriture).',
+  noye: 'Noyé : pendant un déluge, baisse 💧 Eau et monte 🛡️ Prudence pour que tes vers fuient le fond inondé.',
+  merle: 'Un merle a mangé un ver près de la surface : touche les merles, et monte 🛡️ Prudence pour que tes vers s\'enfouissent.',
+  taupe: 'Une taupe a mangé un ver : touche-la pour l\'effrayer. Avec 🛡️ Prudence, tes vers la fuient plus tôt.'
+};
+
+/* ---------- événements de la simulation ---------- */
+sim.on((type, d) => {
+  const G = sim.G;
+  if (!started) return;
+  switch (type) {
+    case 'info': toast(d.text); break;
+    case 'hint': hint(d.text, { now: true, ms: 11000 }); break;
+    case 'event': toast(d.text, 'warn'); SFX.warn(); if (d.ann) hint(d.text, { ms: 7000 }); break;
+    case 'plantDry': toast(d.text, 'warn'); break;
+    case 'bloom': toast('🌼 ' + d.text, 'good'); break;
+    case 'cocoonLost':
+      toast(d.text, 'warn');
+      break;
+    case 'harvest': { SFX.harvest(); const [x] = toPx(d.plant.x, 0); fx.push({ kind: 'txt', x, y: skyH - 40 * dpr, t: 0, life: 70, text: '+1', color: S.PLANT_TYPES[d.plant.type].fruit }); break; }
+    case 'scare': toast(d.text, 'good'); SFX.scare(); break;
+    case 'death':
+      if (DEATH_TIP[d.cause] && !G.seen['mort-' + d.cause]) { G.seen['mort-' + d.cause] = true; hint(DEATH_TIP[d.cause], { ms: 12000 }); }
+      deathAgg[d.cause] = (deathAgg[d.cause] || 0) + 1;
+      if (!deathT) deathT = setTimeout(() => {
+        SFX.death();
+        const parts = Object.entries(deathAgg).map(([k, v]) => v > 1 ? `${v} vers morts ${S.CAUSE[k]}`.replace('morts mangé', 'mangés').replace('morts noyé', 'noyés') : `Un ver est mort ${S.CAUSE[k]}`);
+        toast(parts.join(' · '), 'warn'); deathAgg = {}; deathT = null;
+      }, 700);
+      { const [x, y] = toPx(d.x, d.y); fx.push({ kind: 'ring', x, y, t: 0, life: 40, color: '255,106,92' }); }
+      break;
+    case 'birth':
+      birthAgg++;
+      if (!birthT) birthT = setTimeout(() => {
+        SFX.birth(); toast(birthAgg > 1 ? `${birthAgg} cocons ont éclos` : 'Naissance : un bébé sort du cocon', 'good'); birthAgg = 0; birthT = null; }, 600);
+      break;
+    case 'missionDone': SFX.mission(); banner('★ Mission réussie'); toast(d.text, 'good'); break;
+    case 'seasonEnd':
+      if (tutoStep >= 0) { tutoStep = -1; tutoDone = true; }
+      hintQueue = []; closeHint();
+      setTimeout(() => showBilan(d), 300); break;
+    case 'extinct': setTimeout(showExtinct, 600); break;
+    case 'seasonStart': save(); showBriefing(d); break;
   }
-  deaths[w.dead] = (deaths[w.dead] || 0) + 1;
-  toast(`Un ver est mort ${CAUSE[w.dead]}`);
-}
-function checkEnd() {
-  if (over || alive().length || cocoons.length) return;
-  over = true;
-  const days = Math.floor(tick / DAY);
-  if (days > best) best = days;
-  if (peak > bestPeak) bestPeak = peak;
-  try { localStorage.setItem('worm-best', best); localStorage.setItem('worm-best-peak', bestPeak); } catch (e) {}
-  const d = Object.entries(deaths).map(([k, v]) => `${v} ${CAUSE[k]}`).join(', ');
-  showModal('Population éteinte', `Le dernier ver est mort. Morts : ${d}.`,
-    [`Durée : ${days} jours`, `Population maximale : ${peak} vers`, `Naissances : ${born}`, `Records : ${best} jours · ${bestPeak} vers`],
-    [['Nouvelle partie', true, newGame]]);
-}
-function showModal(title, text, stats, acts) {
+});
+
+/* ---------- écrans ---------- */
+function showModal(o) {
   modalOpen = true;
-  $('#m-title').textContent = title; $('#m-text').textContent = text;
-  $('#m-stats').innerHTML = stats.map(s => `<div>${s}</div>`).join('');
+  $('#m-kicker').textContent = o.kicker || '';
+  $('#m-title').textContent = o.title; $('#m-text').textContent = o.text || '';
+  $('#m-stats').innerHTML = (o.stats || []).join('');
+  const cards = $('#m-cards'); cards.innerHTML = '';
+  for (const c of o.cards || []) {
+    const b = document.createElement('button'); b.className = 'card';
+    const lvl = sim.mut(c.id);
+    b.innerHTML = `<span class="ic">${c.icon}</span><span class="nm">${c.name}${lvl ? `<small>niveau ${lvl + 1}</small>` : ''}</span><span class="tx">${c.text}</span>`;
+    b.onclick = () => { closeModal(); o.onCard(c); };
+    cards.appendChild(b);
+  }
   const box = $('#m-acts'); box.innerHTML = '';
-  for (const [label, primary, fn] of acts) {
+  for (const [label, primary, fn] of o.acts || []) {
     const b = document.createElement('button'); b.textContent = label; if (primary) b.className = 'primary';
-    b.onclick = () => { $('#modal').hidden = true; modalOpen = false; fn(); };
+    b.onclick = () => { closeModal(); fn(); };
     box.appendChild(b);
   }
-  $('#modal').hidden = false; box.querySelector('button').focus();
+  $('#modal').hidden = false;
+  const first = cards.querySelector('button') || box.querySelector('button.primary') || box.querySelector('button');
+  if (first) first.focus({ preventScroll: true });
 }
+function closeModal() { $('#modal').hidden = true; modalOpen = false; }
+
+function seasonName(no) { return `An ${Math.floor(no / 4) + 1} · ${S.SEASONS[no % 4].label}`; }
+function starsLine(G) {
+  let s = '';
+  for (let k = 0; k < S.NSEASONS; k++) s += G.stars[k] === 1 ? '★' : G.stars[k] === 0 ? '☆' : '·';
+  return `<div class="stars" aria-label="Étoiles gagnées">${s}</div>`;
+}
+function objText(m) { return `${m.kind === 'hold' ? 'Finir la saison avec au moins' : 'Atteindre'} ${m.target} ${m.unit}`; }
+function showBriefing(d) {
+  const m = d.mission, no = d.no, G = sim.G;
+  const fc = [];
+  if (m.event) { const E = S.EVENT_TYPES[m.event[0]]; fc.push(`${E.prevu} vers le jour ${S.EV_DAY}`); }
+  if (m.birds) fc.push(m.birds >= 0.5 ? 'Merles fréquents' : 'Quelques merles');
+  if (m.moles) fc.push(m.moles > 1 ? `${m.moles} taupes` : 'Une taupe');
+  const muts = Object.entries(G.mut).map(([k, v]) => { const c = S.CARDS.find(c => c.id === k); return `${c.icon} ${c.name}${v > 1 ? ' ×' + v : ''}`; });
+  showModal({
+    kicker: `Mission ${no + 1} / ${S.NSEASONS} · ${seasonName(no)}${d.retry ? ' · nouvel essai' : ''}`,
+    title: m.title, text: m.intro + (d.renfort ? `\n\nNouvel essai : ${d.renfort} vers voisins rejoignent la famille, et le compost et l'arrosoir sont pleins.` : ''),
+    stats: [`<div class="obj">🎯 ${objText(m)}</div>`, fc.length ? `<div class="warn">Prévisions : ${fc.join(' · ')}</div>` : '', muts.length ? `<div>Mutations : ${muts.join(' · ')}</div>` : '', no > 0 ? starsLine(G) : ''],
+    acts: [['C\'est parti', true, () => { if (m.tuto && !tutoDone) tutoStart(); seasonHints(no); }]]
+  });
+}
+function showBilan(d) {
+  const G = sim.G, m = d.mission, no = sim.seasonNo();
+  const st = d.stats;
+  const lines = [
+    `<div class="obj">${d.success ? '★ Réussie' : '☆ Ratée'} : ${objText(m)} (${m.kind === 'reach' ? Math.max(G.mission.best, sim.metric(m.metric)) : sim.metric(m.metric)} / ${m.target})</div>`,
+    `<div>Vers vivants : ${sim.alive().length} · naissances : ${st.births} · morts : ${st.deaths}</div>`,
+    `<div>Fruits cette saison : ${d.fruitsSeason} · total : ${G.fruits}</div>`,
+    starsLine(G)
+  ];
+  if (d.last) { showFinal(); return; }
+  const cards = sim.offerCards(d.success);
+  showModal({
+    kicker: `Fin de la saison · ${seasonName(no)}`,
+    title: d.success ? 'Saison réussie' : 'Saison difficile',
+    text: (d.success ? 'Bravo ! ' : 'La mission n\'est pas remplie, mais la famille continue. ') + 'Choisis une mutation pour tes vers :',
+    stats: lines, cards,
+    onCard: c => { sim.takeCard(c.id); sim.startSeason(); }
+  });
+}
+function showExtinct() {
+  if (sim.G.phase !== 'eteint') return;
+  const no = sim.seasonNo();
+  showModal({
+    kicker: seasonName(no), title: 'La famille s\'est éteinte',
+    text: 'Le dernier ver est mort. Tu peux rejouer cette saison depuis son début, avec tes mutations.',
+    stats: [`<div>Morts : ${Object.entries(sim.G.deaths).map(([k, v]) => `${v} ${S.CAUSE[k]}`).join(', ')}</div>`],
+    acts: [['Rejouer la saison', true, () => sim.restartSeason()], ['Nouvelle partie', false, () => newGame()]]
+  });
+}
+function rank(st) { return st >= 11 ? 'Légende du potager' : st >= 8 ? 'Maître composteur' : st >= 5 ? 'Jardinier souterrain' : 'Apprenti lombric'; }
+function showFinal() {
+  const sc = sim.finalScore(), G = sim.G;
+  SFX.end();
+  let best = null; try { best = JSON.parse(store.get(BEST_KEY)); } catch (e) {}
+  const isBest = !best || sc.points > best.points;
+  if (isBest) store.set(BEST_KEY, JSON.stringify(sc));
+  store.del(SAVE_KEY);
+  showModal({
+    kicker: 'Fin de la campagne · 3 ans', title: sc.pop > 0 ? 'Le jardin est sauvé !' : 'Fin de la campagne',
+    text: `Rang : ${rank(sc.stars)}.`,
+    stats: [starsLine(G), `<div class="obj">${sc.points} points${isBest ? ' · nouveau record !' : ` · record : ${best.points}`}</div>`,
+      `<div>Étoiles : ${sc.stars} / ${S.NSEASONS} (×100)</div>`, `<div>Fruits récoltés : ${sc.fruits} (×10)</div>`,
+      `<div>Vers vivants à la fin : ${sc.pop} (×5)</div>`, `<div>Naissances : ${sc.born} · population maximale : ${sc.peak}</div>`,
+      `<div>${S.MISSIONS.map((m, k) => `${G.stars[k] ? '★' : '☆'} ${m.title}`).join(' · ')}</div>`],
+    acts: [['Nouvelle partie', true, () => newGame()]]
+  });
+}
+function showTitle() {
+  const sv = store.get(SAVE_KEY);
+  let info = null;
+  if (sv) { try { const o = JSON.parse(JSON.parse(sv).etat); info = `${seasonName(o.season)}, jour ${Math.floor(o.stick / S.DAY)}`; } catch (e) {} }
+  let best = null; try { best = JSON.parse(store.get(BEST_KEY)); } catch (e) {}
+  const acts = [];
+  if (info) acts.push(['Reprendre la partie', true, () => resume(sv)]);
+  acts.push(['Nouvelle partie', !info, () => newGame()]);
+  showModal({
+    kicker: 'Une campagne de trois ans · environ 30 minutes',
+    title: 'Le jardin de Vishow',
+    text: 'Vishow et sa famille vivent sous un potager. En creusant et en mangeant, les vers laissent de l\'humus qui nourrit les plantes.\n\nChaque saison apporte une mission : agrandir la famille, faire fleurir le potager, récolter, survivre à la canicule, au gel, aux merles et aux taupes. Entre deux saisons, tes vers mutent.',
+    stats: [info ? `<div>Partie en cours : ${info}</div>` : '', best ? `<div>Record : ${best.points} points · ${best.stars} ★</div>` : '',
+      '<div class="obj">Règle les 4 instincts selon la saison · toucher le sol : appeler les vers · toucher un merle ou une taupe : le chasser · « Pondre » au bon endroit</div>'],
+    acts
+  });
+}
+
+/* ---------- tutoriel (première saison) ---------- */
+const TUTO = [
+  { text: 'Voici Vishow. Touche le sol près de lui pour l\'appeler : il rampe vers ce point.', done: G => G.stats.lures > 0 },
+  { text: 'L\'anneau rose vif de Vishow veut dire qu\'il est prêt à pondre : touche « Pondre ».', done: G => G.stats.laid > 0, show: G => sim.alive().some(sim.canBreed) || G.stats.laid > 0 },
+  { text: 'Le cocon éclot en 4 jours. Objectif : 4 vers avant l\'été. « ×2 » accélère le temps.', wait: 11 },
+  { text: 'En bas, les 4 instincts (🔥 chaleur, 💧 eau, 🍂 nourriture, 🛡️ prudence) décident où vont tes vers. Le fond du sol est chaud, la surface sèche vite : règle-les selon la saison.', wait: 14 },
+  { text: 'Les taches claires sont des nutriments. Les vers les mangent et laissent derrière eux de l\'humus, l\'engrais des plantes.', wait: 9 },
+  { text: 'Les plantes en surface poussent grâce à cet humus et donnent des fruits, récoltés tout seuls. Appelle tes vers sous une plante, à faible profondeur.', done: G => G.plants.some(p => p.fert > 0.02), wait: 25 },
+  { text: 'Les cailloux bloquent les vers et la pluie : le sol est sec dessous. En s\'y cognant, les vers les poussent peu à peu, et la terre découverte est très riche. Appelle tes vers de l\'autre côté d\'un caillou pour le pousser.', wait: 14 },
+  { text: 'Surveille les jauges en haut : énergie, eau, température. « Carte » montre la chaleur, l\'eau, la nourriture et l\'humus.', wait: 10 }
+];
+function tutoStart() { tutoStep = 0; tutoT = 0; showTuto(); }
+function showTuto() {
+  const st = TUTO[tutoStep]; if (!st) { tutoDone = true; tutoStep = -1; return; }
+  if (st.show && !st.show(sim.G)) return;
+  hint(st.text, { now: true, sticky: true, tuto: true });
+}
+function tutoAdvance(force) {
+  if (tutoStep < 0) return;
+  tutoStep++; tutoT = 0;
+  if (hintCur && hintCur.tuto) closeHint();
+  setTimeout(showTuto, force ? 200 : 700);
+}
+function tutoTick(dt) {
+  if (tutoStep < 0 || modalOpen) return;
+  const st = TUTO[tutoStep], G = sim.G;
+  if (!st) return;
+  if (st.show && !(hintCur && hintCur.tuto)) { if (st.show(G)) showTuto(); return; }
+  tutoT += dt;
+  if ((st.done && st.done(G)) || (st.wait && tutoT > st.wait && !st.done) || (st.done && st.wait && tutoT > st.wait)) tutoAdvance();
+}
+function seasonHints(no) {
+  const si = no % 4;
+  if (no === 1) hint('Été : le sol chauffe et sèche. Pense à baisser 🔥 Chaleur et à monter 💧 Eau et 🛡️ Prudence. « Arroser » sauve les plantes.', { ms: 12000 });
+  if (no === 2) hint('L\'automne enrichit la surface. « Compost » puis touche le sol : un festin qui fait vite grossir les vers.', { ms: 11000 });
+  if (no === 3) hint('Hiver : le haut du sol gèle. Monte 🔥 Chaleur pour que tes vers descendent, mais pas trop : le fond reste brûlant. Regarde la carte Chaleur.', { ms: 12000 });
+  if (si === 0 && no > 0) toast('Printemps : les plantes repartent');
+}
+
+/* ---------- partie ---------- */
 function newGame() {
-  setupDims(); resize(); makeImage();
-  initWorld();
-  tick = 0; seasonOff = Math.floor(Math.random() * 4) * SEASON_LEN; lastSeason = seasonIdx();
-  weather = { state: 'soleil', left: 0, rain: 0, surf: 0, seas: 0, glob: 0, sun: 1, int: 1 };
-  setWeather('soleil'); over = false; worms = []; cocoons = []; deaths = {}; peak = 1; born = 0;
-  let x = GW / 2, y = GH * 0.25;
-  for (let k = 0; k < 400; k++) {
-    const tx = rand(8, GW - 8), ty = rand(4, GH * 0.6), i = cell(tx, ty), T = T0[i];
-    if (T > 18 && T < 25 && water[i] > 0.3 && water[i] < 0.6) { x = tx; y = ty; break; }
+  closeModal();
+  store.del(SAVE_KEY);
+  started = true; tutoDone = false; tutoStep = -1;
+  layout();
+  const [GW, GH] = gridDims();
+  sim.newGame(GW, GH);
+  layout(); syncControls();
+}
+function resume(sv) {
+  started = true; tutoDone = true;
+  try { const o = JSON.parse(sv); sim.load(o.etat); sim.G.checkpoint = o.debut; } catch (e) { store.del(SAVE_KEY); newGame(); return; }
+  layout(); syncControls();
+  if (sim.G.phase === 'bilan') { sim.G.phase = 'jeu'; }
+  showModal({ kicker: seasonName(sim.seasonNo()), title: 'Reprise', text: sim.mission().title + ' — ' + objText(sim.mission()), stats: [starsLine(sim.G)], acts: [['Continuer', true, () => {}]] });
+}
+let lastSave = 0;
+function save() {
+  const G = sim.G; if (!G || !started) return;
+  // en cours de saison : l'état courant ; colonie éteinte : le début de la saison ; bilan : on garde la dernière sauvegarde
+  const etat = G.phase === 'jeu' ? sim.serialize() : G.phase === 'eteint' ? G.checkpoint : null;
+  if (etat && !store.set(SAVE_KEY, JSON.stringify({ etat, debut: G.checkpoint }))) store.set(SAVE_KEY, JSON.stringify({ etat, debut: etat }));
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+window.addEventListener('pagehide', save);
+
+/* ---------- commandes ---------- */
+const W_KEYS = ['chaleur', 'eau', 'nutri', 'prud'];
+function syncControls() {
+  const G = sim.G;
+  for (const k of W_KEYS) setInstinct(k, G.instincts[k]);
+  setLegend();
+}
+function setInstinct(k, v) {
+  if (sim.G) sim.G.instincts[k] = +v;
+  $('#w-' + k).value = v; $('#q-' + k).value = v;
+  $('#o-' + k).textContent = v; $('#q-o-' + k).textContent = v;
+}
+for (const k of W_KEYS) for (const id of ['#w-', '#q-']) $(id + k).addEventListener('input', e => setInstinct(k, e.target.value));
+function setPauseBtn() { $('#pause').innerHTML = paused ? '<span aria-hidden="true">▶️</span><span class="lg"> Reprendre</span>' : '<span aria-hidden="true">⏸️</span><span class="lg"> Pause</span>'; $('#pause').setAttribute('aria-label', paused ? 'Reprendre' : 'Pause'); }
+$('#pause').onclick = () => { paused = !paused; setPauseBtn(); };
+setPauseBtn();
+$('#speed').onclick = e => { speed = speed === 1 ? 2 : speed === 2 ? 3 : 1; e.currentTarget.textContent = '×' + speed; };
+const MODES = ['terre', 'chaleur', 'eau', 'nutri', 'humus'];
+const MODE_LABEL = { terre: 'Terre', chaleur: 'Chaleur', eau: 'Eau', nutri: 'Nourriture', humus: 'Humus' };
+const LEG = {
+  terre: 'Terre : sombre = humide · ocre = nourriture · brun foncé = humus · rougeâtre = chaud',
+  chaleur: ['linear-gradient(90deg,rgb(38,58,118),rgb(70,110,150),rgb(205,175,70),rgb(225,90,45),rgb(255,40,90))', '5 °C', '35 °C · rose = mortel'],
+  eau: ['linear-gradient(90deg,rgb(158,124,82),rgb(110,120,110),rgb(60,120,175),rgb(30,45,150))', 'sec', 'gorgé d\'eau'],
+  nutri: ['linear-gradient(90deg,rgb(40,32,26),rgb(140,118,50),rgb(130,200,70))', 'épuisé', 'riche'],
+  humus: ['linear-gradient(90deg,rgb(120,96,70),rgb(70,48,30),rgb(40,70,30),rgb(90,160,60))', 'pauvre', 'fertile']
+};
+function setLegend() {
+  const l = LEG[mode];
+  $('#legend').innerHTML = typeof l === 'string' ? l : `<span>${MODE_LABEL[mode]} :</span><span>${l[1]}</span><i style="background:${l[0]}"></i><span>${l[2]}</span>`;
+  $('#map').innerHTML = `<span aria-hidden="true">🗺️</span><span class="lg"> Carte :</span> ${MODE_LABEL[mode]}`;
+}
+$('#map').onclick = () => { mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length]; setLegend(); toast('Carte : ' + MODE_LABEL[mode]); };
+$('#instincts').onclick = e => { const p = $('#panel'); p.hidden = !p.hidden; e.currentTarget.setAttribute('aria-pressed', !p.hidden); setTimeout(layout, 0); };
+$('#mate').onclick = () => { if (sim.G && sim.G.phase === 'jeu') sim.breed(true); };
+function armTool(t) {
+  tool = tool === t ? null : t;
+  $('#t-compost').classList.toggle('armed', tool === 'compost');
+  $('#t-eau').classList.toggle('armed', tool === 'eau');
+  if (tool === 'compost') toast('Touche l\'endroit où déposer le compost');
+  if (tool === 'eau') toast('Touche la plante ou l\'endroit à arroser');
+}
+$('#t-compost').onclick = () => { if (sim.G.charges.compost < 1) { toast('Plus de compost : une charge revient tous les quelques jours', 'warn'); return; } armTool('compost'); };
+$('#t-eau').onclick = () => { if (sim.G.charges.eau < 1) { toast('Arrosoir vide : il se remplit tous les quelques jours', 'warn'); return; } armTool('eau'); };
+$('#menu').onclick = () => { save(); showTitle(); };
+function setSoundBtn() { $('#son').innerHTML = `<span aria-hidden="true">${sound ? '🔊' : '🔇'}</span><span class="lg"> Son</span>`; $('#son').setAttribute('aria-pressed', sound); }
+$('#son').onclick = () => { sound = !sound; store.set('vdt-son', sound ? '1' : '0'); setSoundBtn(); if (sound) SFX.birth(); };
+setSoundBtn();
+document.addEventListener('keydown', e => {
+  if (modalOpen || e.target.tagName === 'INPUT') return;
+  if (e.key === ' ') { e.preventDefault(); $('#pause').click(); }
+  else if (e.key === 'c') $('#t-compost').click();
+  else if (e.key === 'a') $('#t-eau').click();
+  else if (e.key === 'p') $('#mate').click();
+  else if (e.key === 'm') $('#map').click();
+  else if (e.key === 'Escape' && tool) armTool(tool);
+});
+
+/* toucher le jeu */
+cv.addEventListener('pointerdown', e => {
+  const G = sim.G; if (!G || modalOpen || G.phase !== 'jeu') return;
+  const r = cv.getBoundingClientRect(), px = (e.clientX - r.left) * dpr, py = (e.clientY - r.top) * dpr;
+  const hitR = 30 * dpr;
+  // merle
+  for (const b of G.birds) { const [bx, by] = birdPos(b); if (Math.hypot(px - bx, py - by) < hitR * 1.2) { if (sim.scareBird(b)) fx.push({ kind: 'ring', x: bx, y: by, t: 0, life: 30, color: '242,201,76' }); return; } }
+  // taupe
+  for (const m of G.moles) { const [mx, my] = toPx(m.x, m.y); if (m.state !== 'part' && Math.hypot(px - mx, py - my) < hitR * 1.3) { const [gx, gy] = fromPx(px, py); sim.scareMole(m, gx, gy - 1); fx.push({ kind: 'ring', x: mx, y: my, t: 0, life: 30, color: '242,201,76' }); return; } }
+  const [gx, gy] = fromPx(px, py);
+  // plantes (zone du ciel au-dessus de chaque plante)
+  if (py < skyH + 4 * dpr) {
+    for (const p of G.plants) {
+      const [ppx] = toPx(p.x, 0);
+      if (Math.abs(px - ppx) < Math.max(cx * p.hw, 26 * dpr) && py > skyH - plantH(p) - 26 * dpr) {
+        if (tool === 'eau') { useTool(p.x, py); return; }
+        if (!tool) { toast(plantInfo(p)); return; }
+      }
+    }
   }
-  worms.push(newWorm(x, y, true));
-  toast(SEASONS[lastSeason].msg);
+  if (tool) { useTool(clamp(gx, 0, G.GW - 1), py); return; }
+  const ly = Math.max(1, gy);
+  sim.lure(gx, ly); SFX.lure();
+  fx.push({ kind: 'ring', x: px, y: Math.max(py, skyH + cy), t: 0, life: 36, color: '234,140,144' });
+});
+function useTool(x, py) {
+  const ok = tool === 'compost' ? sim.compost(x) : sim.arrose(x);
+  if (ok) { SFX.tool(); const [px] = toPx(x, 0); fx.push({ kind: tool === 'compost' ? 'leaves' : 'drops', x: px, y: skyH, t: 0, life: 50 }); }
+  armTool(tool);
+}
+function plantInfo(p) {
+  const T = S.PLANT_TYPES[p.type].name, st = p.g < 1 ? 'pousse' : p.g < 3 ? 'feuillage' : p.g < 4 ? 'en fleur' : 'fruit mûr';
+  const f = p.fert < 0.05 ? 'humus pauvre : amène des vers' : p.fert < 0.2 ? 'humus moyen' : 'humus riche';
+  const w = p.wet < 0.15 ? 'sol sec : arrose' : p.wet < 0.25 ? 'sol frais' : 'sol humide';
+  return `${T} : ${st} · ${f} · ${w}`;
 }
 
-function step() {
-  tick++;
-  const si = seasonIdx();
-  if (si !== lastSeason) { lastSeason = si; toast(SEASONS[si].msg); }
-  const e = EVENTS[si], d = seasonDay(), key = si * 10 + Math.floor(d);
-  if (e && key !== lastAnn && (Math.floor(d) === EV_DAY - 1 || Math.floor(d) === EV_DAY)) { lastAnn = key; toast(Math.floor(d) === EV_DAY ? e.start : e.ann); }
-  updateWeather(); updateSoil();
-  for (const w of worms) if (!w.dead) updateWorm(w);
-  for (const c of cocoons) if (--c.t <= 0) { worms.push(newWorm(c.x, c.y, false)); born++; c.done = true; }
-  if (cocoons.some(c => c.done)) { cocoons = cocoons.filter(c => !c.done); toast('Naissance : un bébé sort du cocon'); }
-  for (const w of worms) if (w.dead) w.deadT--;
-  worms = worms.filter(w => !w.dead || w.deadT > 0);
-  if (autoBreed && tick % 12 === 0 && alive().some(canBreed)) breed(true);
-  peak = Math.max(peak, alive().length);
-  checkEnd();
-}
-
-/* ---------- rendu ---------- */
-const cv = $('#cv'), ctx = cv.getContext('2d');
-const off = document.createElement('canvas');
-const octx = off.getContext('2d');
-let img;
-function makeImage() { off.width = GW; off.height = GH; img = octx.createImageData(GW, GH); }
-const drops = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.random(), v: rand(0.6, 1.2) }));
-function resize() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
-}
-window.addEventListener('resize', resize);
-
+/* ---------- dessin ---------- */
 function ramp(stops, t) {
   t = clamp(t);
   for (let k = 1; k < stops.length; k++) if (t <= stops[k][0]) {
@@ -473,163 +1514,440 @@ function ramp(stops, t) {
 const HEAT = [[0, [38, 58, 118]], [0.35, [70, 110, 150]], [0.6, [205, 175, 70]], [0.8, [225, 90, 45]], [1, [255, 40, 90]]];
 const WET = [[0, [158, 124, 82]], [0.4, [110, 120, 110]], [0.7, [60, 120, 175]], [1, [30, 45, 150]]];
 const NUT = [[0, [40, 32, 26]], [0.4, [140, 118, 50]], [1, [130, 200, 70]]];
-const MODES = ['terre', 'chaleur', 'eau', 'nutri'];
-const MODE_LABEL = { terre: 'Terre', chaleur: 'Chaleur', eau: 'Eau', nutri: 'Nutriments' };
-const LEG = {
-  terre: 'Carte Terre : vue naturelle · sombre = humide · ocre = nutriments · rougeâtre = chaud',
-  chaleur: ['linear-gradient(90deg,rgb(38,58,118),rgb(70,110,150),rgb(205,175,70),rgb(225,90,45),rgb(255,40,90))', '5 °C', '35 °C · rose = mortel'],
-  eau: ['linear-gradient(90deg,rgb(158,124,82),rgb(110,120,110),rgb(60,120,175),rgb(30,45,150))', 'sec', 'gorgé d\'eau'],
-  nutri: ['linear-gradient(90deg,rgb(40,32,26),rgb(140,118,50),rgb(130,200,70))', 'épuisé', 'riche']
-};
-function setLegend() {
-  const l = LEG[mode];
-  $('#legend').innerHTML = typeof l === 'string' ? l : `<span>${l[1]}</span><i style="background:${l[0]}"></i><span>${l[2]}</span>`;
-  $('#map').textContent = 'Carte : ' + MODE_LABEL[mode];
-}
+const HUM = [[0, [120, 96, 70]], [0.25, [70, 48, 30]], [0.6, [40, 70, 30]], [1, [90, 160, 60]]];
+const rockCell = i => sim.isRock && sim.isRock(i);
+const GRAIN = Array.from({ length: 997 }, (_, k) => ((Math.sin(k * 12.9898) * 43758.5453) % 1) * 9);
 function paintField() {
-  const d = img.data, Tmax = 29;
+  const G = sim.G, d = img.data, Tmax = sim.limits(1).Tmax, GW = G.GW, GH = G.GH;
   for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
     const i = y * GW + x, p = i * 4;
     let r, g, b;
     if (mode === 'terre') {
-      const f = y / GH, n = nutr[i], T = temp(i), v = visit[i], m = water[i];
-      r = 118 - 55 * f; g = 84 - 42 * f; b = 54 - 28 * f;
-      const k = (1 - 0.5 * m) * (1 - 0.3 * v);
+      const f = y / GH, n = G.nutr[i], T = sim.temp(i), v = G.visit[i], m = G.water[i], h = G.fert[i];
+      const sl = G.soil ? G.soil[i] : 0, gr = GRAIN[i % GRAIN.length], tu = G.tunnel ? G.tunnel[i] : 0;
+      if (sl === 1) { r = 150 - 45 * f; g = 98 - 32 * f; b = 58 - 22 * f; }          // argile
+      else if (sl === 2) { r = 168 - 30 * f; g = 140 - 28 * f; b = 96 - 22 * f; }   // sable
+      else { r = 118 - 55 * f; g = 84 - 42 * f; b = 54 - 28 * f; }
+      r += gr; g += gr; b += gr * 0.8;
+      const k = (1 - 0.5 * m) * (1 - 0.15 * v) * (1 - 0.35 * h) * (1 - 0.5 * tu);
       r = r * k + 34 * n; g = g * k + 26 * n; b = b * k + 22 * m - 4 * n;
       if (T > 22) r += (T - 22) * 3.5;
+      if (T < 1) { const c = clamp((1 - T) / 8) * 60; r += c * 0.6; g += c * 0.8; b += c; }
     } else if (mode === 'chaleur') {
-      const T = temp(i);
+      const T = sim.temp(i);
       [r, g, b] = T > Tmax ? [255, 40, 90] : ramp(HEAT, (T - 5) / 30);
-    } else if (mode === 'eau') { [r, g, b] = ramp(WET, water[i]); }
-    else { [r, g, b] = ramp(NUT, nutr[i]); }
+    } else if (mode === 'eau') [r, g, b] = ramp(WET, G.water[i]);
+    else if (mode === 'nutri') [r, g, b] = ramp(NUT, G.nutr[i]);
+    else [r, g, b] = ramp(HUM, G.fert[i] * 1.6);
+    if (rockCell(i)) { r = 70; g = 64; b = 58; }
+    else if (sim.isRoot && sim.isRoot(i)) { r = 92; g = 64; b = 40; }
     d[p] = r; d[p + 1] = g; d[p + 2] = b; d[p + 3] = 255;
   }
   octx.putImageData(img, 0, 0);
 }
 function lerpC(a, b, t) { return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t)).join(',')})`; }
+const drops = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), v: 0.6 + Math.random() * 0.6 }));
+function plantH(p) { return Math.min(skyFree - 14 * dpr, 110 * dpr) * (0.12 + 0.22 * Math.min(p.g, 3.4)) / 0.87; }
+function birdPos(b) {
+  const [x] = toPx(b.x, 0);
+  return [x, skyH - 9 * dpr - (b.state === 'vol' ? 40 * dpr * (0.5 + 0.5 * Math.sin(b.x * 0.3)) : 0) - (b.state === 'part' ? b.fy * 18 * dpr : 0)];
+}
+let frameNo = 0;
 function draw() {
-  const Wd = cv.width, Hd = cv.height, cx = Wd / GW, cy = Hd / (GH + SKYR), cs = Math.min(cx, cy), skyH = SKYR * cy;
-  const wet = clamp(weather.rain / 1.1), cloud = clamp(1 - weather.sun), gray = Math.max(wet, cloud * 0.6);
+  const G = sim.G;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (!G) { ctx.fillStyle = '#16110d'; ctx.fillRect(0, 0, Wd, Hd); return; }
+  frameNo++;
+  const w = G.weather, cs = Math.min(cx, cy), u = dpr;
+  const wet = clamp(w.rain / 1.1), cloud = clamp(1 - w.sun), gray = Math.max(wet, cloud * 0.6);
+  const si = sim.seasonIdx();
   const sky = ctx.createLinearGradient(0, 0, 0, skyH);
-  sky.addColorStop(0, lerpC([70, 128, 182], [52, 60, 68], gray));
-  sky.addColorStop(1, lerpC([170, 204, 224], [104, 114, 122], gray));
+  const wint = si === 3 ? 0.3 : 0;
+  sky.addColorStop(0, lerpC(lerpC0([70, 128, 182], [120, 140, 160], wint), [52, 60, 68], gray));
+  sky.addColorStop(1, lerpC(lerpC0([170, 204, 224], [200, 210, 220], wint), [104, 114, 122], gray));
   ctx.fillStyle = sky; ctx.fillRect(0, 0, Wd, skyH);
-  if (weather.sun > 0.05) {
-    ctx.globalAlpha = weather.sun; ctx.fillStyle = '#f6d36b';
-    ctx.beginPath(); ctx.arc(Wd * 0.86, skyH * 0.72, cs * 2.2, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  if (w.sun > 0.05) {
+    ctx.globalAlpha = w.sun; ctx.fillStyle = '#f6d36b';
+    ctx.beginPath(); ctx.arc(Wd * 0.88, skyH * 0.5, 14 * u, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
   }
   if (cloud > 0.1) {
     ctx.globalAlpha = 0.85 * cloud; ctx.fillStyle = wet > 0.3 ? '#59626b' : '#d9dde0';
-    const drift = (tick * 0.02) % GW;
+    const drift = (G.tick * 0.02) % G.GW;
     for (let k = 0; k < 4; k++) {
-      const x0 = ((k * GW / 3.6 + drift) % (GW + 20) - 10) * cx, y0 = skyH * (0.62 + 0.12 * (k % 2));
-      ctx.beginPath(); ctx.ellipse(x0, y0, cs * 6, cs * 1.6, 0, 0, 7); ctx.ellipse(x0 + cs * 3, y0 - cs * 0.8, cs * 4, cs * 1.5, 0, 0, 7); ctx.fill();
+      const x0 = ((k * G.GW / 3.6 + drift) % (G.GW + 20) - 10) * cx, y0 = skyH * (0.42 + 0.1 * (k % 2));
+      ctx.beginPath(); ctx.ellipse(x0, y0, 40 * u, 11 * u, 0, 0, 7); ctx.ellipse(x0 + 20 * u, y0 - 6 * u, 26 * u, 10 * u, 0, 0, 7); ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
-  if (weather.rain > 0.05) {
-    ctx.strokeStyle = 'rgba(190,215,235,' + (0.35 + 0.4 * wet) + ')'; ctx.lineWidth = Math.max(1, cs * 0.12);
+  if (w.rain > 0.05) {
+    ctx.strokeStyle = 'rgba(190,215,235,' + (0.35 + 0.4 * wet) + ')'; ctx.lineWidth = Math.max(1, 1.2 * u);
     ctx.beginPath();
-    const n = Math.round(drops.length * wet);
+    const n = Math.round(drops.length * wet), run = !paused && !modalOpen;
     for (let k = 0; k < n; k++) {
-      const dr = drops[k]; if (!paused && !modalOpen) { dr.y += 0.02 * dr.v * speed; if (dr.y > 1) { dr.y -= 1; dr.x = Math.random(); } }
-      const x = dr.x * Wd, y = dr.y * skyH; ctx.moveTo(x, y); ctx.lineTo(x - cs * 0.3, y + cs * 0.9);
+      const dr = drops[k]; if (run) { dr.y += 0.02 * dr.v * speed; if (dr.y > 1) { dr.y -= 1; dr.x = Math.random(); } }
+      const x = dr.x * Wd, y = dr.y * skyH; ctx.moveTo(x, y); ctx.lineTo(x - 3 * u, y + 9 * u);
     }
     ctx.stroke();
+  }
+  if (si === 3 && w.state !== 'soleil') {   // neige légère
+    ctx.fillStyle = 'rgba(255,255,255,.8)';
+    for (let k = 0; k < 40; k++) { const x = ((k * 97.3 + G.tick * 0.3 * (1 + k % 3)) % Wd), y = ((k * 53.1 + G.tick * (0.6 + (k % 4) * 0.2)) % skyH); ctx.fillRect(x, y, 2 * u, 2 * u); }
   }
   paintField();
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(off, 0, skyH, Wd, Hd - skyH);
-  ctx.fillStyle = season().grass; ctx.fillRect(0, skyH - cs * 0.35, Wd, cs * 0.5);
 
-  const toPx = (x, y) => [(x + 0.5) * cx, skyH + (y + 0.5) * cy];
-  for (const c of cocoons) {
-    const [x, y] = toPx(c.x, c.y);
-    ctx.fillStyle = '#d9c27a'; ctx.strokeStyle = '#6b5524'; ctx.lineWidth = cs * 0.15;
-    ctx.beginPath(); ctx.ellipse(x, y, cs * 0.9, cs * 0.6, 0.4, 0, 7); ctx.fill(); ctx.stroke();
+  // racines (vue Terre et Humus)
+  if (mode === 'terre' || mode === 'humus') {
+    ctx.strokeStyle = 'rgba(232,214,170,.28)'; ctx.lineWidth = Math.max(1, 1.2 * u);
+    for (const p of G.plants) {
+      const depth = 3 + 2.4 * Math.min(p.g, 4), [x0] = toPx(p.x, 0);
+      ctx.beginPath();
+      for (let k = -2; k <= 2; k++) {
+        ctx.moveTo(x0, skyH);
+        ctx.quadraticCurveTo(x0 + k * cx * p.hw * 0.25, skyH + depth * cy * 0.5, x0 + k * cx * p.hw * 0.4, skyH + depth * cy * (1 - Math.abs(k) * 0.15));
+      }
+      ctx.stroke();
+    }
   }
+  drawRoot(G);
+  for (const m of G.mush || []) drawMush(m);
+  for (const r of G.rocks || []) drawRock(r);
+  // inondation
+  if (G.floodTop < G.GH) { ctx.fillStyle = 'rgba(60,110,170,.22)'; const y = skyH + G.floodTop * cy; ctx.fillRect(0, y, Wd, Hd - y); ctx.fillStyle = 'rgba(150,200,240,.5)'; ctx.fillRect(0, y, Wd, 2 * u); }
+
+  // herbe
+  ctx.fillStyle = S.SEASONS[si].grass; ctx.fillRect(0, skyH - 3 * u, Wd, 5 * u);
+  drawTree(G, si);
+  drawSurface(G, si);
+  for (const p of G.plants) drawPlant(p);
+  drawSnow(G, si);
+
+  // appel
+  const L = G.lure;
+  if (L && L.t > 0) {
+    const [lx, ly] = toPx(L.x, L.y), a = Math.min(1, L.t / (L.dur * 0.25));
+    const ph = (frameNo % 60) / 60;
+    ctx.strokeStyle = `rgba(234,140,144,${0.55 * a})`; ctx.lineWidth = 2 * u;
+    for (let k = 0; k < 2; k++) { const rr = (8 + ((ph + k * 0.5) % 1) * 22) * u; ctx.globalAlpha = 1 - ((ph + k * 0.5) % 1); ctx.beginPath(); ctx.arc(lx, ly, rr, 0, 7); ctx.stroke(); }
+    ctx.globalAlpha = 1; ctx.fillStyle = `rgba(234,140,144,${0.8 * a})`; ctx.beginPath(); ctx.arc(lx, ly, 3.5 * u, 0, 7); ctx.fill();
+  }
+
+  // cocons
+  for (const c of G.cocoons) {
+    const [x, y] = toPx(c.x, c.y), s = Math.max(cs, 5 * u);
+    ctx.fillStyle = '#d9c27a'; ctx.strokeStyle = '#6b5524'; ctx.lineWidth = s * 0.15;
+    ctx.beginPath(); ctx.ellipse(x, y, s * 0.9, s * 0.6, 0.4, 0, 7); ctx.fill(); ctx.stroke();
+  }
+  // vers
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const w of worms) {
-    if (w.trail.length < 4) continue;
-    const s = sizeOf(w), t = w.trail, dead = !!w.dead;
-    ctx.globalAlpha = dead ? clamp(w.deadT / (DAY * 0.6)) * 0.8 : 1;
-    const body = dead ? '#8a7a74' : '#e3858a', dark = dead ? '#6b5f5a' : '#b35a62';
+  const ws = Math.max(cs, 4.5 * u);
+  for (const wm of G.worms) {
+    if (wm.trail.length < 4) continue;
+    const s = sim.sizeOf(wm), t = wm.trail, dead = !!wm.dead;
+    ctx.globalAlpha = dead ? clamp(wm.deadT / (S.DAY * 0.6)) * 0.8 : 1;
+    const stress = !dead && (wm.e < 0.25 || wm.h < 0.25 || wm.heat > 0.3 || wm.cold > 0.3);
+    const body = dead ? '#8a7a74' : stress ? '#d9a0a0' : '#e3858a', dark = dead ? '#6b5f5a' : '#b35a62';
     ctx.beginPath(); for (let k = 0; k < t.length; k += 2) { const [x, y] = toPx(t[k], t[k + 1]); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-    ctx.strokeStyle = dark; ctx.lineWidth = cs * (0.55 + 0.45 * s) + cs * 0.25; ctx.stroke();
-    ctx.strokeStyle = body; ctx.lineWidth = cs * (0.55 + 0.45 * s); ctx.stroke();
+    ctx.strokeStyle = dark; ctx.lineWidth = ws * (0.55 + 0.45 * s) + ws * 0.25; ctx.stroke();
+    ctx.strokeStyle = body; ctx.lineWidth = ws * (0.55 + 0.45 * s); ctx.stroke();
     if (s >= 1) {
       const k0 = Math.floor(t.length * 0.62) & ~1, k1 = Math.floor(t.length * 0.75) & ~1;
-      ctx.strokeStyle = dead ? '#7d6a63' : canBreed(w) ? '#d94f7a' : '#c96470'; ctx.lineWidth = cs * 1.1;
+      const ready = !dead && sim.canBreed(wm);
+      ctx.strokeStyle = dead ? '#7d6a63' : ready ? '#ff4f8a' : '#c96470'; ctx.lineWidth = ws * 1.1;
       ctx.beginPath(); for (let k = k0; k <= k1; k += 2) { const [x, y] = toPx(t[k], t[k + 1]); k === k0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
     }
-    const [hx, hy] = toPx(w.x, w.y);
+    const [hx, hy] = toPx(wm.x, wm.y);
+    if (wm.name && !dead) { ctx.font = `600 ${11 * u}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 3 * u; ctx.strokeStyle = 'rgba(22,17,13,.8)'; const lx = clamp(hx, 26 * u, Wd - 26 * u); ctx.strokeText(wm.name, lx, hy - ws - 9 * u); ctx.fillStyle = '#f0e5d6'; ctx.fillText(wm.name, lx, hy - ws - 9 * u); }
     ctx.fillStyle = dead ? '#6b5f5a' : '#f2a2a6';
-    ctx.beginPath(); ctx.arc(hx, hy, cs * (0.35 + 0.25 * s), 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx, hy, ws * (0.35 + 0.25 * s), 0, 7); ctx.fill();
+    if (stress) {
+      ctx.fillStyle = wm.heat > 0.3 ? '#ff6a5c' : wm.cold > 0.3 ? '#9fd0ff' : wm.h < 0.25 ? '#78b1d2' : '#e3a83f';
+      ctx.beginPath(); ctx.arc(hx, hy - ws * 1.4, 2.2 * u, 0, 7); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  for (const m of G.moles) drawMole(m);
+  for (const b of G.birds) drawBird(b);
+  drawFx();
+}
+function lerpC0(a, b, t) { return a.map((v, k) => v + (b[k] - v) * t); }
+
+function drawPlant(p) {
+  const [x] = toPx(p.x, 0), u = dpr, base = skyH - 2 * u;
+  const T = S.PLANT_TYPES[p.type], g = p.g, h = plantH(p);
+  const sick = p.health < 0.6, wilt = sick ? (0.6 - p.health) * 1.2 : 0;
+  const leaf = sick ? '#9a9a3a' : sim.seasonIdx() === 2 ? '#8c8a2e' : '#4f9a3a';
+  const stem = sick ? '#7d7a36' : '#3f7d2c';
+  if (g < 0.25) {   // graine qui pointe
+    ctx.fillStyle = '#6a4a2a'; ctx.beginPath(); ctx.ellipse(x, base, 4 * u, 2.5 * u, 0, 0, 7); ctx.fill();
+    return;
+  }
+  ctx.strokeStyle = stem; ctx.lineWidth = Math.max(1.5, (1.5 + g * 0.6) * u); ctx.lineCap = 'round';
+  const lean = wilt * 14 * u, tx = x + lean, ty = base - h;
+  ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(x, base - h * 0.6, tx, ty); ctx.stroke();
+  const nLeaves = Math.min(6, Math.floor(1 + g * 1.5));
+  ctx.fillStyle = leaf;
+  for (let k = 0; k < nLeaves; k++) {
+    const f = (k + 1) / (nLeaves + 1), lx = x + lean * f * f, ly = base - h * f, side = k % 2 ? 1 : -1;
+    const ls = (5 + 3 * Math.min(g, 3)) * u * (1 - f * 0.35);
+    ctx.save(); ctx.translate(lx, ly); ctx.rotate(side * (0.7 + wilt) );
+    ctx.beginPath(); ctx.ellipse(side * ls * 0.6, 0, ls * 0.8, ls * 0.35, 0, 0, 7); ctx.fill(); ctx.restore();
+  }
+  if (g >= 3) {   // fleur ou fruit
+    const fr = clamp(g - 3), ripe = g >= 4;
+    {
+      if (fr < 0.6) {
+        ctx.fillStyle = '#fff3c4';
+        for (let k = 0; k < 5; k++) { const a = k * 1.2566; ctx.beginPath(); ctx.arc(tx + Math.cos(a) * 4 * u, ty + Math.sin(a) * 4 * u, 3 * u, 0, 7); ctx.fill(); }
+        ctx.fillStyle = '#f2c94c'; ctx.beginPath(); ctx.arc(tx, ty, 2.6 * u, 0, 7); ctx.fill();
+      }
+      if (fr > 0.05) {
+        const rr = (2.5 + 4.5 * fr) * u, bob = ripe ? Math.sin(frameNo * 0.12) * 1.5 * u : 0;
+        ctx.fillStyle = ripe ? T.fruit : lerpC([120, 170, 70], hexRgb(T.fruit), fr * 0.7);
+        ctx.beginPath(); ctx.arc(tx + 6 * u, ty + 7 * u + bob, rr, 0, 7); ctx.fill();
+        if (ripe) {
+          ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.5 * u;
+          ctx.beginPath(); ctx.arc(tx + 6 * u, ty + 7 * u + bob, rr + 4 * u + Math.sin(frameNo * 0.15) * 1.5 * u, 0, 7); ctx.stroke();
+        }
+      }
+    }
+  }
+  if (p.wet < 0.13 && sim.season().grow > 0) { ctx.fillStyle = '#ffb3a8'; ctx.font = `${11 * u}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('soif', x, base + 12 * u > skyH ? base - h - 8 * u : base + 12 * u); }
+}
+function drawRock(r) {
+  const [x, y] = toPx(r.x, r.y), rx = r.rx * cx, ry = r.ry * cy, u = dpr;
+  // contour irrégulier, toujours le même pour un caillou donné
+  const pts = [], n = 14;
+  for (let k = 0; k < n; k++) {
+    const a = k / n * Math.PI * 2, j = 0.86 + 0.14 * Math.sin(k * 2.7 + r.shape * 40) * Math.cos(k * 1.3 + r.shape * 17);
+    pts.push([x + Math.cos(a) * rx * j, y + Math.sin(a) * ry * j]);
+  }
+  const path = () => { ctx.beginPath(); pts.forEach(([px, py], k) => { const [qx, qy] = pts[(k + 1) % n]; const mx = (px + qx) / 2, my = (py + qy) / 2; k ? ctx.quadraticCurveTo(px, py, mx, my) : ctx.moveTo(mx, my); }); const [px, py] = pts[0], [qx, qy] = pts[1]; ctx.quadraticCurveTo(px, py, (px + qx) / 2, (py + qy) / 2); ctx.closePath(); };
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 8 * u; ctx.shadowOffsetY = 3 * u;
+  const gr = ctx.createRadialGradient(x - rx * 0.35, y - ry * 0.45, Math.min(rx, ry) * 0.1, x, y, Math.max(rx, ry));
+  gr.addColorStop(0, '#b9b4ab'); gr.addColorStop(0.55, '#8a857c'); gr.addColorStop(1, '#5b5750');
+  ctx.fillStyle = gr; path(); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(40,36,32,.8)'; ctx.lineWidth = 1.5 * u; path(); ctx.stroke();
+  // fissure et taches
+  ctx.strokeStyle = 'rgba(60,55,50,.6)'; ctx.lineWidth = 1.2 * u;
+  ctx.beginPath(); ctx.moveTo(x - rx * 0.3, y - ry * 0.1); ctx.lineTo(x - rx * 0.05, y + ry * 0.15); ctx.lineTo(x + rx * 0.2, y + ry * 0.05); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.18)';
+  ctx.beginPath(); ctx.ellipse(x - rx * 0.35, y - ry * 0.45, rx * 0.25, ry * 0.15, -0.3, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(90,110,60,.35)';
+  for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(x + Math.cos(k * 2.1 + r.shape * 9) * rx * 0.5, y + Math.sin(k * 1.7 + r.shape * 5) * ry * 0.45, 1.6 * u, 0, 7); ctx.fill(); }
+}
+/* ---------- racine, arbre, champignons, surface ---------- */
+function drawRoot(G) {
+  if (!G.root) return;
+  const u = dpr, cs = (cx + cy) / 2;
+  ctx.lineCap = 'round';
+  for (const pass of [0, 1, 2]) for (const sg of G.root) {
+    const [x1, y1] = toPx(sg.x1, sg.y1), [x2, y2] = toPx(sg.x2, sg.y2), w = (sg.r1 + sg.r2) * cs;
+    ctx.strokeStyle = pass === 0 ? '#3b2616' : pass === 1 ? '#7a5434' : 'rgba(200,160,110,.35)';
+    ctx.lineWidth = pass === 0 ? w + 3 * u : pass === 1 ? w : Math.max(1, w * 0.18);
+    ctx.beginPath();
+    if (pass === 2) { ctx.moveTo(x1, y1 - w * 0.2); ctx.lineTo(x2, y2 - w * 0.2); } else { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    ctx.stroke();
+  }
+  // radicelles
+  ctx.strokeStyle = 'rgba(122,84,52,.7)'; ctx.lineWidth = Math.max(1, 1.1 * u);
+  ctx.beginPath();
+  G.root.forEach((sg, k) => { for (let j = 1; j <= 2; j++) { const t = j / 3, [x, y] = toPx(sg.x1 + (sg.x2 - sg.x1) * t, sg.y1 + (sg.y2 - sg.y1) * t); const a = (k * 1.7 + j) % 2 ? 0.9 : 2.2; ctx.moveTo(x, y); ctx.quadraticCurveTo(x + Math.cos(a) * 10 * u, y + 8 * u, x + Math.cos(a) * 16 * u, y + 18 * u); } });
+  ctx.stroke();
+}
+function drawMush(m) {
+  const [x, y] = toPx(m.x, m.y), u = dpr * 1.6, s = Math.min(1, m.t / (S.DAY * 2));
+  ctx.globalAlpha = 0.4 + 0.6 * s;
+  ctx.fillStyle = 'rgba(240,230,210,.35)';   // mycélium
+  for (let k = 0; k < 6; k++) ctx.fillRect(x + Math.cos(k * 1.1) * 9 * u, y + Math.sin(k * 2.3) * 5 * u, 5 * u, 1 * u);
+  for (const [dx, sz] of [[-5, 1], [3, 0.8], [8, 0.6]]) {
+    const mx = x + dx * u, my = y;
+    ctx.fillStyle = '#efe4cf'; ctx.fillRect(mx - 1.2 * u * sz, my - 6 * u * sz, 2.4 * u * sz, 6 * u * sz);
+    ctx.fillStyle = '#b8603a'; ctx.beginPath(); ctx.ellipse(mx, my - 6 * u * sz, 5 * u * sz, 3.2 * u * sz, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(mx - 1.5 * u * sz, my - 7.5 * u * sz, 0.8 * u, 0, 7); ctx.fill();
   }
   ctx.globalAlpha = 1;
 }
+function drawTree(G, si) {
+  if (!G.tree) return;
+  const u = dpr, left = G.tree.left, tw = 26 * u, x = left ? 0 : Wd, dir = left ? 1 : -1;
+  const top = Math.max(0, skyH - skyFree - 40 * u);
+  ctx.fillStyle = '#5a3d27';
+  ctx.beginPath(); ctx.moveTo(x, skyH); ctx.lineTo(x + dir * (tw + 10 * u), skyH); ctx.quadraticCurveTo(x + dir * tw, skyH - 20 * u, x + dir * tw * 0.8, top); ctx.lineTo(x, top); ctx.fill();
+  ctx.strokeStyle = 'rgba(30,20,10,.35)'; ctx.lineWidth = 1.2 * u;
+  for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(x + dir * k * 6 * u, skyH - 4 * u); ctx.lineTo(x + dir * k * 5 * u, top + 10 * u); ctx.stroke(); }
+  // branche et feuillage
+  ctx.strokeStyle = '#5a3d27'; ctx.lineWidth = 6 * u;
+  const by = top + (skyH - top) * 0.35;
+  ctx.beginPath(); ctx.moveTo(x + dir * tw * 0.8, by); ctx.quadraticCurveTo(x + dir * 60 * u, by - 10 * u, x + dir * 95 * u, by - 22 * u); ctx.stroke();
+  const leaf = ['#7fbf4a', '#4f8f2e', '#d0852c', null][si];
+  if (leaf) {
+    ctx.fillStyle = leaf; ctx.globalAlpha = 0.95;
+    for (const [dx, dy, r] of [[20, -10, 34], [60, -26, 28], [95, -26, 22], [10, 20, 26], [50, 6, 24]]) { ctx.beginPath(); ctx.arc(x + dir * dx * u, by + dy * u, r * u, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  // feuilles qui tombent en automne
+  if (si === 2) for (let k = 0; k < 7; k++) {
+    const t = ((G.tick * 0.004 + k * 0.37) % 1), lx = x + dir * (30 + k * 14 + Math.sin(G.tick * 0.03 + k) * 10) * u, ly = by + t * (skyH - by);
+    ctx.fillStyle = k % 2 ? '#c4692a' : '#e0a038'; ctx.beginPath(); ctx.ellipse(lx, ly, 3.5 * u, 1.8 * u, t * 9 + k, 0, 7); ctx.fill();
+  }
+}
+let groundLeaves = [], lastSeasonDrawn = -1;
+function drawSurface(G, si) {
+  const u = dpr;
+  if (G.season !== lastSeasonDrawn) { lastSeasonDrawn = G.season; if (si !== 2) groundLeaves = []; }
+  // feuilles mortes : s'accumulent pendant l'automne
+  if (si === 2) {
+    const want = Math.min(70, Math.floor(sim.seasonDay() * 1.6));
+    while (groundLeaves.length < want) groundLeaves.push({ x: Math.random(), a: Math.random() * 6, c: ['#b0692a', '#c98a2e', '#8c5a24', '#d2a046'][groundLeaves.length % 4] });
+    for (const l of groundLeaves) { ctx.fillStyle = l.c; ctx.beginPath(); ctx.ellipse(l.x * Wd, skyH - 2 * u, 4 * u, 1.8 * u, l.a, 0, 7); ctx.fill(); }
+  }
+  // flaques après la pluie
+  if (si !== 3 || G.weather.seas > -10) {
+    ctx.fillStyle = 'rgba(120,170,215,.75)';
+    const step = Math.max(2, Math.round(G.GW / 30));
+    for (let x = 1; x < G.GW - 1; x += step) {
+      const wv = G.water[x]; if (wv < 0.62) continue;
+      const [px] = toPx(x, 0), w = (wv - 0.6) * 60 * u;
+      ctx.beginPath(); ctx.ellipse(px, skyH - 1.5 * u, Math.min(18 * u, w), 2.2 * u, 0, 0, 7); ctx.fill();
+    }
+  }
+}
+let snow = 0;
+function drawSnow(G, si) {
+  const u = dpr, cold = G.weather.seas < -8;
+  const target = si === 3 && cold ? Math.min(1, sim.seasonDay() / 12) * (G.weather.state === 'soleil' ? 0.85 : 1) : 0;
+  snow += (target - snow) * 0.01;
+  if (snow < 0.03) return;
+  const h = snow * 14 * u;
+  ctx.fillStyle = '#f3f6fa';
+  ctx.beginPath(); ctx.moveTo(0, skyH + 2 * u);
+  for (let x = 0; x <= Wd; x += 12 * u) ctx.lineTo(x, skyH - h - Math.sin(x * 0.05 / u) * 1.5 * u);
+  ctx.lineTo(Wd, skyH + 2 * u); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(180,200,225,.5)'; ctx.fillRect(0, skyH, Wd, 2 * u);
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function drawBird(b) {
+  const [x, y] = birdPos(b), u = dpr, d = b.dir || 1;
+  ctx.save(); ctx.translate(x, y); ctx.scale(d, 1);
+  ctx.fillStyle = '#1b1b1d';
+  ctx.beginPath(); ctx.ellipse(0, 0, 11 * u, 7 * u, -0.15, 0, 7); ctx.fill();           // corps
+  ctx.beginPath(); ctx.moveTo(-9 * u, -2 * u); ctx.lineTo(-20 * u, -6 * u); ctx.lineTo(-19 * u, 1 * u); ctx.fill();  // queue
+  const peck = b.peck > 0 ? 6 * u : 0;
+  ctx.beginPath(); ctx.arc(10 * u, -6 * u + peck, 5.5 * u, 0, 7); ctx.fill();          // tête
+  ctx.fillStyle = '#f2a516'; ctx.beginPath(); ctx.moveTo(14 * u, -7 * u + peck); ctx.lineTo(21 * u, -5 * u + peck); ctx.lineTo(14 * u, -4 * u + peck); ctx.fill();
+  ctx.fillStyle = '#f2a516'; ctx.beginPath(); ctx.arc(11.5 * u, -7.5 * u + peck, 1.3 * u, 0, 7); ctx.fill();
+  if (b.state !== 'sol') {   // ailes
+    const fl = Math.sin(frameNo * 0.5) * 9 * u;
+    ctx.fillStyle = '#2a2a2e'; ctx.beginPath(); ctx.moveTo(-4 * u, -3 * u); ctx.lineTo(2 * u, -14 * u - fl); ctx.lineTo(6 * u, -3 * u); ctx.fill();
+  } else {
+    ctx.strokeStyle = '#d18a1a'; ctx.lineWidth = 1.5 * u; ctx.beginPath(); ctx.moveTo(-1 * u, 6 * u); ctx.lineTo(-2 * u, 10 * u); ctx.moveTo(3 * u, 6 * u); ctx.lineTo(3 * u, 10 * u); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawMole(m) {
+  const [x, y] = toPx(m.x, m.y), u = dpr;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(m.a);
+  ctx.fillStyle = '#4a3c44'; ctx.strokeStyle = 'rgba(240,229,214,.75)'; ctx.lineWidth = 1.5 * u;
+  ctx.beginPath(); ctx.ellipse(0, 0, 15 * u, 9 * u, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(9 * u, -3 * u, 1.2 * u, 0, 7); ctx.fill();
+  ctx.fillStyle = '#f0a5b5'; ctx.beginPath(); ctx.ellipse(15 * u, 0, 4 * u, 2.6 * u, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#e8b0b8';
+  ctx.beginPath(); ctx.ellipse(7 * u, 7 * u, 4 * u, 2.5 * u, 0.5, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(7 * u, -7 * u, 4 * u, 2.5 * u, -0.5, 0, 7); ctx.fill();
+  ctx.restore();
+  if (m.scared > 0) { ctx.fillStyle = '#f2c94c'; ctx.font = `bold ${14 * u}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('!', x, y - 13 * u); }
+}
+function drawFx() {
+  const u = dpr;
+  for (const f of fx) {
+    f.t++; const a = 1 - f.t / f.life;
+    if (f.kind === 'ring') { ctx.strokeStyle = `rgba(${f.color},${a})`; ctx.lineWidth = 2 * u; ctx.beginPath(); ctx.arc(f.x, f.y, (6 + f.t * 0.8) * u, 0, 7); ctx.stroke(); }
+    else if (f.kind === 'txt') { ctx.globalAlpha = a; ctx.fillStyle = f.color; ctx.font = `bold ${16 * u}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText(f.text, f.x, f.y - f.t * 0.6 * u); ctx.globalAlpha = 1; }
+    else if (f.kind === 'drops') { ctx.fillStyle = `rgba(120,177,210,${a})`; for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.arc(f.x + k * 7 * u, f.y - 40 * u + f.t * 1.4 * u + (k % 2) * 6 * u, 2.2 * u, 0, 7); ctx.fill(); } }
+    else if (f.kind === 'leaves') { for (let k = -3; k <= 3; k++) { ctx.fillStyle = `rgba(${k % 2 ? '176,105,42' : '156,154,60'},${a})`; ctx.beginPath(); ctx.ellipse(f.x + k * 7 * u + Math.sin(f.t * 0.2 + k) * 4 * u, f.y - 40 * u + f.t * 1.0 * u, 4 * u, 2 * u, k, 0, 7); ctx.fill(); } }
+  }
+  for (let k = fx.length - 1; k >= 0; k--) if (fx[k].t >= fx[k].life) fx.splice(k, 1);
+}
 
-/* ---------- interface ---------- */
-let toastT;
-function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.remove('off'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add('off'), 2600); }
+/* ---------- tableau de bord ---------- */
 function gauge(id, v, bad, label) {
   const el = $(id); el.querySelector('.f').style.width = (clamp(v) * 100).toFixed(1) + '%';
   el.querySelector('.v').textContent = label ?? Math.round(clamp(v) * 100) + ' %';
   el.classList.toggle('bad', bad);
 }
-function rangeGauge(id, vals, min, max, lo, hi, fmt, labels) {
+function rangeGauge(id, vals, min, max, lo, hi, fmt) {
   const el = $(id), pct = v => clamp((v - min) / (max - min)) * 100;
   el.querySelector('.lo').style.width = pct(lo) + '%';
   el.querySelector('.hi').style.width = (100 - pct(hi)) + '%';
-  el.querySelector('.ticks').innerHTML = vals.map(v => `<i style="left:${pct(v).toFixed(1)}%"></i>`).join('');
-  el.title = labels.map(l => l[1]).join(' · ');
+  const show = vals.length > 24 ? vals.filter((_, k) => k % Math.ceil(vals.length / 24) === 0) : vals;
+  el.querySelector('.ticks').innerHTML = show.map(v => `<i style="left:${pct(v).toFixed(1)}%"></i>`).join('');
   const n = vals.length, bad = vals.filter(v => v < lo || v > hi).length;
   el.querySelector('.v').textContent = n ? fmt(vals.reduce((a, b) => a + b, 0) / n) + (bad ? ` ⚠${bad}` : '') : '';
   el.classList.toggle('bad', bad > 0);
 }
+const WEATHER_LABEL = { soleil: 'Ensoleillé', nuages: 'Nuageux', pluie: 'Pluie' };
 function updateUI() {
-  const days = Math.floor(tick / DAY), live = alive(), n = live.length;
-  const ev = curEvent();
-  $('#clock').textContent = `Jour ${days} · ${season().label} · ${ev ? '⚠ ' + ev.name : WEATHER_LABEL[weather.state]}`;
-  $('#score').innerHTML = `Pic <b>${peak} vers</b> · naissances <b>${born}</b> · records <b>${best} j</b> / <b>${bestPeak} vers</b>`;
+  const G = sim.G; if (!G) return;
+  const live = sim.alive(), n = live.length, ev = sim.curEvent();
+  const day = Math.floor(sim.seasonDay()) + 1;
+  $('#clock').textContent = `${seasonName(sim.seasonNo())} · jour ${Math.min(day, S.SEASON_DAYS)}/${S.SEASON_DAYS} · ${ev ? '⚠ ' + ev.name : WEATHER_LABEL[G.weather.state]}`;
   const avg = f => n ? live.reduce((a, w) => a + f(w), 0) / n : 0;
   const e = avg(w => w.e), h = avg(w => w.h), age = avg(w => w.age / w.life);
-  gauge('#g-e', e, e < 0.3); gauge('#g-h', h, h < 0.3);
-  gauge('#g-age', age, age > 0.85);
-  const L = limits(1);
-  rangeGauge('#r-t', live.map(w => temp(cell(w.x, w.y))), -5, 35, L.Tmin, L.Tmax, v => v.toFixed(0) + ' °C',
-    [[L.Tmin, 'gel < ' + L.Tmin + ' °C'], [L.Tmax, 'brûlure > ' + L.Tmax + ' °C']]);
-  const juv = live.filter(w => sizeOf(w) < 1).length, ready = live.filter(canBreed).length;
-  $('#stage').innerHTML = `<b>${n} ver${n > 1 ? 's' : ''}</b>${juv ? ` dont ${juv} juvénile${juv > 1 ? 's' : ''}` : ''}${cocoons.length ? ` · ${cocoons.length} cocon${cocoons.length > 1 ? 's' : ''}` : ''} · ${ready ? `<b>${ready}</b> prêt${ready > 1 ? 's' : ''} à se reproduire` : 'aucun prêt à se reproduire'} · moyennes ci-dessus`;
-  const d = Object.entries(deaths);
-  $('#readout').innerHTML = d.length ? 'Morts : ' + d.map(([k, v]) => `<b>${v}</b> ${CAUSE[k]}`).join(' · ') : 'Aucune mort pour l\'instant';
-  const mb = $('#mate'); mb.disabled = !ready || n + cocoons.length >= MAXPOP;
-  mb.textContent = ready ? `Pondre 1 œuf (${ready} prêt${ready > 1 ? 's' : ''})` : 'Pondre 1 œuf';
+  gauge('#g-e', e, e < 0.3); gauge('#g-h', h, h < 0.3); gauge('#g-age', age, age > 0.85);
+  const L = sim.limits(1);
+  rangeGauge('#r-t', live.map(w => sim.temp(sim.cell(w.x, w.y))), -5, 35, L.Tmin, L.Tmax, v => v.toFixed(0) + ' °C');
+  const juv = live.filter(w => sim.sizeOf(w) < 1).length, ready = live.filter(sim.canBreed).length;
+  const coc = G.cocoons.length;
+  $('#stage').innerHTML = `<b>${n} ver${n > 1 ? 's' : ''}</b>${juv ? ` dont ${juv} jeune${juv > 1 ? 's' : ''}` : ''}${coc ? ` · ${coc} cocon${coc > 1 ? 's' : ''}` : ''} · ${ready ? `<b>${ready}</b> prêt${ready > 1 ? 's' : ''} à pondre` : 'aucun prêt à pondre'} · 🍅 <b>${G.fruits}</b>`;
+  const m = sim.mission(), M = G.mission, v = M.done && m.kind === 'reach' ? Math.max(M.best, sim.metric(m.metric)) : sim.metric(m.metric);
+  const left = S.SEASON_DAYS - Math.floor(sim.seasonDay());
+  const mel = $('#mission');
+  mel.classList.toggle('done', M.done);
+  mel.classList.toggle('risk', !M.done && m.kind === 'hold' && v < m.target);
+  $('#m-name').textContent = `${M.done ? '★' : '🎯'} ${m.title} : ${m.kind === 'hold' ? 'garder ' : ''}${Math.min(v, 999)} / ${m.target} ${m.unit.split(' ')[0]}`;
+  $('#m-left').textContent = M.done ? 'réussie' : `encore ${left} j`;
+  $('#m-bar').style.width = (clamp(v / m.target) * 100) + '%';
+  $('#score').innerHTML = `🍅 <b>${G.fruits}</b> fruits · naissances <b>${G.born}</b> · pic <b>${G.peak}</b> vers`;
+  const full = n + G.cocoons.length >= S.MAXPOP;
+  const mb = $('#mate'); mb.disabled = !ready || full;
+  mb.textContent = full ? `Plein (${S.MAXPOP})` : ready ? `Pondre (${ready})` : 'Pondre';
+  $('#c-compost').textContent = G.charges.compost; $('#c-eau').textContent = G.charges.eau;
+  $('#t-compost').disabled = G.charges.compost < 1 && tool !== 'compost';
+  $('#t-eau').disabled = G.charges.eau < 1 && tool !== 'eau';
+  $('#muts').innerHTML = Object.entries(G.mut).map(([k, lv]) => { const c = S.CARDS.find(c => c.id === k); return `<span title="${c.text}">${c.icon} ${c.name}${lv > 1 ? ' ×' + lv : ''}</span>`; }).join('');
 }
 
-for (const k of Object.keys(W)) {
-  const inp = $('#w-' + k), out = $('#o-' + k);
-  inp.value = W[k]; out.textContent = W[k];
-  inp.addEventListener('input', () => { W[k] = +inp.value; out.textContent = inp.value; });
-}
-$('#pause').onclick = e => { paused = !paused; e.currentTarget.textContent = paused ? 'Reprendre' : 'Pause'; };
-$('#speed').onclick = e => { speed = speed === 1 ? 3 : speed === 3 ? 8 : 1; e.currentTarget.textContent = '×' + speed; };
-$('#map').onclick = () => { mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length]; setLegend(); toast('Carte : ' + MODE_LABEL[mode]); };
-$('#instincts').onclick = e => { const p = $('#panel'); p.hidden = !p.hidden; e.currentTarget.setAttribute('aria-pressed', !p.hidden); };
-$('#mate').onclick = () => breed(false);
-$('#auto').onclick = e => { autoBreed = !autoBreed; e.currentTarget.setAttribute('aria-pressed', autoBreed); e.currentTarget.textContent = 'Auto : ' + (autoBreed ? 'on' : 'off'); toast(autoBreed ? 'Reproduction automatique activée' : 'Reproduction automatique désactivée'); };
-$('#restart').onclick = () => { $('#modal').hidden = true; modalOpen = false; newGame(); };
-
-let frame = 0;
-function loop() {
-  if (!paused && !modalOpen && !over) for (let k = 0; k < speed; k++) { step(); if (modalOpen || over) break; }
+/* ---------- boucle : pas fixes de 1/60 s ---------- */
+let last = performance.now(), acc = 0, uiT = 0, saveT = 0;
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  const G = sim.G;
+  if (G && started && !paused && !modalOpen && G.phase === 'jeu') {
+    acc += dt * S.STEPS_PER_SEC * speed;
+    let n = 0;
+    while (acc >= 1 && n < 12) { sim.step(); acc -= 1; n++; if (G !== sim.G || sim.G.phase !== 'jeu') { acc = 0; break; } }
+    if (acc > 3) acc = 0;
+    tutoTick(dt);
+    saveT += dt; if (saveT > 20) { saveT = 0; save(); }
+  } else acc = 0;
   draw();
-  if (frame++ % 6 === 0) updateUI();
+  uiT += dt; if (uiT > 0.1) { uiT = 0; updateUI(); }
   requestAnimationFrame(loop);
 }
-if (window.innerWidth >= 900) { $('#panel').hidden = false; $('#instincts').setAttribute('aria-pressed', 'true'); }
-newGame(); setLegend(); updateUI(); loop();
+if (wide()) { $('#panel').hidden = false; $('#instincts').setAttribute('aria-pressed', 'true'); }
+setLegend();
+layout();
+// un décor derrière l'écran titre
+sim.newGame(...gridDims());
+layout(); syncControls(); updateUI();
+showTitle();
+if (location.search.includes('test')) window.__jeu = { sim, S, get speed() { return speed; }, set speed(v) { speed = v; } };
+requestAnimationFrame(loop);
 })();
-</script>
 
+</script>
 </body></html>

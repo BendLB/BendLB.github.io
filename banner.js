@@ -4,7 +4,7 @@
   var PROJETS = [
     ["monkey", "Monkey Memory"],
     ["livre", "(Le Livre)³"],
-    ["worm", "Worm Simulation"],
+    ["worm", "Le jardin de Vishow"],
     ["fourmis", "Fourmilière"],
     ["balance", "Balance énergie"],
     ["carbone", "Balance carbone"],
