@@ -1,27 +1,29 @@
 <!doctype html><html><head><style>:where(html,body,*){touch-action:manipulation}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><meta name="theme-color" content="#0E1320"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Book BdLB"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><script src="../banner.js"></script>
+<!-- jeu : fourmilière -->
 <title>Fourmilière</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
+html,body{margin:0;padding:0}
+:root{box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{font-size:14px;touch-action:manipulation}
 /* Layout : terrain vu du dessus à gauche (ou en haut sur téléphone), carnet de bord de la colonie à droite (ou en bas). Monde unique, sombre : la terre. */
 :root{
   --soil:#17120e; --panel:#211a14; --raise:#2b221a; --line:#3b3026;
   --ink:#efe6d6; --muted:#a3937f;
   --food:#c6d45a; --army:#8fa9e8; --build:#d9925a; --enemy:#e5513f; --prey:#c48ad8;
-  --display:"Syne", "Avenir Next", system-ui, sans-serif;
-  --body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --display:"Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --body:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   color-scheme:dark;
 }
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--soil);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent}
 body{display:flex;flex-direction:column}
-#app{flex:1;min-height:0;height:auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
-  grid-template-areas:"top" "stats" "stage" "panel";gap:8px;padding-inline:16px;padding-block:10px;box-sizing:border-box}
+#app{flex:1;min-height:0;height:auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;
+  grid-template-areas:"top" "stats" "stage" "ticker" "bar";gap:8px;padding-inline:16px;padding-block:10px;box-sizing:border-box}
 @media (min-width:900px){
-  #app{grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto auto minmax(0,1fr);
-    grid-template-areas:"top panel" "stats panel" "stage panel";gap:10px 18px;padding-block:16px}
+  #app{max-width:1200px;margin:0 auto;width:100%;padding-block:14px}
 }
 .top{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{display:flex;align-items:baseline;gap:12px;min-width:0}
@@ -88,7 +90,7 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
 .evo b{font-family:var(--display);font-weight:600;font-size:.95rem}
 .evo small{display:block;font:400 .7rem var(--mono);color:var(--muted);margin-top:3px;line-height:1.45}
 .evo .go:disabled{opacity:.45;cursor:not-allowed}
-.top .chip{margin-left:auto}
+
 .card.wide{max-width:680px}
 #chartCv{display:block;width:100%;height:280px;margin:6px 0 4px}
 .clegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
@@ -125,32 +127,110 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
 .odds{font-family:var(--mono);font-weight:600}
 .empty{color:var(--muted);font-size:.85rem;margin:0 0 14px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
 
+/* --- Ajouts de la version locale --- */
+.topbtns{display:flex;align-items:center;gap:6px;margin-left:auto}
+#soundBtn[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.stars{color:#e6c25a;letter-spacing:.08em;font-size:.95rem;white-space:nowrap}
+.toast{position:absolute;left:10px;right:56px;bottom:30px;background:rgba(33,26,20,.94);border:1px solid var(--food);border-radius:10px;padding:9px 12px;font-size:.82rem;line-height:1.4;display:flex;gap:10px;align-items:flex-start;z-index:2}
+.toast p{margin:0;flex:1}
+.toast button{flex:none;font:600 .75rem var(--body);background:var(--food);color:#17120e;border:0;border-radius:6px;padding:5px 9px;cursor:pointer}
+.banner button{font:600 .72rem var(--body);background:var(--army);color:#17120e;border:0;border-radius:6px;padding:4px 8px;cursor:pointer}
+.kicker{font:600 .7rem var(--body)!important;text-transform:uppercase;letter-spacing:.12em;color:var(--food)!important;margin:0 0 4px!important}
+.goals,.recap{list-style:none;padding:0!important;margin:0 0 14px!important;display:flex;flex-direction:column;gap:4px}
+.goals li,.recap li{display:flex;justify-content:space-between;gap:10px;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.84rem;margin:0!important}
+.goals li b,.recap li b{font-family:var(--mono);font-weight:600}
+.goals li.ok{border-color:#e6c25a}
+.bigstars{font-size:2.2rem!important;color:#e6c25a!important;letter-spacing:.12em;margin:4px 0 8px!important;line-height:1!important}
+.score{font:700 1.1rem var(--mono)!important;color:var(--ink)!important}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.farm{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-bottom:6px}
+.farm b{font-family:var(--display);font-weight:600;font-size:.86rem}
+.farm small{grid-column:1;font:400 .7rem var(--mono);color:var(--muted)}
+.farm .pm{grid-row:1/3;grid-column:2;display:flex;gap:4px;align-items:center}
+.farm .pm button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 1rem var(--mono);cursor:pointer;padding:0}
+.farm .pm span{font:600 .85rem var(--mono);min-width:1.6em;text-align:center}
+.pbtn[data-k="royal"]{border-top:3px solid #e6c25a}
+.pbtn[data-k="found"]{border-top:3px solid var(--build)}
+.projs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.targets .go{padding:8px 12px}
+.targets .btn2{display:flex;flex-direction:column;gap:4px;grid-row:1/3;grid-column:2}
+.sheetInfo{font-size:.85rem;color:var(--muted);margin:0 0 12px}
+.sheetInfo b{color:var(--ink)}
+@media (max-width:899px){
+  .panel{max-height:34vh}
+      h1{font-size:1.1rem}
+  .top{gap:6px}
+  .speed button{padding:6px 7px}
+}
+@media (max-width:380px){ h1{display:none} }
+@media (max-width:899px){ .toast{font-size:.76rem;padding:7px 10px;right:52px;bottom:26px} }
+
+/* --- Barre d'outils et fenêtres --- */
+.ticker{grid-area:ticker;display:block;width:100%;text-align:left;background:none;border:0;color:var(--muted);font:400 .78rem var(--body);padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:1.2em}
+.ticker.bad{color:#f0a296}.ticker.good{color:#dbe59a}
+.tbar{grid-area:bar;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.tb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 3px;color:var(--ink);cursor:pointer;min-width:0;font:inherit;min-height:52px}
+.tb b{font:600 .74rem var(--body);white-space:nowrap}
+.tb small{font:400 .64rem var(--body);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tb.hot{border-color:var(--food)}.tb.hot small{color:var(--food)}
+.tb.alarm{border-color:var(--enemy)}
+.mini{display:flex;width:80%;height:6px;border-radius:3px;overflow:hidden}
+.mini i{display:block;height:100%}.mini .m0{background:var(--food)}.mini .m1{background:var(--army)}.mini .m2{background:var(--build)}
+.win .card{max-width:520px}
+.win .card h3{font-size:1.35rem}
+.win .card>p{font-size:.86rem}
+h2.sub{margin:16px 0 8px}
+.qlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.qlist li{display:grid;grid-template-columns:1.6em 1fr auto;gap:2px 8px;align-items:center;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+.qlist .num{font:600 .8rem var(--mono);color:var(--muted);grid-row:1/3}
+.qlist b{font:600 .86rem var(--body)}
+.qlist small{grid-column:2;font:400 .72rem var(--body);color:var(--muted)}
+.qlist .qb{grid-row:1/3;grid-column:3;display:flex;gap:4px}
+.qlist .qb button{width:32px;height:32px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 .9rem var(--body);cursor:pointer;padding:0}
+.qlist .qb button:disabled{opacity:.3}
+.addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.farm{grid-template-columns:1fr auto}
+.farm .meter{grid-column:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin:3px 0 1px}
+.farm .meter i{display:block;height:100%;background:#b6e26a}
+.farm .warn{color:#f0a296}
+.log li{grid-template-columns:3.2em 1fr}
+.card .log{margin-bottom:14px}
+@media (max-width:899px){ .win{align-items:flex-end;padding:0} .win .card{border-radius:16px 16px 0 0;max-height:82vh;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))} }
+.farm a{color:var(--food)}
+.tb b{font-size:clamp(.6rem,2.9vw,.78rem);max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.stat span{text-transform:none;letter-spacing:.02em}
+.stats{grid-template-columns:1fr 1.5fr 1fr 1fr 1fr}
+#stFood b small{font-size:.66em;font-weight:500;white-space:nowrap}
+
+</style>
 <div id="app">
   <header class="top">
     <div class="brand"><h1>Fourmilière</h1><span class="day" id="day">Jour 1</span></div>
-    <button class="chip" id="chartBtn">Courbe</button>
-    <div class="speed" role="group" aria-label="Vitesse">
-      <button data-s="0" aria-pressed="false" aria-label="Pause">❚❚</button>
-      <button data-s="1" aria-pressed="true">1×</button>
-      <button data-s="2" aria-pressed="false">2×</button>
-      <button data-s="4" aria-pressed="false">4×</button>
-      <button data-s="8" aria-pressed="false">8×</button>
+    <div class="topbtns">
+      <button class="chip" id="chartBtn">Courbe</button>
+      <button class="chip" id="soundBtn" aria-pressed="true" aria-label="Son">♪</button>
+      <div class="speed" role="group" aria-label="Vitesse">
+        <button data-s="0" aria-pressed="false" aria-label="Pause">❚❚</button>
+        <button data-s="1" aria-pressed="true">1×</button>
+        <button data-s="2" aria-pressed="false">2×</button>
+        <button data-s="4" aria-pressed="false">4×</button>
+      </div>
     </div>
   </header>
 
   <div class="stats">
     <div class="stat" id="stPop"><b>1</b><div class="capbar"><i id="capFill"></i></div><span id="capTxt">Place</span></div>
-    <div class="stat" id="stFood"><b>0</b><span>Nourriture</span></div>
-    <div class="stat"  id="stWood"><b>0</b><span>Bois</span></div>
-    <div class="stat"  id="stEggs"><b>0</b><span>Couvain</span></div>
-    <div class="stat"  id="stTerr"><b>0</b><span>Territoire</span></div>
+    <div class="stat" id="stFood" title="Nourriture en réserve, et ce qu'elle gagne ou perd par minute"><b>0</b><span>Nourriture</span></div>
+    <div class="stat" id="stWood"><b>0</b><span>Bois</span></div>
+    <div class="stat" id="stEggs"><b>0</b><span>Couvain</span></div>
+    <div class="stat" id="stLast" title="Nourriture encore à portée des ouvrières"><b>0</b><span id="stLastTxt">Environs</span></div>
   </div>
 
   <main class="stage">
     <canvas id="cv" aria-label="Vue du dessus de la colonie et de son territoire"></canvas>
     <div class="banner" id="banner" hidden></div>
+    <div class="toast" id="toast" hidden></div>
     <div class="camctl">
       <button id="zIn" aria-label="Zoomer">+</button>
       <button id="zOut" aria-label="Dézoomer">−</button>
@@ -159,56 +239,98 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
     <div class="scale"><i id="scaleBar"></i><span id="scaleTxt">1 cm</span></div>
   </main>
 
-  <aside class="panel">
-    <section>
-      <h2>Répartition des naissances</h2>
-      <div class="split" id="split">
-        <div class="seg s0" id="seg0"></div><div class="seg s1" id="seg1"></div><div class="seg s2" id="seg2"></div>
-        <button class="handle" id="h1" aria-label="Limite ouvrières / soldates"></button>
-        <button class="handle" id="h2" aria-label="Limite soldates / bâtisseuses"></button>
-      </div>
-      <div class="legend">
-        <i style="background:var(--food)"></i><span>Ouvrières</span><span class="n" id="lp0"></span><span class="c" id="lc0"></span>
-        <i style="background:var(--army)"></i><span>Armée</span><span class="n" id="lp1"></span><span class="c" id="lc1"></span>
-        <i style="background:var(--build)"></i><span>Bâtisseuses</span><span class="n" id="lp2"></span><span class="c" id="lc2"></span>
-      </div>
-      <div class="presets">
-        <button class="chip" data-p="34,33,33">Équilibré</button>
-        <button class="chip" data-p="70,10,20">Récolte</button>
-        <button class="chip" data-p="35,50,15">Défense</button>
-        <button class="chip" data-p="40,10,50">Chantier</button>
-      </div>
-      <p class="hint">Les fourmis déjà nées gardent leur caste.</p>
-    </section>
+  <button class="ticker" id="ticker" aria-label="Ouvrir le journal"></button>
 
-    <section>
-      <h2>Évolution de la colonie</h2>
-      <div id="evo"></div>
-    </section>
+  <nav class="tbar" aria-label="Fenêtres">
+    <button class="tb" data-w="wBirth"><b>Naissances</b><span class="mini" id="tbSplit"><i class="m0"></i><i class="m1"></i><i class="m2"></i></span></button>
+    <button class="tb" data-w="wProj"><b>Projets</b><small id="tbProj">aucun</small></button>
+    <button class="tb" data-w="wFarm"><b>Pucerons</b><small id="tbFarm">0 éleveuse</small></button>
+    <button class="tb" data-w="wEvo"><b>Évolution</b><small id="tbEvo">niveau 1</small></button>
+    <button class="tb" data-w="wLog"><b>Journal</b><small id="tbLog">&nbsp;</small></button>
+  </nav>
+</div>
 
-    <section>
-      <h2>Projet en cours</h2>
-      <div id="proj"></div>
-    </section>
+<div class="overlay win" id="wBirth" hidden>
+  <div class="card">
+    <h3>Naissances</h3>
+    <p>Chaque œuf qui éclot devient ouvrière, soldate ou bâtisseuse selon cette répartition. Les fourmis déjà nées gardent leur caste.</p>
+    <div class="split" id="split">
+      <div class="seg s0" id="seg0"></div><div class="seg s1" id="seg1"></div><div class="seg s2" id="seg2"></div>
+      <button class="handle" id="h1" aria-label="Limite ouvrières / soldates" role="slider"></button>
+      <button class="handle" id="h2" aria-label="Limite soldates / bâtisseuses" role="slider"></button>
+    </div>
+    <div class="legend">
+      <i style="background:var(--food)"></i><span>Ouvrières : récolte, chasse, pucerons</span><span class="n" id="lp0"></span><span class="c" id="lc0"></span>
+      <i style="background:var(--army)"></i><span>Armée : défense, assauts</span><span class="n" id="lp1"></span><span class="c" id="lc1"></span>
+      <i style="background:var(--build)"></i><span>Bâtisseuses : bois, place</span><span class="n" id="lp2"></span><span class="c" id="lc2"></span>
+    </div>
+    <div class="presets">
+      <button class="chip" data-p="34,33,33">Équilibré</button>
+      <button class="chip" data-p="70,10,20">Récolte</button>
+      <button class="chip" data-p="35,50,15">Défense</button>
+      <button class="chip" data-p="40,10,50">Chantier</button>
+    </div>
+    <p class="hint">Défense au nid : chaque soldate présente compte 1 (plus avec l'amélioration Soldates), chaque autre fourmi présente 0,2. Les raids grossissent avec le temps et avec la taille de la colonie.</p>
+    <p class="hint" id="defNow"></p>
+    <button class="ghost wclose">Fermer</button>
+  </div>
+</div>
 
-    <section>
-      <h2>Journal</h2>
-      <ul class="log" id="log"></ul>
-    </section>
-  </aside>
+<div class="overlay win" id="wProj" hidden>
+  <div class="card">
+    <h3>Projets</h3>
+    <p>Un seul projet à la fois. Les suivants attendent dans la file et partent tout seuls, dans l'ordre, dès que le précédent est fini.</p>
+    <div id="proj"></div>
+    <h2 class="sub">File d'attente</h2>
+    <div id="queue"></div>
+    <h2 class="sub">Ajouter</h2>
+    <div id="projAdd"></div>
+    <p class="hint">On peut aussi toucher une proie, un fourmilion ou une colonie directement sur le terrain.</p>
+    <button class="ghost wclose">Fermer</button>
+  </div>
+</div>
+
+<div class="overlay win" id="wFarm" hidden>
+  <div class="card">
+    <h3>Pucerons</h3>
+    <p>Sur certaines plantes vivent des pucerons qui produisent du <b>miellat</b>, une nourriture sucrée. Tu peux y envoyer des ouvrières : ce sont les <b>éleveuses</b>. Elles font sans cesse l'aller-retour entre la plante et le nid et rapportent le miellat, qui s'ajoute à la nourriture.</p>
+    <p>Chaque plante refait environ <b>15 de miellat par minute</b>. Plus elle est loin, plus il faut d'éleveuses pour tout récolter ; au-delà du nombre conseillé, la plante est vide et les éleveuses en plus ne servent à rien. Pendant ce temps, elles ne récoltent rien d'autre et ne défendent pas le nid.</p>
+    <div id="farms"></div>
+    <button class="ghost wclose">Fermer</button>
+  </div>
+</div>
+
+<div class="overlay win" id="wEvo" hidden>
+  <div class="card">
+    <h3>Évolution</h3>
+    <div id="evo"></div>
+    <button class="ghost wclose">Fermer</button>
+  </div>
+</div>
+
+<div class="overlay win" id="wLog" hidden>
+  <div class="card">
+    <h3>Journal</h3>
+    <ul class="log" id="log"></ul>
+    <button class="ghost wclose">Fermer</button>
+  </div>
 </div>
 
 <div class="overlay" id="intro">
   <div class="card">
-    <h3>Une reine, quelques réserves, tout un territoire</h3>
-    <p>La colonie vit seule. Tu décides de qui naît, et des grands projets.</p>
+    <h3>Fourmilière</h3>
+    <p>Une reine, quelques réserves, tout un territoire. La colonie vit seule ; tu décides de qui naît, où l'on explore et des grands projets. Plus le temps passe, plus les voisines sont fortes et les raids violents.</p>
     <ul>
-      <li><b style="color:var(--food)">Ouvrières</b> : cherchent la nourriture et tracent des pistes de phéromones. Plus de nourriture, plus de ponte.</li>
-      <li><b style="color:var(--army)">Armée</b> : repousse les raids ennemis et peut conquérir d'autres colonies.</li>
+      <li><b style="color:var(--food)">Ouvrières</b> : récoltent, tracent les pistes, chassent et élèvent les pucerons.</li>
+      <li><b style="color:var(--army)">Armée</b> : défend le nid contre les raids et part à l'assaut des autres colonies.</li>
       <li><b style="color:var(--build)">Bâtisseuses</b> : ramènent du bois pour agrandir le nid. Trop à l'étroit, des fourmis s'en vont.</li>
     </ul>
-    <p>Un seul projet à la fois. Plus tu t'éloignes, plus les proies et les colonies sont grosses.</p>
-    <button class="go" id="startBtn">Fonder la colonie</button>
+    <p>Touche le terrain pour envoyer les éclaireuses explorer ; touche une proie, un fourmilion, une colonie ou une plante à pucerons pour agir dessus. Combien de jours tiendras-tu ?</p>
+    <div class="btns">
+      <button class="go" id="resumeBtn" hidden>Reprendre la partie</button>
+      <button class="go" id="startBtn">Nouvelle partie</button>
+    </div>
+    <p class="hint" id="bestTxt"></p>
   </div>
 </div>
 
@@ -228,6 +350,7 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
       <span><i style="background:var(--build)"></i>Bâtisseuses</span>
       <span><i style="background:var(--army)"></i>Armée</span>
       <span><i style="background:var(--food)"></i>Ouvrières</span>
+      <span><i style="background:var(--ink);height:2px"></i>Nourriture</span>
     </div>
     <canvas id="chartCv" aria-label="Évolution de la population par caste"></canvas>
     <p class="hint" id="chartNow"></p>
@@ -238,7 +361,7 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
 <div class="overlay" id="victory" hidden>
   <div class="card">
     <h3 id="vicTitle">Victoire</h3>
-    <p>Que fais-tu de leur nid ? Une colonie annexée partage tes réserves et ta répartition des naissances.</p>
+    <p>Que fais-tu de leur nid ? Une colonie annexée devient un deuxième nid : ses fourmis travaillent pour toi et ta place augmente.</p>
     <div class="choice">
       <button class="pbtn" id="vicDestroy" data-k="attack"></button>
       <button class="pbtn" id="vicAnnex" data-k="hunt"></button>
@@ -250,738 +373,1397 @@ h2{font:600 .68rem var(--body);text-transform:uppercase;letter-spacing:.12em;col
   <div class="card">
     <h3>La colonie s'est éteinte</h3>
     <p id="overTxt"></p>
-    <button class="go" id="againBtn">Refonder une colonie</button>
+    <div class="btns">
+      <button class="go" id="overRetry">Revenir en arrière</button>
+      <button class="ghost" id="againBtn">Refonder une colonie</button>
+    </div>
   </div>
 </div>
 
 <script>
-(() => {
+/* Fourmilière — moteur de simulation, sans navigateur (tourne aussi dans Node).
+   1 unité = 1 mm. Le nid principal est en (0,0). */
+(function (root) {
 "use strict";
-const $ = s => document.querySelector(s);
-const cv = $('#cv'), ctx = cv.getContext('2d');
 
-/* --- Monde : 1 unité = 1 mm --- */
-const WR = 2000, CELL = 8, GN = 500, FC = 25, FN = 160, SC = 80, SN = 50, TN = 320;
-const STEP = 1/30, EGG_COST = 1.2, HATCH = 14;
-const COL = {food:'#c6d45a', army:'#8fa9e8', build:'#d9925a', enemy:'#e5513f', prey:'#c48ad8', ink:'#efe6d6', muted:'#a3937f'};
-const ANIMALS = [[5,'Chenille'],[11,'Ver de terre'],[22,'Scarabée'],[40,'Mille-pattes'],[65,'Grillon'],[100,'Mante religieuse'],[1e9,'Lézard']];
-const ENEMY_NAMES = ['Rousses','Noires','Charpentières','Moissonneuses','Légionnaires','Tisserandes','Fourmis de feu','Pâles','Coupeuses','Argentées','Esclavagistes','Jaunes','Velues','Nomades','Bergères','Sombres','Rouges des bois','Fileuses'];
+const WR = 2000, CELL = 8, GN = 500, FC = 25, FN = 160, SC = 80, SN = 50;
+const STEP = 1 / 30, EGG_COST = 1.2, HATCH = 14, DAY = 60;
+const ANIMALS = [[8, 'Chenille'], [16, 'Ver de terre'], [30, 'Scarabée'], [55, 'Mille-pattes'], [90, 'Grillon'], [140, 'Mante religieuse'], [1e9, 'Lézard']];
+const ENEMY_NAMES = ['Rousses', 'Noires', 'Charpentières', 'Moissonneuses', 'Légionnaires', 'Tisserandes', 'Fourmis de feu', 'Pâles', 'Coupeuses', 'Argentées', 'Esclavagistes', 'Jaunes', 'Velues', 'Nomades', 'Bergères', 'Sombres', 'Rouges des bois', 'Fileuses'];
+const PLANTS = ['Rosier', 'Ortie', 'Fève', 'Sureau', 'Chardon', 'Pissenlit', 'Lierre', 'Ronce'];
 
-function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const rnd = Math.random;
-const angDiff = (a,b) => Math.atan2(Math.sin(b-a), Math.cos(b-a));
-const clamp = (v,a,b) => v<a?a:v>b?b:v;
-const fmt = n => n>=1000 ? (n/1000).toFixed(1).replace('.',',')+' k' : Math.floor(n).toLocaleString('fr-FR');
-const cm = d => d>=1000 ? (d/1000).toFixed(2).replace('.',',')+' m' : Math.round(d/10)+' cm';
+/* Climat constant (pas de saisons) ; seuls les raids et les colonies voisines se renforcent avec le temps. */
+const CLIMATE = { lay: 1, eat: 1, pocket: 1, rain: 0.5, regen: 1 };
+/* Force d'un raid : grandit avec le temps et avec la taille de la colonie (une grosse colonie attire de gros raids).
+   t en secondes de jeu à 1×, pop = fourmis vivantes. Les 10 premières minutes, la part liée à la taille monte peu à peu. */
+const raidForce = (t, pop) => 6 + t * 0.02 + pop * 0.18 * Math.min(1, t / 600);
+const raidGap = t => Math.max(45, 110 - t * 0.03);
 
-let nests=[{x:0,y:0,r:12}];
-let R, phF, phW, phH, revealed, buckets, sources, animals, enemies, pebbles, ants, eggs, raid, proj, G;
-let fogDirty = true, frame = 0, sheetType = null, pending = null;
-const cam = {zoom:1, px:0, py:0, follow:true};
-/* Niveau de la colonie : vitesse, charge, force des soldates, appétit */
-const LV = {
-  spd: () => 1+0.15*G.up.spd,
-  carry: () => 1+0.5*G.up.carry,
-  str: () => 1+0.3*G.up.str,
-  eat: () => Math.pow(0.85,G.up.eat),
-  costF: () => Math.round(30*Math.pow(1.6,G.lvl-1)),
-  costW: () => Math.round(20*Math.pow(1.6,G.lvl-1)),
-};
 const UPS = [
-  ['spd','Vitesse','Toutes les fourmis +15 %', ()=>'×'+LV.spd().toFixed(2).replace('.',',')],
-  ['carry','Charge','+0,5 ressource par trajet', ()=>String(LV.carry()).replace('.',',')+' par trajet'],
-  ['str','Soldates','Force +30 %', ()=>'×'+LV.str().toFixed(2).replace('.',',')],
-  ['eat','Sobriété','Appétit −15 %', ()=>'appétit ×'+LV.eat().toFixed(2).replace('.',',')],
+  ['spd', 'Vitesse', 'Toutes les fourmis +15 %'],
+  ['carry', 'Charge', '+0,5 ressource par trajet'],
+  ['str', 'Soldates', 'Force +30 %'],
+  ['eat', 'Sobriété', 'Appétit −15 %'],
 ];
-const leash = () => 60 + Math.sqrt(Math.max(1,G.counts[0]+G.counts[1]+G.counts[2]))*18;
 
-function gi(x,y){ if(x<=-WR||y<=-WR||x>=WR||y>=WR) return -1; return (((y+WR)/CELL)|0)*GN + (((x+WR)/CELL)|0); }
-function fi(x,y){ const i=((x+WR)/FC)|0, j=((y+WR)/FC)|0; return (i<0||j<0||i>=FN||j>=FN)?-1:j*FN+i; }
-const isSeen = (x,y) => { const k=fi(x,y); return k>=0 && revealed[k]===1; };
-const nestR = () => 10 + Math.sqrt(G.cap)*2.2;
-const srcR = a => 2.5 + Math.sqrt(Math.max(0,a))*0.9;
+const hyp = (x, y) => Math.sqrt(x * x + y * y);
+const angDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const pw = (x, e) => Math.pow(Math.max(0, x), e);
+const odds = (us, them, e = 2) => pw(us, e) / (pw(us, e) + pw(them, e) || 1);
+const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.', ',') + ' k' : Math.floor(n).toLocaleString('fr-FR');
+const cm = d => d >= 1000 ? (d / 1000).toFixed(2).replace('.', ',') + ' m' : Math.round(d / 10) + ' cm';
+const verdict = p => p >= 0.75 ? { t: 'Facile', c: '#c6d45a' } : p >= 0.5 ? { t: 'Jouable', c: '#e6c25a' } : p >= 0.25 ? { t: 'Risqué', c: '#d9925a' } : { t: 'Très risqué', c: '#e5513f' };
+const srcR = a => 2.5 + Math.sqrt(Math.max(0, a)) * 0.9;
+const preyForce = d => 6 + Math.pow(d / 100, 1.6) * 4;
+const animalName = A => ANIMALS.find(t => A < t[0])[1];
 
-/* --- Génération --- */
-function addSource(type,x,y,amount){
-  const s={type,x,y,amount,r:srcR(amount),rot:R()*Math.PI,seed:R()};
-  sources.push(s);
-  const k=((((y+WR)/SC)|0))*SN+(((x+WR)/SC)|0);
-  if(k>=0&&k<SN*SN) buckets[k].push(s);
-  return s;
+function rng(seed) {
+  const r = { s: seed | 0, next() { let a = r.s = (r.s + 0x6D2B79F5) | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; } };
+  return r;
 }
-function polar(dmin,dmax,pow=1){ const a=R()*Math.PI*2, d=dmin+Math.pow(R(),pow)*(dmax-dmin); return [Math.cos(a)*d,Math.sin(a)*d,d]; }
-function genWorld(){
-  for(let i=0;i<4;i++){const [x,y]=polar(50,120); addSource('food',x,y,22+R()*15);}
-  for(let i=0;i<3;i++){const [x,y]=polar(55,130); addSource('wood',x,y,15+R()*12);}
-  for(let i=0;i<300;i++){const [x,y,d]=polar(80,WR-150,1.3); addSource('food',x,y,(15+R()*35)*(1+d/700));}
-  for(let i=0;i<220;i++){const [x,y,d]=polar(80,WR-150,1.3); addSource('wood',x,y,(12+R()*25)*(1+d/900));}
-  for(let i=0;i<45;i++){
-    const [x,y,d]=polar(130,WR-200,.9);
-    const A=(3+Math.pow(d/100,1.7)*1.5)*(0.7+R()*0.6)/4;
-    animals.push({x,y,A,name:ANIMALS.find(t=>A<t[0])[1],seen:false,dead:false,rot:R()*6.28});
+function gi(x, y) { if (x <= -WR || y <= -WR || x >= WR || y >= WR) return -1; return (((y + WR) / CELL) | 0) * GN + (((x + WR) / CELL) | 0); }
+
+/* ------------------------------------------------------------------ */
+function create(opts = {}) {
+  const seed = opts.seed != null ? opts.seed : (Math.random() * 2 ** 31) | 0;
+  const S = { G: null, events: [], seed };
+  let G, R;
+  const rnd = () => R.next();
+  const phF = new Float32Array(GN * GN), phW = new Float32Array(GN * GN), phH = new Float32Array(GN * GN);
+  S.ph = { F: phF, W: phW, H: phH };
+  let buckets = [];
+
+  const emit = (type, data) => S.events.push(Object.assign({ type }, data));
+  function log(msg, kind = '') { G.logs.unshift({ d: G.day, msg, kind }); if (G.logs.length > 60) G.logs.length = 60; emit('log', { msg, kind }); }
+  const season = () => CLIMATE;
+  const nestR = () => 10 + Math.sqrt(G.cap) * 2.2;
+  const LV = {
+    spd: () => 1 + 0.15 * G.up.spd,
+    carry: () => 1 + 0.5 * G.up.carry,
+    str: () => 1 + 0.3 * G.up.str,
+    eat: () => Math.pow(0.85, G.up.eat),
+    costF: () => Math.round(30 * Math.pow(1.55, G.lvl - 1)),
+    costW: () => Math.round(20 * Math.pow(1.55, G.lvl - 1)),
+  };
+  S.LV = LV; S.nestR = nestR; S.season = season;
+  /* Rayon de récolte : grandit avec la colonie et ne rétrécit jamais (les ouvrières connaissent le terrain). */
+  const leash = () => G.reach;
+  const updReach = () => { const v = 60 + Math.sqrt(Math.max(1, G.counts[0] + G.counts[1] + G.counts[2])) * 18; if (v > G.reach) G.reach = v; };
+
+  function fi(x, y) { const i = ((x + WR) / FC) | 0, j = ((y + WR) / FC) | 0; return (i < 0 || j < 0 || i >= FN || j >= FN) ? -1 : j * FN + i; }
+  const isSeen = (x, y) => { const k = fi(x, y); return k >= 0 && G.revealed[k] === 1; };
+  S.isSeen = isSeen;
+
+  /* --- Monde --- */
+  function rebuildBuckets() {
+    buckets = Array.from({ length: SN * SN }, () => []);
+    for (const s of G.sources) bucketAdd(s);
   }
-  let names=[...ENEMY_NAMES];
-  for(let tries=0;enemies.length<18&&tries<600;tries++){
-    const [x,y,d]=polar(260,WR-100,.95);
-    if(enemies.some(e=>Math.hypot(e.x-x,e.y-y)<260)) continue;
-    const S=(5+Math.pow(d/100,1.75)*1.7)*(0.75+R()*0.5)/4;
-    const name=names.splice((R()*names.length)|0,1)[0]||'Inconnues';
-    enemies.push({x,y,S,name,seen:false,conquered:false});
+  function bucketAdd(s) { const k = (((s.y + WR) / SC) | 0) * SN + (((s.x + WR) / SC) | 0); if (k >= 0 && k < SN * SN) buckets[k].push(s); }
+  function addSource(type, x, y, amount) {
+    const s = { type, x, y, amount, r: srcR(amount), rot: rnd() * Math.PI, seed: rnd() };
+    G.sources.push(s); bucketAdd(s); return s;
   }
-  pebbles=[];
-  for(let i=0;i<2600;i++){const [x,y]=polar(20,WR,.7); pebbles.push({x,y,r:0.8+R()*R()*5,c:(R()*3)|0});}
-}
-
-/* --- Textures --- */
-const terrCv=document.createElement('canvas'); terrCv.width=terrCv.height=TN;
-const phCv=document.createElement('canvas'); phCv.width=phCv.height=GN;
-const phCx=phCv.getContext('2d'), phImg=phCx.createImageData(GN,GN), ph32=new Uint32Array(phImg.data.buffer);
-const fogCv=document.createElement('canvas'); fogCv.width=fogCv.height=FN;
-const fogCx=fogCv.getContext('2d'), fogImg=fogCx.createImageData(FN,FN), fog32=new Uint32Array(fogImg.data.buffer);
-
-function buildTerrain(){
-  const tc=terrCv.getContext('2d'), img=tc.createImageData(TN,TN), d=img.data;
-  const mk=(n)=>{const g=new Float32Array((n+1)*(n+1));for(let i=0;i<g.length;i++)g[i]=R();return g;};
-  const g1=mk(16),g2=mk(48);
-  const vn=(g,n,u,v)=>{const x=u*n,y=v*n,i=Math.min(n-1,x|0),j=Math.min(n-1,y|0),fx=x-i,fy=y-j,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),w=n+1;
-    const a=g[j*w+i],b=g[j*w+i+1],c=g[(j+1)*w+i],e=g[(j+1)*w+i+1];return a+(b-a)*sx+(c-a)*sy+(a-b-c+e)*sx*sy;};
-  for(let j=0;j<TN;j++)for(let i=0;i<TN;i++){
-    const u=i/TN,v=j/TN, n=vn(g1,16,u,v)*0.65+vn(g2,48,u,v)*0.35, m=vn(g2,48,v,u);
-    const moss=clamp((m-0.62)*3,0,1);
-    const k=(j*TN+i)*4;
-    d[k]  =30+n*26-moss*6;
-    d[k+1]=23+n*20+moss*10;
-    d[k+2]=17+n*13-moss*2;
-    d[k+3]=255;
-  }
-  tc.putImageData(img,0,0);
-}
-function updPh(i0,i1,j0,j1){
-  for(let j=j0;j<=j1;j++){let i=j*GN+i0; for(let x=i0;x<=i1;x++,i++){
-    const f=phF[i],w=phW[i],h=phH[i];
-    if(f<0.02&&w<0.02&&h<0.04){ph32[i]=0;continue;}
-    const fI=f>3?1:f/3, wI=w>3?1:w/3, hI=(h>4?1:h/4)*0.35, s=fI+wI+hI;
-    const r=(fI*198+wI*222+hI*120)/s, g=(fI*214+wI*146+hI*150)/s, b=(fI*90+wI*80+hI*196)/s;
-    const a=(Math.min(1,Math.max(fI,wI,hI))*215)|0;
-    ph32[i]=((a<<24)|((b|0)<<16)|((g|0)<<8)|(r|0))>>>0;
-  }}
-  phCx.putImageData(phImg,0,0);
-}
-function updFog(){
-  for(let i=0;i<FN*FN;i++) fog32[i]= revealed[i] ? 0 : (0xE6<<24|0x07<<16|0x09<<8|0x0b)>>>0;
-  fogCx.putImageData(fogImg,0,0); fogDirty=false;
-}
-function reveal(x,y,rad=1){
-  const ci=((x+WR)/FC)|0, cj=((y+WR)/FC)|0;
-  for(let dj=-rad;dj<=rad;dj++)for(let di=-rad;di<=rad;di++){
-    const i=ci+di,j=cj+dj; if(i<0||j<0||i>=FN||j>=FN) continue;
-    const k=j*FN+i; if(revealed[k]) continue;
-    revealed[k]=1; fogDirty=true;
-    const d=Math.hypot((i+.5)*FC-WR,(j+.5)*FC-WR); if(d>G.exploredR) G.exploredR=d;
-  }
-}
-
-/* --- Partie --- */
-function newGame(){
-  R=mulberry((rnd()*2**31)|0);
-  phF=new Float32Array(GN*GN); phW=new Float32Array(GN*GN); phH=new Float32Array(GN*GN);
-  revealed=new Uint8Array(FN*FN);
-  sources=[]; buckets=Array.from({length:SN*SN},()=>[]);
-  animals=[]; enemies=[]; ants=[]; eggs=[]; raid=null; proj=null; nests=[{x:0,y:0,r:12}]; pending=null;
-  let best=0; try{best=+localStorage.getItem('fourmi-best')||0}catch(e){}
-  cam.zoom=1; cam.px=0; cam.py=0; cam.follow=true;
-  G={t:0,hist:[],histStep:5,nextHist:0,lvl:1,up:{spd:0,carry:0,str:0,eat:0},nextPocket:40,food:60,wood:0,cap:26,buildEff:1,fondLvl:0,split:[50,20,30],layAcc:0,starveAcc:0,leaveAcc:0,
-     leftN:0,starvedN:0,lastNote:0,nextRaid:180,exploredR:0,viewR:120,maxPop:0,best,over:false,speed:G?G.speed:1,
-     logs:[],counts:[0,0,0],tick:0,evap:0,ph:0};
-  genWorld(); buildTerrain(); reveal(0,0,4);
-  ph32.fill(0); phCx.putImageData(phImg,0,0);
-  log('La reine s\'installe et pond ses premiers œufs.');
-  applySplit(); renderLog(); ui();
-}
-function log(msg,kind=''){ G.logs.unshift({d:Math.floor(G.t/60)+1,msg,kind}); if(G.logs.length>40)G.logs.length=40; renderLog(); }
-function renderLog(){
-  $('#log').innerHTML=G.logs.slice(0,7).map(l=>`<li class="${l.kind}"><span>J${l.d}</span>${l.msg}</li>`).join('');
-}
-
-function spawnAnt(caste,h){
-  if(h===undefined) h=(rnd()<0.6||nests.length<2)?0:1+((rnd()*(nests.length-1))|0);
-  const n=nests[h], a=rnd()*6.28, r=rnd()*(h?n.r:nestR())*0.4;
-  ants.push({x:n.x+Math.cos(a)*r,y:n.y+Math.sin(a)*r,a:rnd()*6.28,caste,h,st:0,t:0,age:0,life:230+rnd()*170,carry:null,task:null,dead:false});
-}
-function countAnts(){
-  const c=[0,0,0]; for(const a of ants) if(!a.dead&&a.task!=='leave') c[a.caste]++;
-  G.counts=c; return c[0]+c[1]+c[2];
-}
-function killSome(pred,n){
-  if(n<=0) return 0;
-  const pool=ants.filter(a=>!a.dead&&a.task!=='leave'&&pred(a));
-  n=Math.min(pool.length,Math.round(n));
-  for(let i=0;i<n;i++){const k=i+((rnd()*(pool.length-i))|0); [pool[i],pool[k]]=[pool[k],pool[i]]; pool[i].dead=true;}
-  return n;
-}
-
-/* --- Phéromones --- */
-function deposit(ph,x,y,v){ const i=gi(x,y); if(i>=0){ const n=ph[i]+v; ph[i]=n>6?6:n; } }
-function sense(ph,an){
-  const d=14,s=0.55,c=Math.cos,n=Math.sin,x=an.x,y=an.y,a=an.a;
-  const L=ph[gi(x+c(a-s)*d,y+n(a-s)*d)]||0, C=ph[gi(x+c(a)*d,y+n(a)*d)]||0, Rr=ph[gi(x+c(a+s)*d,y+n(a+s)*d)]||0;
-  const m=Math.max(L,C,Rr); if(m<0.03||C>=m) return 0; return L>Rr?-1:1;
-}
-function nearSource(x,y,type,R0){
-  const bi=((x+WR)/SC)|0, bj=((y+WR)/SC)|0; let best=null,bd=1e9;
-  for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){
-    const i=bi+di,j=bj+dj; if(i<0||j<0||i>=SN||j>=SN) continue;
-    for(const s of buckets[j*SN+i]){ if(s.type!==type||s.amount<1) continue;
-      const d=Math.hypot(s.x-x,s.y-y)-s.r; if(d<R0&&d<bd){bd=d;best=s;} }
-  }
-  return best;
-}
-function evaporate(){
-  const rad=Math.min(WR,G.exploredR+80), i0=Math.max(0,((WR-rad)/CELL)|0), i1=Math.min(GN-1,((WR+rad)/CELL)|0);
-  for(let j=i0;j<=i1;j++){let k=j*GN+i0; for(let i=i0;i<=i1;i++,k++){
-    if(phF[k]) {phF[k]*=0.985; if(phF[k]<0.01)phF[k]=0;}
-    if(phW[k]) {phW[k]*=0.985; if(phW[k]<0.01)phW[k]=0;}
-    if(phH[k]) {phH[k]*=0.991; if(phH[k]<0.01)phH[k]=0;}
-  }}
-}
-
-/* --- Fourmis --- */
-function steer(an,target,k){ an.a+=angDiff(an.a,target)*k; }
-function stepAnt(an,dt,mainR,idx){
-  an.age+=dt; if(an.age>an.life){an.dead=true;return;}
-  const home=nests[an.h]||nests[0], hx=home.x, hy=home.y, nR=an.h?home.r:mainR;
-  const rx0=an.x-hx, ry0=an.y-hy, r=Math.hypot(rx0,ry0), toHome=Math.atan2(-ry0,-rx0); let sp=30;
-  if(an.task==='leave'){
-    steer(an,toHome+Math.PI,.15); sp=26; an.lt=(an.lt||0)+dt;
-    if(an.lt>8||Math.hypot(an.x,an.y)>WR-40) an.dead=true;
-  } else if(an.task==='haul'){
-    steer(an,toHome,.15); sp=24;
-    deposit(phF,an.x,an.y,1.5);
-    if(r<nR*0.75){ G.food+=an.load||1; G.wood+=an.loadW||0; an.load=0; an.loadW=0; an.carry=null; an.task=null; an.st=0; an.t=0; an.a+=Math.PI; }
-  } else if(an.task){
-    const tg=proj&&proj.target;
-    if(!tg){an.task=null;}
-    else{ const dx=tg.x-an.x,dy=tg.y-an.y,d=Math.hypot(dx,dy);
-      if(d>(tg.rad||10)+6) steer(an,Math.atan2(dy,dx),.25); else an.a+=(rnd()-.3)*1.4;
-      sp=an.caste===1?36:32; }
-  } else if(an.caste===1){
-    if(raid){ const rx=Math.cos(raid.ang)*raid.dist, ry=Math.sin(raid.ang)*raid.dist;
-      steer(an,Math.atan2(ry-an.y,rx-an.x),.25); sp=38;
-      if(Math.hypot(rx-an.x,ry-an.y)<12) an.a+=(rnd()-.5)*2;
-    } else {
-      if(r>nR+55) steer(an,toHome,.12);
-      else if(r<nR+3) steer(an,toHome+Math.PI,.12);
-      sp=17;
+  function polar(dmin, dmax, p = 1) { const a = rnd() * Math.PI * 2, d = dmin + Math.pow(rnd(), p) * (dmax - dmin); return [Math.cos(a) * d, Math.sin(a) * d, d]; }
+  const farFrom = (list, x, y, min) => list.every(e => hyp(e.x - x, e.y - y) >= min);
+  function genWorld() {
+    for (let i = 0; i < 4; i++) { const [x, y] = polar(50, 120); addSource('food', x, y, 22 + rnd() * 15); }
+    for (let i = 0; i < 3; i++) { const [x, y] = polar(55, 130); addSource('wood', x, y, 15 + rnd() * 12); }
+    for (let i = 0; i < 300; i++) { const [x, y, d] = polar(80, WR - 150, 1.3); addSource('food', x, y, (15 + rnd() * 35) * (1 + d / 700)); }
+    for (let i = 0; i < 220; i++) { const [x, y, d] = polar(80, WR - 150, 1.3); addSource('wood', x, y, (12 + rnd() * 25) * (1 + d / 900)); }
+    // proies : une ou deux faciles près du nid, puis de plus en plus grosses
+    for (let i = 0; i < 22; i++) {
+      const [x, y, d] = i < 2 ? polar(110, 220) : polar(160, WR - 200, .9);
+      const A = preyForce(d) * (0.7 + rnd() * 0.6);
+      G.animals.push({ x, y, A, name: animalName(A), seen: false, dead: false, rot: rnd() * 6.28, rad: 4 + Math.sqrt(A) * 0.8 });
     }
-  } else {
-    const ph=an.caste===0?phF:phW, type=an.caste===0?'food':'wood';
-    an.t+=dt;
-    if(an.st===0){
-      const s=nearSource(an.x,an.y,type,24);
-      if(s){ const dx=s.x-an.x,dy=s.y-an.y; steer(an,Math.atan2(dy,dx),.4);
-        if(Math.hypot(dx,dy)<s.r+2){ const take=Math.min(s.amount,LV.carry()); s.amount-=take; s.r=srcR(s.amount); an.load=take; an.st=1; an.carry=type; an.t=0; an.a+=Math.PI; }
-      } else an.a+=sense(ph,an)*0.32;
-      deposit(phH,an.x,an.y,Math.max(0,1-an.t/40));
-      if(an.t>40||r>leash()){an.st=2;an.t=0;}
-      an.a+=(rnd()-.5)*0.25;
-    } else {
-      if(an.st===1) an.a+=sense(phH,an)*0.3;
-      steer(an,toHome,an.st===2?0.12:0.06);
-      if(an.st===1) deposit(ph,an.x,an.y,Math.max(0.05,1.2-an.t/50)*1.2);
-      if(r<nR*0.75){
-        if(an.st===1){ if(an.carry==='food') G.food+=an.load||1; else G.wood+=an.load||1; an.load=0; }
-        an.st=0; an.carry=null; an.t=0; an.a+=Math.PI+(rnd()-.5);
+    // colonies ennemies : la plus proche entre 26 et 40 cm
+    const names = [...ENEMY_NAMES];
+    for (let tries = 0; G.enemies.length < 18 && tries < 900; tries++) {
+      const [x, y, d] = G.enemies.length === 0 ? polar(260, 400) : polar(300, WR - 100, .95);
+      if (!farFrom(G.enemies, x, y, 250)) continue;
+      const Sx = (20 + d * 0.25) * (0.75 + rnd() * 0.5);
+      const name = names.splice((rnd() * names.length) | 0, 1)[0] || 'Inconnues';
+      G.enemies.push({ x, y, S: Sx, S0: Sx, name, seen: false, conquered: false, annexed: false, rad: 8 + Math.sqrt(Sx) * 1.2 });
+    }
+    // fourmilions : pièges en entonnoir, invisibles tant que personne n'est passé à côté
+    for (let tries = 0; G.pits.length < 26 && tries < 900; tries++) {
+      const [x, y, d] = polar(160, WR - 150, 1.1);
+      if (!farFrom(G.pits, x, y, 120) || !farFrom(G.enemies, x, y, 60)) continue;
+      const A = 3 + d * 0.012 * (0.7 + rnd() * 0.6);
+      G.pits.push({ x, y, r: 7 + rnd() * 3, A, rad: 8, name: 'Fourmilion', seen: false, dead: false, kills: 0 });
+    }
+    // plantes à pucerons
+    for (let tries = 0; G.plants.length < 8 && tries < 900; tries++) {
+      const [x, y] = G.plants.length < 2 ? polar(120, 230) : polar(250, WR - 300, 1);
+      if (!farFrom(G.plants, x, y, 200) || !farFrom(G.enemies, x, y, 80)) continue;
+      G.plants.push({ x, y, name: PLANTS[G.plants.length], stock: 20, max: 40, seen: false, farmers: 0, rad: 14, bug: 0 });
+    }
+  }
+
+  function reveal(x, y, rad = 1) {
+    const ci = ((x + WR) / FC) | 0, cj = ((y + WR) / FC) | 0;
+    for (let dj = -rad; dj <= rad; dj++) for (let di = -rad; di <= rad; di++) {
+      const i = ci + di, j = cj + dj; if (i < 0 || j < 0 || i >= FN || j >= FN) continue;
+      const k = j * FN + i; if (G.revealed[k]) continue;
+      G.revealed[k] = 1; S.fogDirty = true;
+      const d = hyp((i + .5) * FC - WR, (j + .5) * FC - WR); if (d > G.exploredR) G.exploredR = d;
+    }
+  }
+  S.reveal = reveal;
+
+  /* --- Partie --- */
+  function newGame() {
+    R = rng(seed);
+    phF.fill(0); phW.fill(0); phH.fill(0);
+    G = S.G = {
+      seed, t: 0, day: 1, si: 0, st: 0, hist: [], histStep: 5, nextHist: 0, lvl: 1, up: { spd: 0, carry: 0, str: 0, eat: 0 },
+      nextPocket: 40, food: 60, wood: 0, cap: 26, buildEff: 1, fondLvl: 0, split: [50, 20, 30], layAcc: 0, starveAcc: 0, leaveAcc: 0,
+      leftN: 0, starvedN: 0, pitN: 0, lastNote: 0, nextRaid: 150, nextPrey: 240, exploredR: 0, maxPop: 0,
+      revealed: new Uint8Array(FN * FN), sources: [], animals: [], enemies: [], pits: [], plants: [], pebbles: [], ants: [], eggs: [],
+      raid: null, proj: null, queue: [], reach: 78, foodRate: 0, foodPrev: 60, nearFood: 0, nests: [{ x: 0, y: 0, r: 12 }], pending: null, beacon: null, weather: null, nextRain: 60,
+      counts: [0, 0, 0], tick: 0, logs: [], over: null, stats: { born: 0, hunted: 0, huntFood: 0, wins: 0, annexed: 0, pitKills: 0, raidsWon: 0, raidsLost: 0, starved: 0, left: 0, maxPop: 0, honey: 0 },
+      hints: {},
+    };
+    buckets = Array.from({ length: SN * SN }, () => []);
+    genWorld(); rebuildBuckets(); reveal(0, 0, 4);
+    log("La reine s'installe et pond ses premiers œufs.");
+    S.fogDirty = true;
+  }
+
+  function spawnAnt(caste, h) {
+    if (h === undefined) h = (rnd() < 0.6 || G.nests.length < 2) ? 0 : 1 + ((rnd() * (G.nests.length - 1)) | 0);
+    const n = G.nests[h], a = rnd() * 6.28, r = rnd() * (h ? n.r : nestR()) * 0.4;
+    G.ants.push({ x: n.x + Math.cos(a) * r, y: n.y + Math.sin(a) * r, a: rnd() * 6.28, caste, h, st: 0, t: 0, age: 0, life: 230 + rnd() * 170,
+      carry: null, task: null, ti: -1, load: 0, loadW: 0, dead: false, scout: rnd() < 0.3 });
+    G.stats.born++;
+  }
+  function countAnts() {
+    const c = [0, 0, 0]; for (const a of G.ants) if (!a.dead && a.task !== 'leave') c[a.caste]++;
+    G.counts = c; return c[0] + c[1] + c[2];
+  }
+  S.pop = () => G.counts[0] + G.counts[1] + G.counts[2];
+  function killSome(pred, n) {
+    if (n <= 0) return 0;
+    const pool = G.ants.filter(a => !a.dead && a.task !== 'leave' && pred(a));
+    n = Math.min(pool.length, Math.round(n));
+    for (let i = 0; i < n; i++) { const k = i + ((rnd() * (pool.length - i)) | 0); [pool[i], pool[k]] = [pool[k], pool[i]]; pool[i].dead = true; }
+    return n;
+  }
+
+  /* --- Phéromones --- */
+  function deposit(ph, x, y, v) { const i = gi(x, y); if (i >= 0) { const n = ph[i] + v; ph[i] = n > 6 ? 6 : n; } }
+  function sense(ph, an) {
+    const d = 14, s = 0.55, c = Math.cos, n = Math.sin, x = an.x, y = an.y, a = an.a;
+    const L = ph[gi(x + c(a - s) * d, y + n(a - s) * d)] || 0, C = ph[gi(x + c(a) * d, y + n(a) * d)] || 0, Rr = ph[gi(x + c(a + s) * d, y + n(a + s) * d)] || 0;
+    const m = Math.max(L, C, Rr); if (m < 0.03 || C >= m) return 0; return L > Rr ? -1 : 1;
+  }
+  function nearSource(x, y, type, R0) {
+    const bi = ((x + WR) / SC) | 0, bj = ((y + WR) / SC) | 0; let best = null, bd = 1e9;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      const i = bi + di, j = bj + dj; if (i < 0 || j < 0 || i >= SN || j >= SN) continue;
+      for (const s of buckets[j * SN + i]) {
+        if (s.type !== type || s.amount < 1) continue;
+        const d = hyp(s.x - x, s.y - y) - s.r; if (d < R0 && d < bd) { bd = d; best = s; }
       }
     }
-    sp=(an.caste===0?32:30)*(an.carry?0.85:1);
+    return best;
   }
-  an.a+=(rnd()-.5)*0.35;
-  sp*=LV.spd();
-  an.x+=Math.cos(an.a)*sp*dt; an.y+=Math.sin(an.a)*sp*dt;
-  if(Math.hypot(an.x,an.y)>WR-30) an.a=Math.atan2(-an.y,-an.x);
-  if(((idx+G.tick)&3)===0) reveal(an.x,an.y,1);
-}
-
-/* --- Combat --- */
-const pw = (x,e) => Math.pow(Math.max(0,x),e);
-const odds = (us,them,e=1.3) => pw(us,e)/(pw(us,e)+pw(them,e)||1);
-function defense(){ let s=0,o=0; for(const a of ants){ if(a.dead||a.task==='leave'||a.task) continue; if(a.caste===1)s++; else o++; } return s*LV.str()+o*0.35; }
-function hunters(){ return Math.max(1,Math.round(ants.filter(a=>!a.dead&&!a.task&&a.caste===0).length*0.5)); }
-const huntOdds = (n,A) => odds(n*3,A,1.2);
-const fightOdds = (n,S) => odds(n*1.5*LV.str(),S);
-function levelUp(k){
-  const f=LV.costF(), w=LV.costW(), u=UPS.find(x=>x[0]===k);
-  if(!u||G.food<f||G.wood<w||G.over) return;
-  G.food-=f; G.wood-=w; G.lvl++; G.up[k]++;
-  log(`Niveau ${G.lvl} : ${u[1].toLowerCase()} améliorée (${u[3]()}).`,'good');
-  ui();
-}
-function verdict(p){
-  return p>=0.75?{t:'Facile',c:COL.food}:p>=0.5?{t:'Jouable',c:'#e6c25a'}:p>=0.25?{t:'Risqué',c:COL.build}:{t:'Très risqué',c:COL.enemy};
-}
-function army(){ return ants.filter(a=>!a.dead&&!a.task&&a.caste===1).length; }
-
-function startRaid(){
-  const seen=enemies.filter(e=>e.seen&&!e.conquered);
-  const src=seen.length? seen[(rnd()*seen.length)|0] : null;
-  const near=seen.reduce((m,e)=>Math.min(m,e.S),1e9);
-  const ramp=Math.min(1,1/7+G.t/2400);
-  const S=Math.max(1,Math.round((3+G.exploredR*0.02+G.t*0.006+(seen.length?near*0.08:0))*ramp));
-  const ang=src?Math.atan2(src.y,src.x):rnd()*6.28;
-  const n=clamp(Math.round(S/1.5),4,70), ag=[];
-  for(let i=0;i<n;i++){const a=rnd()*6.28,d=Math.sqrt(rnd())*(5+Math.sqrt(n)*3); ag.push([Math.cos(a)*d,Math.sin(a)*d]);}
-  raid={S,ang,dist:Math.max(nestR()+60,G.viewR*0.92),phase:'approach',ft:0,ag,from:src?src.name:'fourmis errantes'};
-  log(`Raid des ${raid.from} en approche (force ${S}).`,'bad');
-}
-function resolveRaid(){
-  const D=defense(), S=raid.S, p=odds(D,S), pop=countAnts();
-  if(rnd()<p){
-    const L=S*0.6*S/(S+D)*(0.6+rnd()*0.8);
-    const k1=killSome(a=>a.caste===1&&!a.task,L*0.75), k2=killSome(a=>a.caste!==1&&!a.task,L*0.25);
-    log(`Raid des ${raid.from} repoussé. Pertes : ${k1+k2}.`,'good');
-  } else {
-    if(pop<3){ raid=null; return gameOver('Des pillardes ont atteint la chambre royale.'); }
-    const k=killSome(a=>a.caste===1&&!a.task,G.counts[1]*0.4)+killSome(a=>a.caste!==1&&!a.task,(G.counts[0]+G.counts[2])*0.15);
-    const fl=Math.floor(G.food*0.25); G.food-=fl; eggs.splice(0,Math.floor(eggs.length*0.25));
-    log(`Le nid a été pillé : ${k} mortes, ${fl} de nourriture volée.`,'bad');
-  }
-  raid=null;
-}
-
-/* --- Projets --- */
-function startProject(type,target){
-  if(proj||G.over) return;
-  if(type==='found'){
-    const cost=foundCost(); if(G.wood<cost) return;
-    G.wood-=cost; proj={type,t:0,dur:30,name:`Fondations niv. ${G.fondLvl+1}`};
-    log(`Les bâtisseuses creusent des fondations (−${cost} bois).`);
-  } else {
-    const caste=type==='hunt'?0:1, frac=type==='hunt'?0.5:1;
-    const pool=ants.filter(a=>!a.dead&&!a.task&&a.caste===caste);
-    const n=Math.max(1,Math.round(pool.length*frac));
-    for(let i=0;i<n&&i<pool.length;i++) pool[i].task=type;
-    const d=Math.hypot(target.x,target.y);
-    target.rad = type==='hunt'? 4+Math.sqrt(target.A)*0.8 : 8+Math.sqrt(target.S)*1.2;
-    proj={type,target,t:0,march:d/32+2,dur:d/32+2+6,name:type==='hunt'?`Chasse : ${target.name}`:`Assaut : ${target.name}`};
-    log(type==='hunt'?`${n} ouvrières partent chasser un ${target.name.toLowerCase()}.`:`${n} soldates marchent sur les ${target.name}.`);
-  }
-  closeSheet(); ui();
-}
-const foundCost = () => Math.round(5*Math.pow(2.2,G.fondLvl));
-function endProject(){
-  const p=proj, t=p.target;
-  const crew=ants.filter(a=>!a.dead&&a.task===p.type);
-  let loot=0, lootW=0;
-  if(p.type==='found'){ G.fondLvl++; G.buildEff*=2; log(`Fondations terminées : la construction va ${G.buildEff}× plus vite.`,'good'); }
-  else if(p.type==='hunt'){
-    const H=crew.length, A=t.A, ok=rnd()<huntOdds(H,A);
-    const lost=killSome(a=>a.task==='hunt',H*(ok?0.08:0.25)*A/(H*3+A));
-    if(ok){ const tot=Math.round(Math.max(15,A*15)); loot=Math.round(tot*0.6); t.dead=true; addSource('food',t.x,t.y,tot-loot);
-      log(`${t.name} abattu ! Les chasseuses rapportent ${loot} de nourriture, ${tot-loot} restent sur place. Pertes : ${lost}.`,'good'); }
-    else { log(`La chasse au ${t.name.toLowerCase()} échoue. Pertes : ${lost}.`,'bad'); }
-  } else {
-    const D=crew.length, S=t.S, ok=rnd()<fightOdds(D,S);
-    const lost=killSome(a=>a.task==='attack',D*(ok?0.35*S/(D*1.5+S):0.3+0.3*S/(D*1.5+S)));
-    if(ok){ t.conquered=true; reveal(t.x,t.y,3);
-      pending={t,lost,food:Math.round(Math.max(40,S*25)),wood:Math.round(Math.max(20,S*12)),workers:Math.max(3,Math.round(S*1.5))};
-      log(`Les ${t.name} sont vaincues ! Pertes : ${lost}. À toi de décider de leur sort.`,'good');
-      openVictory(); return; }
-    else { t.S*=0.8; log(`L'assaut contre les ${t.name} est repoussé. Pertes : ${lost}.`,'bad'); }
-  }
-  const alive=crew.filter(a=>!a.dead);
-  for(const a of alive){ a.task=null; if(loot&&alive.length){ a.task='haul'; a.carry='food'; a.load=loot/alive.length; a.loadW=lootW/alive.length; } }
-  if(loot&&!alive.length){ G.food+=loot; G.wood+=lootW; }
-  proj=null; ui();
-}
-
-function openVictory(){
-  const p=pending;
-  $('#vicTitle').textContent=`Les ${p.t.name} sont vaincues`;
-  $('#vicDestroy').innerHTML=`<b>Détruire</b><small>Les soldates rapportent ${Math.round(p.food/2)} de nourriture et ${Math.round(p.wood/2)} de bois. Le reste attend sur place.</small>`;
-  $('#vicAnnex').innerHTML=`<b>Annexer</b><small>Le nid devient ta colonie n° ${nests.length+1}. Tu récupères tout : ${p.food} de nourriture, ${p.wood} de bois, ${p.workers} ouvrières et ${Math.round(10+p.t.S*2)} places.</small>`;
-  $('#victory').hidden=false;
-}
-function resolveVictory(annex){
-  const p=pending, t=p.t; if(!p) return;
-  const crew=ants.filter(a=>!a.dead&&a.task==='attack');
-  if(annex){
-    t.annexed=true;
-    nests.push({x:t.x,y:t.y,r:t.rad||12,name:t.name});
-    G.food+=p.food; G.wood+=p.wood; G.cap+=10+t.S*2;
-    for(let i=0;i<p.workers;i++) spawnAnt(0,nests.length-1);
-    for(const a of crew) a.task=null;
-    log(`Les ${t.name} rejoignent la colonie : +${p.food} nourriture, +${p.wood} bois, +${p.workers} ouvrières.`,'good');
-  } else {
-    const lf=Math.round(p.food/2), lw=Math.round(p.wood/2);
-    addSource('food',t.x,t.y,p.food-lf); addSource('wood',t.x+(t.rad||10)*0.8,t.y,p.wood-lw);
-    if(crew.length){ for(const a of crew){ a.task='haul'; a.carry='food'; a.load=lf/crew.length; a.loadW=lw/crew.length; } }
-    else { G.food+=lf; G.wood+=lw; }
-    log(`Le nid des ${t.name} est rasé. Les soldates rapportent ${lf} de nourriture et ${lw} de bois.`,'good');
-  }
-  pending=null; proj=null; $('#victory').hidden=true; ui();
-}
-
-/* --- Pas de simulation --- */
-function step(dt){
-  G.t+=dt; G.tick++;
-  const nR=nestR();
-  for(let i=0;i<ants.length;i++) stepAnt(ants[i],dt,nR,i);
-  if(G.tick%15===0) ants=ants.filter(a=>!a.dead);
-  const pop=countAnts();
-  const [w,s,b]=G.counts;
-  if(G.t>=G.nextHist){
-    G.hist.push([G.t,w,s,b]); G.nextHist=G.t+G.histStep;
-    if(G.hist.length>400){ G.hist=G.hist.filter((_,i)=>i%2===0); G.histStep*=2; }
+  function evaporate(k0) {
+    const rad = Math.min(WR, G.exploredR + 80), i0 = Math.max(0, ((WR - rad) / CELL) | 0), i1 = Math.min(GN - 1, ((WR + rad) / CELL) | 0);
+    const fF = G.weather ? 0.9 : 0.985, fH = G.weather ? 0.93 : 0.991;
+    for (let j = i0; j <= i1; j++) {
+      let k = j * GN + i0;
+      for (let i = i0; i <= i1; i++, k++) {
+        if (phF[k]) { phF[k] *= fF; if (phF[k] < 0.01) phF[k] = 0; }
+        if (phW[k]) { phW[k] *= fF; if (phW[k] < 0.01) phW[k] = 0; }
+        if (phH[k]) { phH[k] *= fH; if (phH[k] < 0.01) phH[k] = 0; }
+      }
+    }
   }
 
-  // consommation
-  G.food-=(pop*0.008*LV.eat()+0.03)*dt;
-  // nouvelles poches de ressources
-  if(G.t>=G.nextPocket){
-    G.nextPocket=G.t+40+rnd()*40;
-    const type=rnd()<0.6?'food':'wood', a=rnd()*6.283, d=40+rnd()*Math.max(110,Math.min(WR-150,G.exploredR*1.15));
-    const x=Math.cos(a)*d, y=Math.sin(a)*d, amt=(type==='food'?30+rnd()*50:20+rnd()*35)*(1+d/800);
-    addSource(type,x,y,amt);
-    if(isSeen(x,y)) log(type==='food'?`Une nouvelle poche de nourriture est apparue à ${cm(d)}.`:`Du bois est tombé à ${cm(d)} du nid.`);
-  }
-  if(G.food<0){ G.food=0; G.starveAcc+=pop*0.015*dt; if(G.starveAcc>=1){ const n=killSome(()=>true,Math.floor(G.starveAcc)); G.starveAcc-=n||G.starveAcc; G.starvedN+=n; } }
-  // ponte
-  if(G.food>=EGG_COST){ G.layAcc+=Math.min(1.5,G.food*0.025)*dt; while(G.layAcc>=1&&G.food>=EGG_COST){ G.layAcc--; G.food-=EGG_COST; eggs.push(HATCH*(0.85+rnd()*0.3)); } }
-  for(let i=eggs.length-1;i>=0;i--){ eggs[i]-=dt; if(eggs[i]<=0){ eggs.splice(i,1); const r=rnd()*100; spawnAnt(r<G.split[0]?0:r<G.split[0]+G.split[1]?1:2); } }
-  // construction : seulement quand la place manque
-  if(pop>G.cap*0.75&&G.wood>0&&b>0){ const use=Math.min(G.wood,b*0.04*dt); G.wood-=use; G.cap+=use*0.6*G.buildEff; }
-  // surpopulation
-  if(pop>G.cap){ G.leaveAcc+=(pop-G.cap)*0.025*dt;
-    while(G.leaveAcc>=1){ G.leaveAcc--; const c=ants.filter(a=>!a.dead&&!a.task); if(!c.length)break; c[(rnd()*c.length)|0].task='leave'; G.leftN++; } }
-  if(G.t-G.lastNote>12){
-    if(G.leftN) log(`${G.leftN} fourmis ont quitté le nid, faute de place.`,'bad');
-    if(G.starvedN) log(`${G.starvedN} fourmis sont mortes de faim.`,'bad');
-    G.leftN=0; G.starvedN=0; G.lastNote=G.t;
-  }
-  // raids
-  if(!raid&&G.t>=G.nextRaid){ startRaid(); G.nextRaid=G.t+Math.max(60,210-G.exploredR*0.04-G.t*0.015)*(0.7+rnd()*0.6); }
-  if(raid){
-    if(raid.phase==='approach'){ raid.dist-=24*dt; if(raid.dist<nR+16){raid.phase='fight';raid.ft=0;} }
-    else { raid.ft+=dt; if(raid.ft>4) resolveRaid(); }
-  }
-  // projets
-  if(proj){ proj.t+=dt; if(proj.t>=proj.dur) endProject(); }
-  // monde
-  if(G.tick%15===0){
-    for(const e of enemies){ if(!e.conquered) e.S*=1+0.0004*0.5; if(!e.seen&&isSeen(e.x,e.y)){ e.seen=true; log(`Colonie repérée : les ${e.name} (force ${Math.round(e.S)}, à ${cm(Math.hypot(e.x,e.y))}).`); } }
-    for(const a of animals){ if(!a.dead&&!a.seen&&isSeen(a.x,a.y)){ a.seen=true; log(`Proie repérée : ${a.name.toLowerCase()} (force ${Math.round(a.A)}).`); } }
-    G.evap+=0.5; evaporate();
-  }
-  if(pop>G.maxPop){ G.maxPop=pop; if(pop>G.best){ G.best=pop; try{localStorage.setItem('fourmi-best',pop)}catch(e){} } }
-  if(pop===0&&eggs.length===0&&G.food<EGG_COST) gameOver('La reine est morte de faim, seule dans sa chambre.');
-}
-function gameOver(why){
-  if(G.over) return; G.over=true;
-  $('#overTxt').textContent=`${why} Elle a tenu ${Math.floor(G.t/60)+1} jours et compté jusqu'à ${G.maxPop} fourmis. Record : ${G.best}.`;
-  $('#over').hidden=false;
-}
+  /* --- Cibles (par type et index, pour la sauvegarde) --- */
+  const LISTS = { animal: () => G.animals, enemy: () => G.enemies, pit: () => G.pits, plant: () => G.plants };
+  const target = (tk, ti) => (LISTS[tk] ? LISTS[tk]()[ti] : null) || null;
+  S.target = target;
 
-/* --- Rendu --- */
-let W=0,H=0,dpr=1;
-function resize(){ const r=cv.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1); W=cv.width=Math.max(1,r.width*dpr|0); H=cv.height=Math.max(1,r.height*dpr|0); }
-new ResizeObserver(resize).observe(cv);
-
-function draw(){
-  const nR=nestR();
-  const target=Math.max(110,nR*4.5,G.exploredR*1.02);
-  G.viewR+=(target-G.viewR)*0.02;
-  if(cam.follow){ cam.px*=0.85; cam.py*=0.85; }
-  const s=Math.min(W,H)/2/G.viewR*cam.zoom, cx=W/2, cy=H/2, PX=cam.px, PY=cam.py;
-  const X=x=>cx+(x-PX)*s, Y=y=>cy+(y-PY)*s, vr=Math.hypot(W,H)/2/s+20;
-  const off=(x,y)=>Math.abs(x-PX)>vr||Math.abs(y-PY)>vr;
-  G.scale=s;
-
-  ctx.fillStyle='#0e0b08'; ctx.fillRect(0,0,W,H);
-  ctx.imageSmoothingEnabled=true;
-  ctx.drawImage(terrCv,X(-WR),Y(-WR),2*WR*s,2*WR*s);
-  // cailloux
-  ctx.fillStyle='rgba(120,104,86,.35)';
-  for(const p of pebbles){ if(off(p.x,p.y)||p.r*s<0.7) continue; ctx.beginPath(); ctx.arc(X(p.x),Y(p.y),p.r*s,0,6.283); ctx.fill(); }
-  // phéromones
-  if(frame%5===0){ const cl=v=>clamp(((v+WR)/CELL)|0,0,GN-1); updPh(cl(PX-vr),cl(PX+vr),cl(PY-vr),cl(PY+vr)); }
-  ctx.drawImage(phCv,X(-WR),Y(-WR),2*WR*s,2*WR*s);
-  // ressources
-  for(const so of sources){
-    if(so.amount<1||off(so.x,so.y)||!isSeen(so.x,so.y)) continue;
-    const x=X(so.x),y=Y(so.y),r=Math.max(1.5*dpr,so.r*s);
-    if(so.type==='food'){
-      ctx.fillStyle='rgba(198,212,90,.22)'; ctx.beginPath(); ctx.arc(x,y,r*1.5,0,6.283); ctx.fill();
-      ctx.fillStyle=COL.food;
-      for(let k=0;k<5;k++){ const a=so.rot+k*1.257, d=r*0.55*((k*0.37+so.seed)%1); ctx.beginPath(); ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,Math.max(1*dpr,r*0.38),0,6.283); ctx.fill(); }
+  /* --- Fourmis --- */
+  function steer(an, tgt, k) { an.a += angDiff(an.a, tgt) * k; }
+  function stepAnt(an, dt, mainR, idx, sea) {
+    an.age += dt;
+    if (an.age > an.life) { an.dead = true; return; }
+    const home = G.nests[an.h] || G.nests[0], hx = home.x, hy = home.y, nR = an.h ? home.r : mainR;
+    const rx0 = an.x - hx, ry0 = an.y - hy, r = hyp(rx0, ry0), toHome = Math.atan2(-ry0, -rx0); let sp = 30;
+    if (an.task === 'leave') {
+      steer(an, toHome + Math.PI, .15); sp = 26; an.lt = (an.lt || 0) + dt;
+      if (an.lt > 8 || hyp(an.x, an.y) > WR - 40) an.dead = true;
+    } else if (an.task === 'haul') {
+      steer(an, toHome, .15); sp = 24;
+      deposit(phF, an.x, an.y, 1.5);
+      if (r < nR * 0.75) { G.food += an.load || 0; G.wood += an.loadW || 0; an.load = 0; an.loadW = 0; an.carry = null; an.task = null; an.st = 0; an.t = 0; an.a += Math.PI; }
+    } else if (an.task === 'farm') {
+      const pl = G.plants[an.ti];
+      if (!pl) { an.task = null; an.ti = -1; }
+      else if (an.st === 0) { // aller à la plante
+        const dx = pl.x - an.x, dy = pl.y - an.y, d = hyp(dx, dy);
+        steer(an, Math.atan2(dy, dx), .2); sp = 30;
+        if (d < 10) { an.st = 3; an.t = 0; }
+      } else if (an.st === 3) { // traire les pucerons
+        an.t += dt; sp = 4; an.a += (rnd() - .5) * 1.5;
+        if (an.t > 3) { const take = Math.min(pl.stock, 1.2 * LV.carry()); pl.stock -= take; an.load = take; an.carry = take > 0.05 ? 'honey' : null; an.st = 1; an.t = 0; an.a = toHome; }
+      } else { // rentrer
+        steer(an, toHome, .2); sp = 28; deposit(phF, an.x, an.y, 0.6);
+        if (r < nR * 0.75) { G.food += an.load || 0; G.stats.honey += an.load || 0; if (pl) pl.got = (pl.got || 0) + (an.load || 0); an.load = 0; an.carry = null; an.st = 0; an.t = 0; an.a += Math.PI; }
+      }
+    } else if (an.task) {
+      const tg = G.proj && G.proj.tk ? target(G.proj.tk, G.proj.ti) : null;
+      if (!tg || an.task !== G.proj.type) { an.task = null; }
+      else {
+        const dx = tg.x - an.x, dy = tg.y - an.y, d = hyp(dx, dy);
+        if (d > (tg.rad || 10) + 6) steer(an, Math.atan2(dy, dx), .25); else an.a += (rnd() - .3) * 1.4;
+        sp = an.caste === 1 ? 36 : 32;
+      }
+    } else if (G.weather && r > nR * 0.6 && an.caste !== 1 && !G.raid) {
+      // pluie : rentrer au nid et s'abriter
+      if (r > nR * 0.45) { steer(an, toHome, .3); sp = 30; } else { sp = 6; an.a += (rnd() - .5) * 2; }
+      if (an.carry && r < nR * 0.75) { if (an.carry === 'food') G.food += an.load || 0; else if (an.carry === 'wood') G.wood += an.load || 0; an.load = 0; an.carry = null; an.st = 0; }
+    } else if (an.caste === 1) {
+      const raid = G.raid;
+      if (raid) {
+        const rx = Math.cos(raid.ang) * raid.dist, ry = Math.sin(raid.ang) * raid.dist;
+        steer(an, Math.atan2(ry - an.y, rx - an.x), .25); sp = 38;
+        if (hyp(rx - an.x, ry - an.y) < 12) an.a += (rnd() - .5) * 2;
+      } else {
+        if (r > nR + 55) steer(an, toHome, .12);
+        else if (r < nR + 3) steer(an, toHome + Math.PI, .12);
+        sp = 17;
+      }
     } else {
-      ctx.strokeStyle=COL.build; ctx.lineCap='round'; ctx.lineWidth=Math.max(1*dpr,r*0.28);
-      for(let k=0;k<3;k++){ const a=so.rot+k*0.9, l=r*(1.2-k*0.2), ox=(k-1)*r*0.35; ctx.beginPath(); ctx.moveTo(x+ox-Math.cos(a)*l,y-Math.sin(a)*l); ctx.lineTo(x+ox+Math.cos(a)*l,y+Math.sin(a)*l); ctx.stroke(); }
+      const ph = an.caste === 0 ? phF : phW, type = an.caste === 0 ? 'food' : 'wood';
+      an.t += dt;
+      if (an.st === 0) {
+        const s = nearSource(an.x, an.y, type, 24);
+        const b = G.beacon;
+        let lim = leash();
+        if (s) {
+          const dx = s.x - an.x, dy = s.y - an.y; steer(an, Math.atan2(dy, dx), .4);
+          if (hyp(dx, dy) < s.r + 2) { const take = Math.min(s.amount, LV.carry()); s.amount -= take; s.r = srcR(s.amount); an.load = take; an.st = 1; an.carry = type; an.t = 0; an.a += Math.PI; }
+        } else {
+          an.a += sense(ph, an) * 0.32;
+          if (b && an.scout) { const bd = hyp(b.x - hx, b.y - hy); lim = Math.max(lim, bd + 70); const db = hyp(b.x - an.x, b.y - an.y); if (db > 30) steer(an, Math.atan2(b.y - an.y, b.x - an.x), .06); }
+        }
+        deposit(phH, an.x, an.y, Math.max(0, 1 - an.t / (an.scout && b ? 70 : 40)));
+        // au-delà du rayon de récolte, on continue seulement si on suit une piste fraîche
+        if (an.t > (an.scout && b ? 75 : 40) || (r > lim && (ph[gi(an.x, an.y)] || 0) < 0.4)) { an.st = 2; an.t = 0; }
+        an.a += (rnd() - .5) * 0.25;
+      } else {
+        if (an.st === 1) an.a += sense(phH, an) * 0.3;
+        steer(an, toHome, an.st === 2 ? 0.12 : 0.06);
+        if (an.st === 1) deposit(ph, an.x, an.y, Math.max(0.05, 1.2 - an.t / 50) * 1.2);
+        if (r < nR * 0.75) {
+          if (an.st === 1) { if (an.carry === 'food') G.food += an.load || 0; else G.wood += an.load || 0; an.load = 0; }
+          an.st = 0; an.carry = null; an.t = 0; an.a += Math.PI + (rnd() - .5);
+        }
+      }
+      sp = (an.caste === 0 ? 32 : 30) * (an.carry ? 0.85 : 1);
+    }
+    an.a += (rnd() - .5) * 0.35;
+    sp *= LV.spd(); if (G.weather) sp *= 0.8;
+    an.x += Math.cos(an.a) * sp * dt; an.y += Math.sin(an.a) * sp * dt;
+    if (hyp(an.x, an.y) > WR - 30) an.a = Math.atan2(-an.y, -an.x);
+    if (((idx + G.tick) & 3) === 0) reveal(an.x, an.y, 1);
+  }
+
+  /* --- Fourmilions --- */
+  function stepPits() {
+    const alive = G.pits.filter(p => !p.dead);
+    if (!alive.length) return;
+    const fallen = {};
+    for (const an of G.ants) {
+      if (an.dead || an.task === 'leave' || an.task === 'hunt') continue;
+      for (let k = 0; k < alive.length; k++) {
+        const p = alive[k], dx = an.x - p.x, dy = an.y - p.y;
+        if (dx * dx + dy * dy < p.r * p.r && rnd() < 0.18) { an.dead = true; p.kills++; G.stats.pitKills++; fallen[k] = (fallen[k] || 0) + 1; break; }
+      }
+    }
+    for (const k in fallen) {
+      const p = alive[k];
+      if (!p.seen) { p.seen = true; log(`Un fourmilion a creusé son piège à ${cm(hyp(p.x, p.y))} du nid : ${fallen[k]} fourmi${fallen[k] > 1 ? 's' : ''} tombée${fallen[k] > 1 ? 's' : ''} dans l'entonnoir.`, 'bad'); hint('pit'); }
+      else G.pitN += fallen[k];
     }
   }
-  // colonies ennemies
-  ctx.font=`${11*dpr}px "JetBrains Mono", monospace`; ctx.textAlign='center';
-  if(frame%15===0||draw.armyN===undefined){ draw.armyN=army(); draw.huntN=hunters(); }
-  for(const e of enemies){
-    if(!e.seen||off(e.x,e.y)) continue;
-    const x=X(e.x),y=Y(e.y),r=Math.max(4*dpr,(8+Math.sqrt(e.S)*1.2)*s);
-    if(e.annexed){
-      const g2=ctx.createRadialGradient(x,y,r*0.2,x,y,r*1.7); g2.addColorStop(0,'#5b4532'); g2.addColorStop(.6,'rgba(78,60,43,.7)'); g2.addColorStop(1,'rgba(60,45,32,0)');
-      ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(x,y,r*1.7,0,6.283); ctx.fill();
-      ctx.strokeStyle=COL.food; ctx.lineWidth=1.2*dpr; ctx.setLineDash([3*dpr,3*dpr]); ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.stroke(); ctx.setLineDash([]);
-      const k=nests.findIndex(n=>n.x===e.x&&n.y===e.y);
-      ctx.fillStyle=COL.food; ctx.fillText(`Colonie n° ${k+1} · ex-${e.name}`,x,y-r-6*dpr);
-      continue;
+
+  /* --- Combat --- */
+  function defense() { let s = 0, o = 0; for (const a of G.ants) { if (a.dead || a.task) continue; if (a.caste === 1) s++; else o++; } return s * LV.str() + o * 0.2; }
+  function hunters() { let n = 0; for (const a of G.ants) if (!a.dead && !a.task && a.caste === 0) n++; return Math.max(1, Math.round(n * 0.5)); }
+  function army() { let n = 0; for (const a of G.ants) if (!a.dead && !a.task && a.caste === 1) n++; return n; }
+  const huntOdds = (n, A) => odds(n, A);
+  const fightOdds = (n, Sx) => odds(n * LV.str(), Sx);
+  Object.assign(S, { defense, hunters, army, huntOdds, fightOdds, odds });
+
+  function startRaid() {
+    const live = G.enemies.filter(e => !e.conquered && hyp(e.x, e.y) < 900);
+    if (!live.length) return;
+    // la colonie la plus proche attaque le plus souvent
+    const w = live.map(e => 1 / Math.pow(hyp(e.x, e.y), 1.6)), tot = w.reduce((a, b) => a + b, 0);
+    let r = rnd() * tot, src = live[0];
+    for (let i = 0; i < live.length; i++) { r -= w[i]; if (r <= 0) { src = live[i]; break; } }
+    const Sx = Math.max(2, Math.round(raidForce(G.t, countAnts()) * (0.8 + rnd() * 0.4)));
+    const ang = Math.atan2(src.y, src.x);
+    const n = clamp(Math.round(Sx / 1.5), 4, 80), ag = [];
+    for (let i = 0; i < n; i++) { const a = rnd() * 6.28, d = Math.sqrt(rnd()) * (5 + Math.sqrt(n) * 3); ag.push([Math.cos(a) * d, Math.sin(a) * d]); }
+    G.raid = { S: Sx, ang, dist: Math.max(nestR() + 60, Math.min(hyp(src.x, src.y), 160 + nestR())), phase: 'approach', ft: 0, ag, from: src.seen ? src.name : 'fourmis inconnues', ei: G.enemies.indexOf(src) };
+    log(`Raid des ${G.raid.from} en approche (force ${Sx}).`, 'bad');
+    if (!src.seen) { src.seen = true; log(`Les éclaireuses ont suivi les pillardes jusqu'à leur nid : les ${src.name}, à ${cm(hyp(src.x, src.y))}.`); G.raid.from = src.name; }
+    hint('raid');
+    emit('raid');
+  }
+  function resolveRaid() {
+    const raid = G.raid, D = defense(), Sx = raid.S, p = odds(D, Sx), pop = countAnts();
+    if (rnd() < p) {
+      const L = Sx * 0.6 * Sx / (Sx + D) * (0.6 + rnd() * 0.8);
+      const k1 = killSome(a => a.caste === 1 && !a.task, L * 0.75), k2 = killSome(a => a.caste !== 1 && !a.task, L * 0.25);
+      G.stats.raidsWon++;
+      log(`Raid des ${raid.from} repoussé. Pertes : ${k1 + k2}.`, 'good');
+      emit('raidWon', { D, S: Sx });
+    } else {
+      if (pop < 3) { G.raid = null; return gameOver('Des pillardes ont atteint la chambre royale.'); }
+      const k = killSome(a => a.caste === 1 && !a.task, G.counts[1] * 0.45) + killSome(a => a.caste !== 1 && !a.task, (G.counts[0] + G.counts[2]) * 0.18);
+      const fl = Math.floor(G.food * 0.3); G.food -= fl; const ne = Math.floor(G.eggs.length * 0.3); G.eggs.splice(0, ne);
+      G.stats.raidsLost++;
+      log(`Le nid a été pillé : ${k} mortes, ${fl} de nourriture volée${ne ? `, ${ne} œufs emportés` : ''}.`, 'bad');
+      emit('raidLost', { D, S: Sx });
+      hint('raidLost');
     }
-    const g=ctx.createRadialGradient(x,y,0,x,y,r*1.6);
-    g.addColorStop(0,e.conquered?'rgba(160,150,130,.6)':'rgba(150,50,40,.75)'); g.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*1.6,0,6.283); ctx.fill();
-    ctx.strokeStyle=e.conquered?COL.muted:COL.enemy; ctx.lineWidth=1.2*dpr; ctx.beginPath(); ctx.arc(x,y,r,0,6.283); ctx.stroke();
-    if(e.conquered){ ctx.fillStyle=COL.muted; ctx.fillText(`${e.name} · conquises`,x,y-r-6*dpr); }
-    else { const p=fightOdds(draw.armyN,e.S), v=verdict(p); ctx.fillStyle=COL.enemy; ctx.fillText(`${e.name} · force ${Math.max(1,Math.round(e.S))}`,x,y-r-18*dpr);
-      ctx.fillStyle=v.c; ctx.fillText(`${v.t} · ${Math.round(p*100)} %`,x,y-r-6*dpr); }
+    G.raid = null;
   }
-  // proies
-  for(const a of animals){
-    if(a.dead||!a.seen||off(a.x,a.y)) continue;
-    const x=X(a.x),y=Y(a.y),r=Math.max(2.5*dpr,(4+Math.sqrt(a.A)*0.8)*s);
-    ctx.save(); ctx.translate(x,y); ctx.rotate(a.rot);
-    ctx.fillStyle=COL.prey; ctx.beginPath(); ctx.ellipse(0,0,r,r*0.55,0,0,6.283); ctx.fill();
-    ctx.strokeStyle=COL.prey; ctx.lineWidth=Math.max(1,r*0.12);
-    for(let k=-1;k<=1;k++){ ctx.beginPath(); ctx.moveTo(k*r*0.4,-r*0.9); ctx.lineTo(k*r*0.4,r*0.9); ctx.stroke(); }
-    ctx.restore();
-    const hp=huntOdds(draw.huntN,a.A), hv=verdict(hp);
-    ctx.fillStyle=COL.prey; ctx.fillText(`${a.name} · force ${Math.max(1,Math.round(a.A))}`,x,y-r-18*dpr);
-    ctx.fillStyle=hv.c; ctx.fillText(`${hv.t} · ${Math.round(hp*100)} %`,x,y-r-6*dpr);
+
+  /* --- Projets --- */
+  const foundCost = (lvl = G.fondLvl) => Math.round(5 * Math.pow(2.2, lvl));
+  S.foundCost = foundCost;
+  function startProject(type, tk, ti) {
+    if (G.proj || G.over) return false;
+    if (type === 'found') {
+      const cost = foundCost(); if (G.wood < cost) return false;
+      G.wood -= cost; G.proj = { type, t: 0, dur: 30, name: `Fondations niv. ${G.fondLvl + 1}` };
+      log(`Les bâtisseuses creusent des fondations (−${cost} bois).`);
+      return true;
+    }
+    const tg = target(tk, ti); if (!tg || tg.dead || tg.conquered) return false;
+    const caste = type === 'hunt' ? 0 : 1, frac = type === 'hunt' ? 0.5 : 1;
+    const pool = G.ants.filter(a => !a.dead && !a.task && a.caste === caste);
+    const n = Math.max(1, Math.round(pool.length * frac));
+    if (!pool.length) return false;
+    for (let i = 0; i < n && i < pool.length; i++) { pool[i].task = type; pool[i].carry = null; pool[i].load = 0; }
+    const d = hyp(tg.x, tg.y);
+    G.proj = { type, tk, ti, t: 0, march: d / (32 * LV.spd()) + 2, dur: d / (32 * LV.spd()) + 2 + 6, name: type === 'hunt' ? `Chasse : ${tg.name}` : `Assaut : ${tg.name}` };
+    log(type === 'hunt' ? `${n} ouvrières partent chasser ${tk === 'pit' ? 'le fourmilion' : 'un ' + tg.name.toLowerCase()}.` : `${n} soldates marchent sur les ${tg.name}.`);
+    return true;
   }
-  // nid
-  { const x=X(0),y=Y(0),r=nR*s;
-    const g=ctx.createRadialGradient(x,y,r*0.2,x,y,r*1.7); g.addColorStop(0,'#5b4532'); g.addColorStop(.6,'rgba(78,60,43,.7)'); g.addColorStop(1,'rgba(60,45,32,0)');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*1.7,0,6.283); ctx.fill();
-    const n=Math.min(36,3+Math.floor(G.cap/14));
-    ctx.fillStyle='rgba(20,14,10,.55)';
-    for(let i=0;i<n;i++){ const a=i*2.399, d=r*0.85*Math.sqrt((i+.5)/n); ctx.beginPath(); ctx.ellipse(x+Math.cos(a)*d,y+Math.sin(a)*d,r*0.13,r*0.09,a,0,6.283); ctx.fill(); }
-    ctx.fillStyle='#f3ead8';
-    const ne=Math.min(40,eggs.length);
-    for(let i=0;i<ne;i++){ const a=i*2.399+1, d=(3.5+Math.sqrt(i)*1.1)*s; ctx.beginPath(); ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,Math.max(0.8*dpr,0.9*s),0,6.283); ctx.fill(); }
-    ctx.fillStyle='#e6b65a'; ctx.beginPath(); ctx.ellipse(x,y,Math.max(3*dpr,4*s),Math.max(1.8*dpr,2.2*s),-0.5,0,6.283); ctx.fill();
+  /* File d'attente : une cible morte ou déjà vaincue est retirée ; des fondations sans assez de bois attendent. */
+  function queueState(q) {
+    if (q.type === 'found') return G.wood >= foundCost() ? 'ok' : 'wait';
+    const tg = target(q.tk, q.ti);
+    if (!tg || tg.dead || tg.conquered) return 'gone';
+    const caste = q.type === 'hunt' ? 0 : 1;
+    return G.ants.some(a => !a.dead && !a.task && a.caste === caste) ? 'ok' : 'wait';
   }
-  // trajet du projet
-  if(proj&&proj.target){
-    ctx.setLineDash([4*dpr,5*dpr]); ctx.strokeStyle=proj.type==='hunt'?COL.food:COL.army; ctx.globalAlpha=.6; ctx.lineWidth=1.2*dpr;
-    ctx.beginPath(); ctx.moveTo(X(0),Y(0)); ctx.lineTo(X(proj.target.x),Y(proj.target.y)); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+  S.queueState = queueState;
+  function runQueue() {
+    while (G.queue.length) {
+      const q = G.queue[0], st = queueState(q);
+      if (st === 'gone') { G.queue.shift(); continue; }
+      if (st === 'wait') return;
+      G.queue.shift(); startProject(q.type, q.tk, q.ti); return;
+    }
   }
-  // fourmis
-  const L=Math.max(2.2*dpr,4*s), paths=[new Path2D(),new Path2D(),new Path2D()], gone=new Path2D(), loads={food:new Path2D(),wood:new Path2D()}, lr=Math.max(0.9*dpr,1.1*s);
-  const pad=10*dpr;
-  for(const a of ants){
-    if(a.dead) continue;
-    const x=X(a.x),y=Y(a.y); if(x<-pad||y<-pad||x>W+pad||y>H+pad) continue;
-    const c=Math.cos(a.a)*L/2,sn=Math.sin(a.a)*L/2;
-    const p=a.task==='leave'?gone:paths[a.caste]; p.moveTo(x-c,y-sn); p.lineTo(x+c,y+sn);
-    if(a.carry){ const q=loads[a.carry]; q.moveTo(x+c*1.3+lr,y+sn*1.3); q.arc(x+c*1.3,y+sn*1.3,lr,0,6.283); }
+  function endProject() {
+    const p = G.proj, t = p.tk ? target(p.tk, p.ti) : null;
+    const crew = G.ants.filter(a => !a.dead && a.task === p.type);
+    let loot = 0;
+    if (p.type === 'found') { G.fondLvl++; G.buildEff *= 2; log(`Fondations terminées : la construction va ${G.buildEff}× plus vite.`, 'good'); }
+    else if (p.type === 'hunt') {
+      const H = crew.length, A = t.A, ok = rnd() < huntOdds(H, A);
+      const lost = killSome(a => a.task === 'hunt', H * (ok ? 0.08 : 0.25) * A / (H * 3 + A));
+      if (ok) {
+        const tot = Math.round(Math.max(10, A * 3)); loot = Math.round(tot * 0.6); t.dead = true;
+        if (p.tk === 'animal') addSource('food', t.x, t.y, tot - loot);
+        G.stats.hunted++; G.stats.huntFood += loot;
+        log(p.tk === 'pit' ? `Le fourmilion est délogé et dévoré ! Les chasseuses rapportent ${loot} de nourriture. Pertes : ${lost}.` : `${t.name} abattu ! Les chasseuses rapportent ${loot} de nourriture, ${tot - loot} restent sur place. Pertes : ${lost}.`, 'good');
+        emit('win');
+      } else { log(`La chasse ${p.tk === 'pit' ? 'au fourmilion' : 'au ' + t.name.toLowerCase()} échoue. Pertes : ${lost}.`, 'bad'); emit('fail'); }
+    } else {
+      const D = crew.length, Sx = t.S, ok = rnd() < fightOdds(D, Sx);
+      const lost = killSome(a => a.task === 'attack', D * (ok ? 0.35 * Sx / (D * LV.str() + Sx) : 0.3 + 0.3 * Sx / (D * LV.str() + Sx)));
+      if (ok) {
+        t.conquered = true; reveal(t.x, t.y, 3);
+        G.pending = { ti: p.ti, lost, food: Math.round(Math.max(30, Sx * 1.5)), wood: Math.round(Math.max(15, Sx * 0.8)), workers: Math.max(3, Math.round(Sx * 0.15)), cap: Math.round(10 + Sx * 0.3) };
+        G.stats.wins++;
+        log(`Les ${t.name} sont vaincues ! Pertes : ${lost}. À toi de décider de leur sort.`, 'good');
+        emit('victory');
+        return;
+      } else { t.S *= 0.8; log(`L'assaut contre les ${t.name} est repoussé. Pertes : ${lost}. Leur colonie est affaiblie (force ${Math.round(t.S)}).`, 'bad'); emit('fail'); }
+    }
+    const alive = crew.filter(a => !a.dead);
+    for (const a of alive) { a.task = null; if (loot) { a.task = 'haul'; a.carry = 'food'; a.load = loot / alive.length; a.loadW = 0; } }
+    if (loot && !alive.length) G.food += loot;
+    G.proj = null;
   }
-  ctx.lineCap='round'; ctx.lineWidth=Math.max(1.3*dpr,1.5*s);
-  ctx.strokeStyle=COL.food; ctx.stroke(paths[0]); ctx.strokeStyle=COL.army; ctx.stroke(paths[1]); ctx.strokeStyle=COL.build; ctx.stroke(paths[2]);
-  ctx.globalAlpha=.3; ctx.strokeStyle=COL.ink; ctx.stroke(gone); ctx.globalAlpha=1;
-  ctx.fillStyle='#f6f2c8'; ctx.fill(loads.food); ctx.fillStyle='#b9824e'; ctx.fill(loads.wood);
-  // raid
-  if(raid){
-    const rx=Math.cos(raid.ang)*raid.dist, ry=Math.sin(raid.ang)*raid.dist, p=new Path2D();
-    for(const o of raid.ag){ const ax=X(rx+o[0]+(rnd()-.5)*2),ay=Y(ry+o[1]+(rnd()-.5)*2),a=raid.ang+Math.PI+(rnd()-.5); p.moveTo(ax-Math.cos(a)*L/2,ay-Math.sin(a)*L/2); p.lineTo(ax+Math.cos(a)*L/2,ay+Math.sin(a)*L/2); }
-    ctx.strokeStyle=COL.enemy; ctx.stroke(p);
-    if(raid.phase==='fight'){ ctx.fillStyle='rgba(255,220,200,.9)'; for(let k=0;k<14;k++){ ctx.beginPath(); ctx.arc(X(rx+(rnd()-.5)*30),Y(ry+(rnd()-.5)*30),1.2*dpr,0,6.283); ctx.fill(); } }
+  function resolveVictory(annex) {
+    const p = G.pending; if (!p) return;
+    const t = G.enemies[p.ti];
+    const crew = G.ants.filter(a => !a.dead && a.task === 'attack');
+    if (annex) {
+      t.annexed = true;
+      G.nests.push({ x: t.x, y: t.y, r: t.rad || 12, name: t.name });
+      G.food += p.food; G.wood += p.wood; G.cap += p.cap;
+      for (let i = 0; i < p.workers; i++) spawnAnt(0, G.nests.length - 1);
+      for (const a of crew) a.task = null;
+      G.stats.annexed++;
+      log(`Les ${t.name} rejoignent la colonie : +${p.food} nourriture, +${p.wood} bois, +${p.workers} ouvrières, +${p.cap} places.`, 'good');
+    } else {
+      const lf = Math.round(p.food * 0.75), lw = Math.round(p.wood * 0.75);
+      addSource('food', t.x, t.y, p.food * 0.5); addSource('wood', t.x + (t.rad || 10) * 0.8, t.y, p.wood * 0.5);
+      if (crew.length) { for (const a of crew) { a.task = 'haul'; a.carry = 'food'; a.load = lf / crew.length; a.loadW = lw / crew.length; } }
+      else { G.food += lf; G.wood += lw; }
+      log(`Le nid des ${t.name} est rasé. Les soldates rapportent ${lf} de nourriture et ${lw} de bois, et le reste attend sur place.`, 'good');
+    }
+    G.pending = null; G.proj = null;
   }
-  if(proj&&proj.target&&proj.t>proj.march){ const t=proj.target; ctx.fillStyle='rgba(255,240,210,.9)';
-    for(let k=0;k<10;k++){ ctx.beginPath(); ctx.arc(X(t.x+(rnd()-.5)*t.rad*2.4),Y(t.y+(rnd()-.5)*t.rad*2.4),1.2*dpr,0,6.283); ctx.fill(); } }
-  // brouillard
-  if(fogDirty) updFog();
-  ctx.drawImage(fogCv,X(-WR),Y(-WR),2*WR*s,2*WR*s);
-  // échelle
-  const nice=[10,20,50,100,200,500,1000], mm=nice.find(v=>v*s/dpr>50)||1000;
-  $('#scaleBar').style.width=(mm*s/dpr)+'px'; $('#scaleTxt').textContent=cm(mm);
+
+  /* --- Élevage de pucerons --- */
+  function farm(pi, n) {
+    const pl = G.plants[pi]; if (!pl || !pl.seen) return 0;
+    const cur = G.ants.filter(a => !a.dead && a.task === 'farm' && a.ti === pi);
+    if (n < cur.length) { for (const a of cur.slice(n)) { a.task = null; a.ti = -1; a.st = 2; } return n; }
+    const pool = G.ants.filter(a => !a.dead && !a.task && a.caste === 0);
+    const add = Math.min(pool.length, n - cur.length);
+    for (let i = 0; i < add; i++) { const a = pool[i]; a.task = 'farm'; a.ti = pi; a.st = 0; a.t = 0; a.carry = null; a.load = 0; }
+    if (add > 0 && !cur.length) log(`${add} ouvrières partent élever les pucerons du ${pl.name.toLowerCase()}.`);
+    return cur.length + add;
+  }
+  S.farmers = pi => G.ants.reduce((n, a) => n + (!a.dead && a.task === 'farm' && a.ti === pi ? 1 : 0), 0);
+
+  /* --- Pas de simulation --- */
+  function step(dt) {
+    if (G.over || G.pending) return;
+    const sea = season();
+    G.t += dt; G.tick++;
+    G.day = Math.floor(G.t / DAY) + 1;
+    const nR = nestR();
+    for (let i = 0; i < G.ants.length; i++) stepAnt(G.ants[i], dt, nR, i, sea);
+    if (G.tick % 3 === 0) stepPits();
+    if (G.tick % 15 === 0) G.ants = G.ants.filter(a => !a.dead);
+    const pop = countAnts();
+    const [w, s, b] = G.counts;
+    if (G.t >= G.nextHist) {
+      G.hist.push([G.t, w, s, b, Math.round(G.food)]); G.nextHist = G.t + G.histStep;
+      if (G.hist.length > 400) { G.hist = G.hist.filter((_, i) => i % 2 === 0); G.histStep *= 2; }
+    }
+    // consommation (le couvain mange aussi)
+    G.food -= ((pop * 0.008 + G.eggs.length * 0.004) * LV.eat() * sea.eat + 0.03) * dt;
+    // nouvelles poches de ressources
+    if (G.t >= G.nextPocket) {
+      G.nextPocket = G.t + (40 + rnd() * 40) / sea.pocket;
+      const type = rnd() < 0.6 ? 'food' : 'wood', a = rnd() * 6.283, d = 40 + rnd() * Math.max(110, Math.min(WR - 150, G.exploredR * 1.15));
+      const x = Math.cos(a) * d, y = Math.sin(a) * d, amt = (type === 'food' ? 30 + rnd() * 50 : 20 + rnd() * 35) * (1 + d / 800);
+      addSource(type, x, y, amt);
+      if (isSeen(x, y)) log(type === 'food' ? `Une nouvelle poche de nourriture est apparue à ${cm(d)}.` : `Du bois est tombé à ${cm(d)} du nid.`);
+    }
+    if (G.food < 0) {
+      G.food = 0; G.starveAcc += pop * 0.005 * dt;
+      if (G.starveAcc >= 1) { const n = killSome(() => true, Math.floor(G.starveAcc)); G.starveAcc -= n || G.starveAcc; G.starvedN += n; G.stats.starved += n; hint('starve'); }
+    }
+    // ponte (la reine pond moins en automne, pas du tout en hiver)
+    if (sea.lay > 0 && G.food >= EGG_COST) {
+      G.layAcc += Math.min(1.5, G.food * 0.025) * sea.lay * dt;
+      while (G.layAcc >= 1 && G.food >= EGG_COST) { G.layAcc--; G.food -= EGG_COST; G.eggs.push(HATCH * (0.85 + rnd() * 0.3)); }
+    }
+    for (let i = G.eggs.length - 1; i >= 0; i--) {
+      G.eggs[i] -= dt;
+      if (G.eggs[i] <= 0) { G.eggs.splice(i, 1); const r = rnd() * 100; spawnAnt(r < G.split[0] ? 0 : r < G.split[0] + G.split[1] ? 1 : 2); }
+    }
+    // construction : seulement quand la place manque
+    if (pop > G.cap * 0.75 && G.wood > 0 && b > 0) { const use = Math.min(G.wood, b * 0.04 * dt); G.wood -= use; G.cap += use * 0.6 * G.buildEff; }
+    // surpopulation
+    if (pop > G.cap) {
+      G.leaveAcc += (pop - G.cap) * 0.025 * dt;
+      while (G.leaveAcc >= 1) { G.leaveAcc--; const c = G.ants.filter(a => !a.dead && !a.task); if (!c.length) break; c[(rnd() * c.length) | 0].task = 'leave'; G.leftN++; G.stats.left++; }
+      hint('cap');
+    }
+    if (G.t - G.lastNote > 12) {
+      if (G.leftN) log(`${G.leftN} fourmi${G.leftN > 1 ? 's ont' : ' a'} quitté le nid, faute de place.`, 'bad');
+      if (G.starvedN) log(`${G.starvedN} fourmi${G.starvedN > 1 ? 's sont mortes' : ' est morte'} de faim.`, 'bad');
+      if (G.pitN) log(`${G.pitN} fourmi${G.pitN > 1 ? 's sont tombées' : ' est tombée'} dans les pièges des fourmilions.`, 'bad');
+      G.leftN = 0; G.starvedN = 0; G.pitN = 0; G.lastNote = G.t;
+    }
+    // météo : averses
+    if (G.weather) { G.weather.t -= dt; if (G.weather.t <= 0) { G.weather = null; log('La pluie cesse. Les ouvrières ressortent, mais les pistes sont à refaire.'); } }
+    else if (G.t >= G.nextRain) {
+      G.nextRain = G.t + (70 + rnd() * 80) / sea.rain;
+      { G.weather = { type: 'pluie', t: 12 + rnd() * 10 }; log('Une averse ! Les fourmis s\'abritent et la pluie lave les pistes de phéromones.', 'bad'); hint('rain'); emit('rain'); }
+    }
+    // raids
+    if (!G.raid && G.t >= G.nextRaid) {
+      startRaid();
+      // moins il reste de colonies voisines, plus les raids sont rares
+      const near = G.enemies.filter(e => hyp(e.x, e.y) < 900), alive = near.filter(e => !e.conquered).length;
+      const slow = alive ? near.length / alive : 1;
+      G.nextRaid = G.t + raidGap(G.t) * (0.8 + rnd() * 0.5) * Math.min(1.6, slow);
+    }
+    if (G.raid) {
+      const raid = G.raid;
+      if (raid.phase === 'approach') { raid.dist -= 24 * dt; if (raid.dist < nR + 16) { raid.phase = 'fight'; raid.ft = 0; } }
+      else { raid.ft += dt; if (raid.ft > 4) resolveRaid(); }
+    }
+    // projets : le suivant de la file démarre dès que possible
+    if (!G.proj && !G.pending && G.queue.length && G.tick % 15 === 0) runQueue();
+    if (G.proj) { G.proj.t += dt; if (G.proj.t >= G.proj.dur) endProject(); }
+    // monde
+    if (G.tick % 15 === 0) {
+      for (const e of G.enemies) {
+        if (!e.seen && isSeen(e.x, e.y)) { e.seen = true; log(`Colonie repérée : les ${e.name} (force ${Math.round(e.S)}, à ${cm(hyp(e.x, e.y))}).`); hint('enemy'); }
+      }
+      for (const a of G.animals) if (!a.dead && !a.seen && isSeen(a.x, a.y)) { a.seen = true; log(`Proie repérée : ${a.name.toLowerCase()} (force ${Math.round(a.A)}).`); hint('prey'); }
+      for (const p of G.plants) {
+        if (!p.seen && isSeen(p.x, p.y)) { p.seen = true; log(`Des pucerons sur un ${p.name.toLowerCase()}, à ${cm(hyp(p.x, p.y))} : on peut les élever.`, 'good'); hint('plant'); }
+        p.stock = Math.min(p.max, p.stock + sea.regen * 0.125);
+        // miellat rapporté au nid, moyenne glissante sur environ 40 s (en nourriture par seconde)
+        const got = p.got || 0, dg = got - (p.gotPrev || 0); p.gotPrev = got; p.rate = (p.rate || 0) + (dg / 0.5 - (p.rate || 0)) * (0.5 / 40);
+      }
+      for (const p of G.pits) if (!p.dead && !p.seen && isSeen(p.x, p.y) && rnd() < 0.02) { p.seen = true; log(`Un entonnoir de fourmilion repéré à ${cm(hyp(p.x, p.y))}. Les fourmis qui passent dessus y tombent.`); }
+      evaporate();
+      if (G.tick % 450 === 0) { G.sources = G.sources.filter(s => s.amount >= 1); rebuildBuckets(); }
+    }
+    // suivi de la nourriture : gain net par seconde (moyenne glissante sur environ 1 min) et nourriture encore à portée
+    if (G.tick % 15 === 0) {
+      updReach();
+      const d = G.food - G.foodPrev; G.foodPrev = G.food; G.foodRate += (d / 0.5 - G.foodRate) * (0.5 / 60);
+    }
+    if (G.tick % 150 === 0) {
+      let n = 0; const R2 = (G.reach + 10) * (G.reach + 10);
+      for (const so of G.sources) if (so.type === 'food' && so.amount >= 1 && so.x * so.x + so.y * so.y < R2) n += so.amount;
+      G.nearFood = n;
+      // alerte : les environs seront vides dans moins de 3 minutes au rythme de la colonie
+      if (G.t > 180 && n < pop * 0.5 * 3) hint('foodLow');
+    }
+    if (pop > G.maxPop) G.maxPop = pop;
+    if (pop > G.stats.maxPop) G.stats.maxPop = pop;
+    if (pop === 0 && G.eggs.length === 0 && G.food < EGG_COST) gameOver('La reine est morte de faim, seule dans sa chambre.');
+    // les colonies voisines grossissent, de nouvelles proies arrivent
+    if (G.tick % 30 === 0) for (const e of G.enemies) if (!e.conquered) { e.S *= 1 + 0.0006; e.rad = 8 + Math.sqrt(e.S) * 1.2; }
+    if (G.t >= G.nextPrey) { G.nextPrey = G.t + 240; newPrey(); }
+  }
+
+  function newPrey() {
+    for (let i = 0; i < 3; i++) {
+      const d0 = Math.max(150, G.exploredR * 0.5), [x, y, d] = polar(d0, Math.min(WR - 200, G.exploredR + 300), 1);
+      const A = preyForce(d) * (0.7 + rnd() * 0.6) * (1 + G.t / 2400);
+      G.animals.push({ x, y, A, name: animalName(A), seen: false, dead: false, rot: rnd() * 6.28, rad: 4 + Math.sqrt(A) * 0.8 });
+    }
+  }
+
+  function gameOver(why) {
+    if (G.over) return;
+    G.over = { why, day: G.day, maxPop: G.stats.maxPop };
+    emit('over', G.over);
+  }
+
+  /* --- Conseils (une fois chacun) --- */
+  function hint(k) { if (G.hints[k]) return; G.hints[k] = 1; emit('hint', { k }); }
+  S.hint = hint;
+
+  /* --- Actions du joueur --- */
+  S.act = {
+    split(a, b, c) { G.split = [a, b, c]; },
+    levelUp(k) {
+      const f = LV.costF(), w = LV.costW(), u = UPS.find(x => x[0] === k);
+      if (!u || G.food < f || G.wood < w || G.over) return false;
+      G.food -= f; G.foodPrev -= f; G.wood -= w; G.lvl++; G.up[k]++;
+      log(`Niveau ${G.lvl} : ${u[1].toLowerCase()} améliorée.`, 'good'); return true;
+    },
+    project: startProject,
+    queue(type, tk, ti) { if (G.queue.length >= 8) return false; if (type !== 'found' && G.queue.some(q => q.type === type && q.tk === tk && q.ti === ti)) return false; G.queue.push({ type, tk, ti }); return true; },
+    unqueue(i) { G.queue.splice(i, 1); },
+    moveQueue(i, d) { const j = i + d; if (j < 0 || j >= G.queue.length) return; [G.queue[i], G.queue[j]] = [G.queue[j], G.queue[i]]; },
+    victory: resolveVictory,
+    farm,
+    beacon(x, y) { G.beacon = x == null ? null : { x, y }; return true; },
+  };
+
+  /* --- Sauvegarde --- */
+  S.save = function () {
+    const o = Object.assign({}, G);
+    o.revealed = Array.from(G.revealed).join('');
+    o.pebbles = undefined;
+    o.ants = G.ants.filter(a => !a.dead).map(a => [Math.round(a.x * 10) / 10, Math.round(a.y * 10) / 10, +a.a.toFixed(2), a.caste, a.h, a.st, +a.t.toFixed(1), +a.age.toFixed(1), Math.round(a.life), a.carry, a.task, a.ti, +(a.load || 0).toFixed(2), +(a.loadW || 0).toFixed(2), a.scout ? 1 : 0]);
+    o.rng = R.s; o.v = 2;
+    return JSON.stringify(o);
+  };
+  S.load = function (str) {
+    const o = JSON.parse(str); if (!o || o.v !== 2) return false;
+    R = rng(o.seed); genPebbles(o.seed);
+    G = S.G = o; G.pebbles = S._pebbles;
+    G.revealed = Uint8Array.from(o.revealed, ch => ch === '1' ? 1 : 0);
+    G.ants = o.ants.map(r => ({ x: r[0], y: r[1], a: r[2], caste: r[3], h: r[4], st: r[5], t: r[6], age: r[7], life: r[8], carry: r[9], task: r[10], ti: r[11], load: r[12], loadW: r[13], scout: !!r[14], dead: false }));
+    R.s = o.rng; delete G.rng; delete G.v;
+    phF.fill(0); phW.fill(0); phH.fill(0);
+    rebuildBuckets(); S.fogDirty = true; countAnts();
+    return true;
+  };
+  function genPebbles(sd) {
+    const r = rng(sd ^ 0x5bd1e995), out = [];
+    for (let i = 0; i < 2600; i++) { const a = r.next() * Math.PI * 2, d = 20 + Math.pow(r.next(), .7) * (WR - 20); out.push({ x: Math.cos(a) * d, y: Math.sin(a) * d, r: 0.8 + r.next() * r.next() * 5, c: (r.next() * 3) | 0 }); }
+    S._pebbles = out;
+  }
+
+  S.step = step;
+  S.countAnts = countAnts;
+  newGame();
+  genPebbles(seed); G.pebbles = S._pebbles;
+  return S;
 }
 
-/* --- Interface --- */
-function applySplit(){
-  const [a,b,c]=G.split;
-  $('#seg0').style.width=a+'%'; $('#seg1').style.width=b+'%'; $('#seg2').style.width=c+'%';
-  $('#seg0').textContent=a>=12?a+'%':''; $('#seg1').textContent=b>=12?b+'%':''; $('#seg2').textContent=c>=12?c+'%':'';
-  $('#h1').style.left=a+'%'; $('#h2').style.left=(a+b)+'%';
-  for(let i=0;i<3;i++) $('#lp'+i).textContent=G.split[i]+' %';
-  $('#h1').setAttribute('aria-valuenow',a); $('#h2').setAttribute('aria-valuenow',a+b);
-}
-function setHandles(h1,h2){ h1=Math.round(clamp(h1,0,100)); h2=Math.round(clamp(h2,h1,100)); G.split=[h1,h2-h1,100-h2]; applySplit(); }
-for(const id of ['h1','h2']){
-  const h=$('#'+id);
-  h.addEventListener('pointerdown',e=>{ h.setPointerCapture(e.pointerId); e.preventDefault(); });
-  h.addEventListener('pointermove',e=>{
-    if(!h.hasPointerCapture(e.pointerId)) return;
-    const r=$('#split').getBoundingClientRect(), v=(e.clientX-r.left)/r.width*100;
-    const h1=G.split[0], h2=G.split[0]+G.split[1];
-    id==='h1'?setHandles(Math.min(v,h2),h2):setHandles(h1,Math.max(v,h1));
-  });
-  h.addEventListener('keydown',e=>{
-    const d=e.key==='ArrowRight'||e.key==='ArrowUp'?1:e.key==='ArrowLeft'||e.key==='ArrowDown'?-1:0; if(!d) return; e.preventDefault();
-    const h1=G.split[0], h2=G.split[0]+G.split[1];
-    id==='h1'?setHandles(Math.min(h1+d,h2),h2):setHandles(h1,Math.max(h2+d,h1));
-  });
-}
-document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ const p=b.dataset.p.split(',').map(Number); setHandles(p[0],p[0]+p[1]); }));
-document.querySelectorAll('.speed button').forEach(b=>b.addEventListener('click',()=>{ G.speed=+b.dataset.s; document.querySelectorAll('.speed button').forEach(x=>x.setAttribute('aria-pressed',x===b)); }));
+const API = { create, CLIMATE, raidForce, preyForce, UPS, WR, CELL, GN, FC, FN, STEP, DAY, EGG_COST, fmt, cm, clamp, verdict, angDiff, rng };
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+else root.Fourmi = API;
+})(typeof window !== 'undefined' ? window : globalThis);
 
-function ui(){
-  const pop=countAnts();
-  $('#day').textContent=`Jour ${Math.floor(G.t/60)+1} · record ${G.best}`;
-  $('#stPop b').textContent=fmt(pop); $('#stPop').classList.toggle('warn',pop>G.cap);
-  $('#capFill').style.width=Math.min(100,pop/G.cap*100)+'%'; $('#capTxt').textContent=`Place ${fmt(G.cap)}`;
-  $('#stFood b').textContent=fmt(G.food); $('#stFood').classList.toggle('warn',G.food<3);
-  $('#stWood b').textContent=fmt(G.wood);
-  $('#stEggs b').textContent=eggs.length;
-  $('#stTerr b').textContent=cm(G.exploredR);
-  for(let i=0;i<3;i++) $('#lc'+i).textContent=G.counts[i]+' en vie';
-  // bandeau de raid
-  const bn=$('#banner');
-  if(raid){ bn.hidden=false; bn.innerHTML=`<strong>${raid.phase==='fight'?'Combat au nid':'Raid en approche'}</strong><span class="mono">${raid.from} · force ${raid.S} contre défense ${Math.round(defense())} · ${Math.round(odds(defense(),raid.S)*100)} %</span>`; }
-  else bn.hidden=true;
-  // évolution
-  { const f=LV.costF(), w=LV.costW(), ok=G.food>=f&&G.wood>=w, ev=$('#evo');
-    const sig=`${G.lvl}|${ok}`;
-    if(ev.dataset.sig!==sig){ ev.dataset.sig=sig;
-      ev.innerHTML=`<div class="evo" style="grid-template-columns:1fr"><div><b>Niveau ${G.lvl}</b><small>Prochain niveau : ${f} nourriture + ${w} bois. Choisis une seule amélioration.</small></div></div>
-        <div class="ups">${UPS.map(u=>`<button class="up" data-u="${u[0]}" ${ok?'':'disabled'}><b>${u[1]}</b><small>${u[2]}</small><small>actuel : ${u[3]()}</small></button>`).join('')}</div>`;
-    } }
-  // projet
-  const box=$('#proj');
-  if(proj){
-    const pct=Math.min(100,proj.t/proj.dur*100);
-    let phase='', meta='';
-    if(proj.type==='found'){ phase='Creusement'; meta=`Fin dans ${Math.ceil(proj.dur-proj.t)} s`; }
-    else { const crew=ants.filter(a=>!a.dead&&a.task===proj.type).length, foe=proj.type==='hunt'?proj.target.A:proj.target.S;
-      phase=proj.t<proj.march?'En marche':'Combat'; meta=`${crew} engagées · force adverse ${Math.round(foe)} · ${Math.round((proj.type==='hunt'?huntOdds(crew,foe):fightOdds(crew,foe))*100)} %`; }
-    box.innerHTML=`<div class="active"><div class="row"><b>${proj.name}</b><span>${phase}</span></div><div class="bar"><i style="width:${pct}%"></i></div><div class="meta">${meta}</div></div>`;
-  } else {
-    const nA=animals.filter(a=>a.seen&&!a.dead).length, nE=enemies.filter(e=>e.seen&&!e.conquered).length, fc=foundCost();
-    const sig=`${nA}|${nE}|${fc}|${G.wood>=fc}`;
-    if(box.dataset.sig!==sig){
-      box.dataset.sig=sig;
-      box.innerHTML=`<div class="projs">
-        <button class="pbtn" data-k="hunt" ${nA?'':'disabled'}><b>Chasse</b><small>${nA?nA+' proie'+(nA>1?'s':'')+' repérée'+(nA>1?'s':''):'Aucune proie repérée'}</small></button>
-        <button class="pbtn" data-k="attack" ${nE?'':'disabled'}><b>Assaut</b><small>${nE?nE+' colonie'+(nE>1?'s':'')+' en vue':'Aucune colonie en vue'}</small></button>
-        <button class="pbtn" data-k="found" ${G.wood>=fc?'':'disabled'}><b>Fondations</b><small>${fc} bois · construction ×2</small></button></div>`;
+</script>
+<script>
+/* Fourmilière — dessin, commandes, écrans. Le moteur est dans sim.js. */
+(() => {
+"use strict";
+const F = window.Fourmi, $ = s => document.querySelector(s);
+const { WR, CELL, GN, FC, FN, STEP, DAY, UPS, fmt, cm, clamp, verdict } = F;
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const COL = { food: '#c6d45a', army: '#8fa9e8', build: '#d9925a', enemy: '#e5513f', prey: '#c48ad8', ink: '#efe6d6', muted: '#a3937f', gold: '#e6c25a', plant: '#6fbf6a', pit: '#d8c08a' };
+const KEY_DAYS = 'fourmi-record-jours', KEY = 'fourmi-partie', KEY_CK = ['fourmi-jour-1', 'fourmi-jour-2', 'fourmi-jour-3', 'fourmi-jour-4', 'fourmi-jour-5'], KEY_BEST = 'fourmi-record', KEY_SOUND = 'fourmi-son';
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+let S = null, G = null, speed = 1, running = false, frame = 0;
+const cam = { zoom: 1, px: 0, py: 0, follow: true, viewR: 120 };
+window.__fourmi = { get S() { return S; }, get running() { return running; }, setSpeed: v => setSpeed(v),
+  toScreen: (x, y) => { const s = cam.scale || 1; return [(W / 2 + (x - cam.px) * s) / dpr, (H / 2 + (y - cam.py) * s) / dpr]; } };
+
+/* ------------------------------------------------------------------ */
+/* Sons (synthétisés, aucun fichier)                                    */
+let actx = null, soundOn = store.get(KEY_SOUND) !== '0';
+function tone(freq, dur, type = 'sine', vol = 0.06, when = 0) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+const SFX = {
+  raid: () => { tone(160, 0.25, 'sawtooth', 0.05); tone(130, 0.35, 'sawtooth', 0.05, 0.22); },
+  good: () => { tone(523, 0.12, 'triangle'); tone(659, 0.12, 'triangle', 0.06, 0.1); tone(784, 0.2, 'triangle', 0.06, 0.2); },
+  bad: () => { tone(220, 0.2, 'triangle', 0.06); tone(175, 0.3, 'triangle', 0.06, 0.15); },
+  tap: () => tone(660, 0.05, 'sine', 0.03),
+  rain: () => { tone(900, 0.05, 'sine', 0.02); tone(700, 0.05, 'sine', 0.02, 0.08); tone(1100, 0.05, 'sine', 0.02, 0.15); },
+};
+$('#soundBtn').setAttribute('aria-pressed', soundOn);
+$('#soundBtn').addEventListener('click', () => { soundOn = !soundOn; store.set(KEY_SOUND, soundOn ? '1' : '0'); $('#soundBtn').setAttribute('aria-pressed', soundOn); if (soundOn) SFX.tap(); });
+
+/* ------------------------------------------------------------------ */
+/* Textures                                                             */
+const TN = 320;
+const terrCv = document.createElement('canvas'); terrCv.width = terrCv.height = TN;
+const phCv = document.createElement('canvas'); phCv.width = phCv.height = GN;
+const phCx = phCv.getContext('2d'), phImg = phCx.createImageData(GN, GN), ph32 = new Uint32Array(phImg.data.buffer);
+const fogCv = document.createElement('canvas'); fogCv.width = fogCv.height = FN;
+const fogCx = fogCv.getContext('2d'), fogImg = fogCx.createImageData(FN, FN), fog32 = new Uint32Array(fogImg.data.buffer);
+
+function buildTerrain(seed) {
+  const r = F.rng(seed ^ 0x2545f491), R = () => r.next();
+  const tc = terrCv.getContext('2d'), img = tc.createImageData(TN, TN), d = img.data;
+  const mk = n => { const g = new Float32Array((n + 1) * (n + 1)); for (let i = 0; i < g.length; i++) g[i] = R(); return g; };
+  const g1 = mk(16), g2 = mk(48);
+  const vn = (g, n, u, v) => { const x = u * n, y = v * n, i = Math.min(n - 1, x | 0), j = Math.min(n - 1, y | 0), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), w = n + 1;
+    const a = g[j * w + i], b = g[j * w + i + 1], c = g[(j + 1) * w + i], e = g[(j + 1) * w + i + 1]; return a + (b - a) * sx + (c - a) * sy + (a - b - c + e) * sx * sy; };
+  for (let j = 0; j < TN; j++) for (let i = 0; i < TN; i++) {
+    const u = i / TN, v = j / TN, n = vn(g1, 16, u, v) * 0.65 + vn(g2, 48, u, v) * 0.35, m = vn(g2, 48, v, u);
+    const moss = clamp((m - 0.62) * 3, 0, 1), k = (j * TN + i) * 4;
+    d[k] = 30 + n * 26 - moss * 6; d[k + 1] = 23 + n * 20 + moss * 10; d[k + 2] = 17 + n * 13 - moss * 2; d[k + 3] = 255;
+  }
+  tc.putImageData(img, 0, 0);
+}
+function updPh(i0, i1, j0, j1) {
+  const { F: phF, W: phW, H: phH } = S.ph;
+  for (let j = j0; j <= j1; j++) {
+    let i = j * GN + i0;
+    for (let x = i0; x <= i1; x++, i++) {
+      const f = phF[i], w = phW[i], h = phH[i];
+      if (f < 0.02 && w < 0.02 && h < 0.04) { ph32[i] = 0; continue; }
+      const fI = f > 3 ? 1 : f / 3, wI = w > 3 ? 1 : w / 3, hI = (h > 4 ? 1 : h / 4) * 0.35, s = fI + wI + hI;
+      const r = (fI * 198 + wI * 222 + hI * 120) / s, g = (fI * 214 + wI * 146 + hI * 150) / s, b = (fI * 90 + wI * 80 + hI * 196) / s;
+      const a = (Math.min(1, Math.max(fI, wI, hI)) * 215) | 0;
+      ph32[i] = ((a << 24) | ((b | 0) << 16) | ((g | 0) << 8) | (r | 0)) >>> 0;
     }
   }
-  if(!proj) delete box.dataset.none; else box.dataset.sig='';
-  if(sheetType) fillSheet();
+  phCx.putImageData(phImg, 0, 0);
 }
-$('#proj').addEventListener('click',e=>{
-  const b=e.target.closest('.pbtn'); if(!b||b.disabled) return;
-  if(b.dataset.k==='found') startProject('found'); else openSheet(b.dataset.k);
+function updFog() {
+  const rv = G.revealed;
+  for (let i = 0; i < FN * FN; i++) fog32[i] = rv[i] ? 0 : (0xE6 << 24 | 0x07 << 16 | 0x09 << 8 | 0x0b) >>> 0;
+  fogCx.putImageData(fogImg, 0, 0); S.fogDirty = false;
+}
+
+/* ------------------------------------------------------------------ */
+/* Partie : démarrage, sauvegarde, reprise                              */
+function attach(sim) {
+  S = sim; G = S.G;
+  buildTerrain(G.seed);
+  ph32.fill(0); phCx.putImageData(phImg, 0, 0);
+  S.fogDirty = true;
+  cam.zoom = 1; cam.px = 0; cam.py = 0; cam.follow = true; cam.viewR = Math.max(110, S.nestR() * 4.5, G.exploredR * 1.02);
+  $('#zFollow').setAttribute('aria-pressed', 'true');
+  for (const k in sigs) delete sigs[k];
+  applySplit(); renderLog(); ui();
+}
+function newGame() {
+  attach(F.create());
+  store.del(KEY); for (const k of KEY_CK) store.del(k);
+  hideAll(); running = true; setSpeed(1); lastDay = 1; checkpoint();
+  setTimeout(() => toast('start'), 1500);
+}
+function saveNow() { if (S && !G.over) store.set(KEY, S.save()); }
+/* Points de reprise : un par jour, les cinq derniers ; « revenir en arrière » reprend le plus ancien. */
+let lastDay = 1;
+function checkpoint() {
+  for (let i = 0; i < KEY_CK.length - 1; i++) { const v = store.get(KEY_CK[i + 1]); if (v) store.set(KEY_CK[i], v); else store.del(KEY_CK[i]); }
+  store.set(KEY_CK[KEY_CK.length - 1], S.save());
+}
+const oldestCk = () => { for (const k of KEY_CK) { const v = store.get(k); if (v) return v; } return null; };
+function loadFrom(str) {
+  const sim = F.create({ seed: 1 });
+  if (!sim.load(str)) return false;
+  attach(sim); return true;
+}
+function resume() {
+  const str = store.get(KEY); if (!str || !loadFrom(str)) { newGame(); return; }
+  lastDay = G.day; running = true; setSpeed(1);
+  if (G.over) return showOver();
+  if (G.pending) return openVictory();
+}
+function goBack() {
+  const str = oldestCk(); hideAll();
+  if (!str || !loadFrom(str)) { newGame(); return; }
+  for (const k of KEY_CK) store.del(k); store.set(KEY_CK[KEY_CK.length - 1], str);
+  lastDay = G.day; saveNow(); running = true; setSpeed(1);
+  log2(`Retour au jour ${G.day}.`);
+}
+function log2(msg) { G.logs.unshift({ d: G.day, msg, kind: '' }); renderLog(); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+window.addEventListener('pagehide', saveNow);
+setInterval(() => { if (running) saveNow(); }, 10000);
+
+/* ------------------------------------------------------------------ */
+/* Écrans                                                               */
+const overlays = ['#intro', '#sheet', '#chartBox', '#victory', '#over', '#wBirth', '#wProj', '#wFarm', '#wEvo', '#wLog'];
+function hideAll() { for (const o of overlays) $(o).hidden = true; }
+const blocked = () => overlays.some(o => !$(o).hidden);
+
+function showOver() {
+  hideAll(); running = false; SFX.bad();
+  dayTick();
+  const best = +store.get(KEY_BEST) || 0, bestD = +store.get(KEY_DAYS) || 0;
+  $('#overTxt').textContent = `${G.over.why} Elle a tenu ${G.over.day} jours et compté jusqu'à ${fmt(G.stats.maxPop)} fourmis. Records : ${bestD} jours, ${fmt(best)} fourmis.`;
+  const ck = oldestCk(), ckDay = ck ? (JSON.parse(ck).day || 1) : 0;
+  $('#overRetry').hidden = !ck || ckDay >= G.over.day;
+  $('#overRetry').textContent = `Revenir au jour ${ckDay}`;
+  $('#over').hidden = false;
+}
+$('#overRetry').addEventListener('click', goBack);
+$('#againBtn').addEventListener('click', () => { hideAll(); newGame(); });
+
+/* Conseils : bulles non bloquantes, une seule fois par partie */
+const HINTS = {
+  start: "Touche le terrain pour poser une balise : les éclaireuses (un tiers des ouvrières et des bâtisseuses) iront explorer par là. Touche la balise pour l'enlever.",
+  prey: "Une proie est en vue (violet). Touche-la : la moitié des ouvrières libres part la chasser. Le pourcentage indique les chances de réussite.",
+  enemy: "Une colonie ennemie est en vue (rouge). Ses raids viendront de là. Avec assez de soldates, touche-la pour lancer l'assaut.",
+  raid: "Un raid arrive ! Seules les fourmis restées au nid défendent : 1 par soldate, 0,2 par autre fourmi. Chasseuses et éleveuses absentes ne comptent pas.",
+  raidLost: "Nid pillé : nourriture, œufs et soldates perdus. Augmente la part d'armée (fenêtre Naissances) avant le prochain raid : ils grossissent avec la colonie.",
+  pit: "Un fourmilion ! Les fourmis qui marchent sur son entonnoir meurent. Touche-le pour le chasser, ou déplace la balise pour éviter le coin.",
+  plant: "Des pucerons (plante verte sur le terrain) ! Ouvre « Pucerons » en bas : des ouvrières éleveuses iront chercher leur miellat et le rapporteront comme nourriture.",
+  foodLow: "Les ouvrières ont presque vidé les environs du nid (case « Environs »). Pose une balise plus loin pour trouver de la nourriture, chasse, ou élève des pucerons. Une piste de phéromones permet de récolter au-delà du rayon habituel.",
+  starve: "La colonie meurt de faim. Plus d'ouvrières (fenêtre Naissances), une balise vers de la nourriture, une chasse ou des pucerons.",
+  cap: "Le nid est plein : des fourmis s'en vont. Il faut des bâtisseuses (fenêtre Naissances) et du bois ; le projet Fondations double la vitesse de construction.",
+  rain: "Pendant la pluie, tout le monde s'abrite et les pistes s'effacent. Elles se reformeront ensuite.",
+  level: "Tu peux passer un niveau : ouvre « Évolution » en bas et choisis une amélioration.",
+};
+const toastQ = []; let toastT = 0;
+function toast(k) {
+  if (!HINTS[k]) return;
+  if (k === 'start' || k === 'level') { if (G.hints['ui_' + k]) return; G.hints['ui_' + k] = 1; }
+  toastQ.push(HINTS[k]); if ($('#toast').hidden) nextToast();
+}
+function nextToast() {
+  const t = $('#toast'); const msg = toastQ.shift();
+  if (!msg) { t.hidden = true; return; }
+  t.innerHTML = `<p>${msg}</p><button>OK</button>`; t.hidden = false; toastT = 18;
+  t.querySelector('button').onclick = () => nextToast();
+}
+
+/* ------------------------------------------------------------------ */
+/* Boucle                                                               */
+function setSpeed(v) { speed = v; document.querySelectorAll('.speed button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.s === v)); }
+document.querySelectorAll('.speed button').forEach(b => b.addEventListener('click', () => setSpeed(+b.dataset.s)));
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,textarea')) return;
+  if (e.code === 'Space' && running && !blocked()) { e.preventDefault(); setSpeed(speed ? 0 : 1); }
 });
-$('#evo').addEventListener('click',e=>{ const b=e.target.closest('.up'); if(b&&!b.disabled) levelUp(b.dataset.u); });
-$('#vicDestroy').addEventListener('click',()=>resolveVictory(false));
-$('#vicAnnex').addEventListener('click',()=>resolveVictory(true));
-function openSheet(type){ sheetType=type; fillSheet(); $('#sheet').hidden=false; }
-function closeSheet(){ sheetType=null; $('#sheet').hidden=true; }
-$('#sheetClose').addEventListener('click',closeSheet);
-$('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') closeSheet(); });
-function fillSheet(){
-  const hunt=sheetType==='hunt';
-  $('#sheetTitle').textContent=hunt?'Chasse':'Assaut';
-  const us=hunt?hunters():army();
-  $('#sheetSub').innerHTML=hunt
-    ?`Ta force de chasse : <b>${us*3}</b> (${us} chasseuses × 3, la moitié des ouvrières libres). Plus elle dépasse la force de la proie, plus la chasse est sûre. En cas de succès, elles rentrent chargées de nourriture.`
-    :`Ta force d'assaut : <b>${Math.round(us*1.5*LV.str())}</b> (toute l'armée, ${String(+(1.5*LV.str()).toFixed(2)).replace('.',',')} par soldate). Plus elle dépasse la force de la colonie, plus l'assaut est sûr. Le nid est moins bien défendu pendant ce temps.`;
-  const list=(hunt?animals.filter(a=>a.seen&&!a.dead):enemies.filter(e=>e.seen&&!e.conquered))
-    .map(t=>({t,d:Math.hypot(t.x,t.y),f:hunt?t.A:t.S})).sort((a,b)=>a.d-b.d);
-  const mine=hunt?us*3:Math.round(us*1.5*LV.str());
-  const html=list.length?`<ul class="targets">${list.map((o,i)=>{const pr=hunt?huntOdds(us,o.f):fightOdds(us,o.f), v=verdict(pr), p=Math.round(pr*100);
-      return `<li><b>${hunt?o.t.name:'Les '+o.t.name} <span class="odds" style="color:${v.c}">· ${v.t} ${p} %</span></b><small>toi ${mine} contre ${Math.round(o.f)} · à ${cm(o.d)}</small><button class="go" data-i="${i}">Lancer</button></li>`;}).join('')}</ul>`
-    :`<p class="empty">Rien en vue pour l'instant. Les ouvrières doivent explorer plus loin.</p>`;
-  const body=$('#sheetBody'); if(body.dataset.html!==html){ body.innerHTML=html; body.dataset.html=html; }
-  body.onclick=e=>{ const b=e.target.closest('button[data-i]'); if(b) startProject(sheetType,list[+b.dataset.i].t); };
-}
 
-/* --- Caméra : glisser pour déplacer, molette ou pincement pour zoomer --- */
-function zoomAt(f,sx,sy){
-  const s=G.scale||1, k=dpr, mx=sx*k-W/2, my=sy*k-H/2;
-  const nz=clamp(cam.zoom*f,0.3,10), rf=nz/cam.zoom; if(rf===1) return;
-  const wx=cam.px+mx/s, wy=cam.py+my/s;
-  cam.zoom=nz; cam.px=wx-mx/(s*rf); cam.py=wy-my/(s*rf);
-  unfollow();
-}
-function unfollow(){ cam.follow=false; $('#zFollow').setAttribute('aria-pressed','false'); }
-const ptrs=new Map(); let pinch=0;
-const local=e=>{ const r=cv.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; };
-cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,local(e)); pinch=0; });
-cv.addEventListener('pointermove',e=>{
-  if(!ptrs.has(e.pointerId)) return;
-  const p=local(e), prev=ptrs.get(e.pointerId);
-  if(ptrs.size===1){
-    const s=G.scale||1; cam.px-=(p[0]-prev[0])*dpr/s; cam.py-=(p[1]-prev[1])*dpr/s;
-    cam.px=clamp(cam.px,-WR,WR); cam.py=clamp(cam.py,-WR,WR);
-    if(Math.abs(p[0]-prev[0])+Math.abs(p[1]-prev[1])>0) unfollow();
-    ptrs.set(e.pointerId,p);
-  } else if(ptrs.size===2){
-    ptrs.set(e.pointerId,p);
-    const [a,b]=[...ptrs.values()], d=Math.hypot(a[0]-b[0],a[1]-b[1]);
-    if(pinch) zoomAt(d/pinch,(a[0]+b[0])/2,(a[1]+b[1])/2);
-    pinch=d;
+function handleEvents() {
+  const ev = S.events.splice(0);
+  for (const e of ev) {
+    switch (e.type) {
+      case 'log': logDirty = true; break;
+      case 'hint': toast(e.k); break;
+      case 'raid': SFX.raid(); break;
+      case 'raidWon': case 'win': SFX.good(); break;
+      case 'raidLost': case 'fail': SFX.bad(); break;
+      case 'rain': SFX.rain(); break;
+      case 'victory': SFX.good(); openVictory(); break;
+      case 'over': showOver(); break;
+    }
   }
-});
-const up=e=>{ ptrs.delete(e.pointerId); pinch=0; };
-cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
-cv.addEventListener('wheel',e=>{ e.preventDefault(); const p=local(e); zoomAt(Math.exp(-e.deltaY*0.0015),p[0],p[1]); },{passive:false});
-$('#zIn').addEventListener('click',()=>{ cam.zoom=clamp(cam.zoom*1.4,0.3,10); unfollow(); });
-$('#zOut').addEventListener('click',()=>{ cam.zoom=clamp(cam.zoom/1.4,0.3,10); unfollow(); });
-$('#zFollow').addEventListener('click',()=>{ cam.follow=true; cam.zoom=1; $('#zFollow').setAttribute('aria-pressed','true'); });
-
-/* --- Graphe de population : aires empilées (ouvrières, armée, bâtisseuses) --- */
-const chCv=$('#chartCv'), chCx=chCv.getContext('2d');
-function niceMax(v){ if(v<=5) return 5; const p=Math.pow(10,Math.floor(Math.log10(v))), n=v/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
-function drawChart(){
-  const r=chCv.getBoundingClientRect(), k=Math.min(2,window.devicePixelRatio||1);
-  const w=chCv.width=Math.max(1,r.width*k|0), h=chCv.height=Math.max(1,r.height*k|0);
-  const c=chCx; c.clearRect(0,0,w,h);
-  const data=G.hist.concat([[G.t,...G.counts]]);
-  const ml=38*k, mr=10*k, mt=8*k, mb=24*k, pw=w-ml-mr, ph=h-mt-mb;
-  const t0=0, t1=Math.max(60,G.t), ymax=niceMax(Math.max(...data.map(d=>d[1]+d[2]+d[3]),1));
-  const X=t=>ml+(t-t0)/(t1-t0)*pw, Y=v=>mt+ph-v/ymax*ph;
-  c.font=`${10*k}px "JetBrains Mono", monospace`; c.fillStyle=COL.muted; c.strokeStyle='rgba(163,147,127,.18)'; c.lineWidth=1;
-  c.textAlign='right'; c.textBaseline='middle';
-  for(let i=0;i<=4;i++){ const v=ymax*i/4, y=Y(v); c.beginPath(); c.moveTo(ml,y); c.lineTo(w-mr,y); c.stroke(); c.fillText(fmt(v),ml-6*k,y); }
-  c.textAlign='center'; c.textBaseline='top';
-  const days=t1/60, stepD=days<=8?1:days<=20?2:days<=50?5:days<=100?10:20;
-  for(let d=0;d*60<=t1;d+=stepD){ const x=X(d*60); c.fillText(`J${d+1}`,x,h-mb+6*k); }
-  const cols=[COL.food,COL.army,COL.build];
-  for(let layer=2;layer>=0;layer--){
-    c.beginPath();
-    data.forEach((d,i)=>{ const top=d[1]+(layer>=1?d[2]:0)+(layer>=2?d[3]:0); const x=X(d[0]),y=Y(top); i?c.lineTo(x,y):c.moveTo(x,y); });
-    c.lineTo(X(data[data.length-1][0]),Y(0)); c.lineTo(X(data[0][0]),Y(0)); c.closePath();
-    c.globalAlpha=.85; c.fillStyle=cols[layer]; c.fill(); c.globalAlpha=1;
-  }
-  c.strokeStyle=COL.ink; c.lineWidth=1.5*k; c.beginPath();
-  data.forEach((d,i)=>{ const x=X(d[0]),y=Y(d[1]+d[2]+d[3]); i?c.lineTo(x,y):c.moveTo(x,y); }); c.stroke();
-  const [w0,s0,b0]=G.counts;
-  $('#chartNow').textContent=`Maintenant : ${w0+s0+b0} fourmis · ${w0} ouvrières · ${s0} soldates · ${b0} bâtisseuses · record ${G.best}`;
 }
-$('#chartBtn').addEventListener('click',()=>{ $('#chartBox').hidden=false; drawChart(); });
-$('#chartClose').addEventListener('click',()=>{ $('#chartBox').hidden=true; });
-$('#chartBox').addEventListener('click',e=>{ if(e.target.id==='chartBox') $('#chartBox').hidden=true; });
-
-/* --- Boucle --- */
-let last=performance.now(), acc=0, uiT=0, started=false;
-function loop(now){
-  const dt=Math.min(0.1,(now-last)/1000); last=now;
-  if(started&&!G.over&&!pending){ acc+=dt*G.speed; let n=0; while(acc>=STEP&&n<14){ step(STEP); acc-=STEP; n++; } if(n>=14) acc=0; }
-  frame++; draw();
-  uiT+=dt; if(uiT>0.25){ uiT=0; ui(); if(!$('#chartBox').hidden) drawChart(); }
+let last = performance.now(), acc = 0, uiT = 0, logDirty = true;
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (S) {
+    if (running && !blocked() && speed > 0) {
+      acc += dt * speed; let n = 0;
+      while (acc >= STEP && n < 16) { S.step(STEP); acc -= STEP; n++; if (S.events.length) { handleEvents(); if (!running || blocked()) break; } }
+      if (n >= 16) acc = 0;
+    } else acc = 0;
+    if (S.events.length) handleEvents();
+    frame++; draw(dt);
+    uiT += dt;
+    if (uiT > 0.25) { uiT = 0; dayTick(); ui(); if (logDirty) renderLog(); if (!$('#chartBox').hidden) drawChart(); }
+    if (!$('#toast').hidden && running && !blocked()) { toastT -= dt; if (toastT <= 0) nextToast(); }
+  }
   requestAnimationFrame(loop);
 }
-$('#startBtn').addEventListener('click',()=>{ $('#intro').hidden=true; started=true; });
-$('#againBtn').addEventListener('click',()=>{ $('#over').hidden=true; newGame(); });
 
-G=null; newGame(); resize(); requestAnimationFrame(loop);
+/* ------------------------------------------------------------------ */
+/* Rendu                                                                */
+let W = 0, H = 0, dpr = 1;
+function resize() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr | 0); H = cv.height = Math.max(1, r.height * dpr | 0); }
+new ResizeObserver(resize).observe(cv);
+const drops = Array.from({ length: 90 }, () => [Math.random(), Math.random(), 0.6 + Math.random() * 0.6]);
+let armyN = 0, huntN = 0;
+
+function draw(dt) {
+  const nR = S.nestR();
+  const tgt = Math.max(110, nR * 4.5, G.exploredR * 1.02);
+  cam.viewR += (tgt - cam.viewR) * 0.02;
+  if (cam.follow) { cam.px *= 0.85; cam.py *= 0.85; }
+  const s = Math.min(W, H) / 2 / cam.viewR * cam.zoom, cx = W / 2, cy = H / 2, PX = cam.px, PY = cam.py;
+  const X = x => cx + (x - PX) * s, Y = y => cy + (y - PY) * s, vr = Math.hypot(W, H) / 2 / s + 20;
+  const off = (x, y) => Math.abs(x - PX) > vr || Math.abs(y - PY) > vr;
+  cam.scale = s;
+
+  ctx.fillStyle = '#0e0b08'; ctx.fillRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(terrCv, X(-WR), Y(-WR), 2 * WR * s, 2 * WR * s);
+  // cailloux
+  ctx.fillStyle = 'rgba(120,104,86,.35)';
+  for (const p of G.pebbles) { if (off(p.x, p.y) || p.r * s < 0.7) continue; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r * s, 0, 6.283); ctx.fill(); }
+  // phéromones
+  if (frame % 5 === 0) { const cl = v => clamp(((v + WR) / CELL) | 0, 0, GN - 1); updPh(cl(PX - vr), cl(PX + vr), cl(PY - vr), cl(PY + vr)); }
+  ctx.drawImage(phCv, X(-WR), Y(-WR), 2 * WR * s, 2 * WR * s);
+  // ressources
+  for (const so of G.sources) {
+    if (so.amount < 1 || off(so.x, so.y) || !S.isSeen(so.x, so.y)) continue;
+    const x = X(so.x), y = Y(so.y), r = Math.max(1.5 * dpr, so.r * s);
+    if (so.type === 'food') {
+      ctx.fillStyle = 'rgba(198,212,90,.22)'; ctx.beginPath(); ctx.arc(x, y, r * 1.5, 0, 6.283); ctx.fill();
+      ctx.fillStyle = COL.food;
+      for (let k = 0; k < 5; k++) { const a = so.rot + k * 1.257, d = r * 0.55 * ((k * 0.37 + so.seed) % 1); ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, Math.max(1 * dpr, r * 0.38), 0, 6.283); ctx.fill(); }
+    } else {
+      ctx.strokeStyle = COL.build; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1 * dpr, r * 0.28);
+      for (let k = 0; k < 3; k++) { const a = so.rot + k * 0.9, l = r * (1.2 - k * 0.2), ox = (k - 1) * r * 0.35; ctx.beginPath(); ctx.moveTo(x + ox - Math.cos(a) * l, y - Math.sin(a) * l); ctx.lineTo(x + ox + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke(); }
+    }
+  }
+  ctx.font = `${11 * dpr}px ui-monospace, Menlo, monospace`; ctx.textAlign = 'center';
+  if (frame % 15 === 0 || frame < 3) { armyN = S.army(); huntN = S.hunters(); }
+  const rects = [];
+  const label = (txt, x, y, c, force) => {
+    const w = ctx.measureText(txt).width, r = [x - w / 2 - 3 * dpr, y - 10 * dpr, w + 6 * dpr, 13 * dpr];
+    if (!force && rects.some(q => r[0] < q[0] + q[2] && q[0] < r[0] + r[2] && r[1] < q[1] + q[3] && q[1] < r[1] + r[3])) return;
+    rects.push(r); ctx.fillStyle = 'rgba(14,11,8,.65)'; ctx.fillRect(...r); ctx.fillStyle = c; ctx.fillText(txt, x, y);
+  };
+  // colonies ennemies
+  for (let i = 0; i < G.enemies.length; i++) {
+    const e = G.enemies[i];
+    if (!e.seen || off(e.x, e.y)) continue;
+    const x = X(e.x), y = Y(e.y), r = Math.max(4 * dpr, (8 + Math.sqrt(e.S) * 1.2) * s);
+    if (e.annexed) {
+      const g2 = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 1.7); g2.addColorStop(0, '#5b4532'); g2.addColorStop(.6, 'rgba(78,60,43,.7)'); g2.addColorStop(1, 'rgba(60,45,32,0)');
+      ctx.fillStyle = g2; ctx.beginPath(); ctx.arc(x, y, r * 1.7, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = COL.food; ctx.lineWidth = 1.2 * dpr; ctx.setLineDash([3 * dpr, 3 * dpr]); ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      const k = G.nests.findIndex(n => n.x === e.x && n.y === e.y);
+      label(`Nid n° ${k + 1} · ex-${e.name}`, x, y - r - 6 * dpr, COL.food);
+      continue;
+    }
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);
+    g.addColorStop(0, e.conquered ? 'rgba(160,150,130,.6)' : 'rgba(150,50,40,.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = e.conquered ? COL.muted : COL.enemy; ctx.lineWidth = 1.2 * dpr; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.stroke();
+    if (e.conquered) label(`${e.name} · rasées`, x, y - r - 6 * dpr, COL.muted);
+    else {
+      const p = S.fightOdds(armyN, e.S), v = verdict(p);
+      label(`${e.name} ${Math.max(1, Math.round(e.S))} · ${Math.round(p * 100)} %`, x, y - r - 5 * dpr, v.c);
+    }
+  }
+  // proies
+  for (const a of G.animals) {
+    if (a.dead || !a.seen || off(a.x, a.y)) continue;
+    const x = X(a.x), y = Y(a.y), r = Math.max(2.5 * dpr, (4 + Math.sqrt(a.A) * 0.8) * s);
+    a.rot += (Math.sin(frame * 0.01 + a.x) * 0.002);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a.rot);
+    ctx.fillStyle = COL.prey; ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.55, 0, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = COL.prey; ctx.lineWidth = Math.max(1, r * 0.12);
+    for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(k * r * 0.4, -r * 0.9); ctx.lineTo(k * r * 0.4, r * 0.9); ctx.stroke(); }
+    ctx.restore();
+    const hp = S.huntOdds(huntN, a.A), hv = verdict(hp);
+    if (s / dpr > 0.45) label(`${a.name} ${Math.max(1, Math.round(a.A))} · ${Math.round(hp * 100)} %`, x, y - r - 5 * dpr, hv.c);
+  }
+  // plantes à pucerons
+  for (let i = 0; i < G.plants.length; i++) {
+    const p = G.plants[i]; if (!p.seen || off(p.x, p.y)) continue;
+    const x = X(p.x), y = Y(p.y), r = Math.max(5 * dpr, p.rad * s);
+    ctx.fillStyle = 'rgba(80,150,70,.55)';
+    for (let k = 0; k < 6; k++) { const a = k * 1.047 + i; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.28, a, 0, 6.283); ctx.fill(); }
+    ctx.fillStyle = COL.plant; ctx.beginPath(); ctx.arc(x, y, r * 0.3, 0, 6.283); ctx.fill();
+    const na = Math.round(p.stock / p.max * 14);
+    ctx.fillStyle = '#b6e26a';
+    for (let k = 0; k < na; k++) { const a = k * 2.399 + i, d = r * (0.25 + 0.5 * ((k * 0.618) % 1)); ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, Math.max(0.8 * dpr, 0.9 * s), 0, 6.283); ctx.fill(); }
+    const nf = S.farmers(i);
+    label(`${p.name}${nf ? ' · ' + nf + ' éleveuses' : ' · pucerons'}`, x, y - r - 6 * dpr, COL.plant);
+  }
+  // fourmilions
+  for (let i = 0; i < G.pits.length; i++) {
+    const p = G.pits[i]; if (p.dead || !p.seen || off(p.x, p.y)) continue;
+    const x = X(p.x), y = Y(p.y), r = Math.max(4 * dpr, p.r * s);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.3);
+    g.addColorStop(0, 'rgba(20,14,8,.95)'); g.addColorStop(.45, 'rgba(150,125,85,.7)'); g.addColorStop(.85, 'rgba(216,192,138,.45)'); g.addColorStop(1, 'rgba(216,192,138,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.3, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = 'rgba(216,192,138,.5)'; ctx.lineWidth = 1 * dpr;
+    for (let k = 1; k <= 2; k++) { ctx.beginPath(); ctx.arc(x, y, r * k * 0.4, 0, 6.283); ctx.stroke(); }
+    if (s / dpr > 0.45) { const hp = S.huntOdds(huntN, p.A), hv = verdict(hp); label(`Fourmilion · ${Math.round(hp * 100)} %`, x, y - r * 1.3 - 4 * dpr, hv.c); }
+  }
+  // nid principal
+  {
+    const x = X(0), y = Y(0), r = nR * s;
+    const g = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 1.7); g.addColorStop(0, '#5b4532'); g.addColorStop(.6, 'rgba(78,60,43,.7)'); g.addColorStop(1, 'rgba(60,45,32,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.7, 0, 6.283); ctx.fill();
+    const n = Math.min(36, 3 + Math.floor(G.cap / 14));
+    ctx.fillStyle = 'rgba(20,14,10,.55)';
+    for (let i = 0; i < n; i++) { const a = i * 2.399, d = r * 0.85 * Math.sqrt((i + .5) / n); ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, r * 0.13, r * 0.09, a, 0, 6.283); ctx.fill(); }
+    ctx.fillStyle = '#f3ead8';
+    const ne = Math.min(40, G.eggs.length);
+    for (let i = 0; i < ne; i++) { const a = i * 2.399 + 1, d = (3.5 + Math.sqrt(i) * 1.1) * s; ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, Math.max(0.8 * dpr, 0.9 * s), 0, 6.283); ctx.fill(); }
+    ctx.fillStyle = '#e6b65a'; ctx.beginPath(); ctx.ellipse(x, y, Math.max(3 * dpr, 4 * s), Math.max(1.8 * dpr, 2.2 * s), -0.5, 0, 6.283); ctx.fill();
+  }
+  // trajet du projet
+  const pt = G.proj && G.proj.tk ? S.target(G.proj.tk, G.proj.ti) : null;
+  if (pt) {
+    ctx.setLineDash([4 * dpr, 5 * dpr]); ctx.strokeStyle = G.proj.type === 'hunt' ? COL.food : COL.army; ctx.globalAlpha = .6; ctx.lineWidth = 1.2 * dpr;
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(pt.x), Y(pt.y)); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // balise
+  if (G.beacon) {
+    const b = G.beacon, x = X(b.x), y = Y(b.y), pulse = (frame % 90) / 90;
+    ctx.strokeStyle = `rgba(239,230,214,${0.7 - pulse * 0.6})`; ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath(); ctx.arc(x, y, (6 + pulse * 16) * dpr, 0, 6.283); ctx.stroke();
+    ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5 * dpr; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 14 * dpr); ctx.stroke();
+    ctx.fillStyle = COL.food; ctx.beginPath(); ctx.moveTo(x, y - 14 * dpr); ctx.lineTo(x + 9 * dpr, y - 11 * dpr); ctx.lineTo(x, y - 8 * dpr); ctx.fill();
+    label('Balise', x, y + 16 * dpr, COL.ink, true);
+  }
+  // fourmis
+  const L = Math.max(2.2 * dpr, 4 * s), paths = [new Path2D(), new Path2D(), new Path2D()], gone = new Path2D(), loads = { food: new Path2D(), wood: new Path2D(), honey: new Path2D() }, lr = Math.max(0.9 * dpr, 1.1 * s);
+  const pad = 10 * dpr;
+  for (const a of G.ants) {
+    if (a.dead) continue;
+    const x = X(a.x), y = Y(a.y); if (x < -pad || y < -pad || x > W + pad || y > H + pad) continue;
+    const c = Math.cos(a.a) * L / 2, sn = Math.sin(a.a) * L / 2;
+    const p = a.task === 'leave' ? gone : paths[a.caste]; p.moveTo(x - c, y - sn); p.lineTo(x + c, y + sn);
+    if (a.carry && loads[a.carry]) { const q = loads[a.carry]; q.moveTo(x + c * 1.3 + lr, y + sn * 1.3); q.arc(x + c * 1.3, y + sn * 1.3, lr, 0, 6.283); }
+  }
+  ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1.3 * dpr, 1.5 * s);
+  ctx.strokeStyle = COL.food; ctx.stroke(paths[0]); ctx.strokeStyle = COL.army; ctx.stroke(paths[1]); ctx.strokeStyle = COL.build; ctx.stroke(paths[2]);
+  ctx.globalAlpha = .3; ctx.strokeStyle = COL.ink; ctx.stroke(gone); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#f6f2c8'; ctx.fill(loads.food); ctx.fillStyle = '#b9824e'; ctx.fill(loads.wood); ctx.fillStyle = '#9fe3d0'; ctx.fill(loads.honey);
+  // raid
+  if (G.raid) {
+    const raid = G.raid, rx = Math.cos(raid.ang) * raid.dist, ry = Math.sin(raid.ang) * raid.dist, p = new Path2D();
+    for (const o of raid.ag) { const ax = X(rx + o[0] + (Math.random() - .5) * 2), ay = Y(ry + o[1] + (Math.random() - .5) * 2), a = raid.ang + Math.PI + (Math.random() - .5); p.moveTo(ax - Math.cos(a) * L / 2, ay - Math.sin(a) * L / 2); p.lineTo(ax + Math.cos(a) * L / 2, ay + Math.sin(a) * L / 2); }
+    ctx.strokeStyle = COL.enemy; ctx.stroke(p);
+    if (raid.phase === 'fight') { ctx.fillStyle = 'rgba(255,220,200,.9)'; for (let k = 0; k < 14; k++) { ctx.beginPath(); ctx.arc(X(rx + (Math.random() - .5) * 30), Y(ry + (Math.random() - .5) * 30), 1.2 * dpr, 0, 6.283); ctx.fill(); } }
+  }
+  if (pt && G.proj.t > G.proj.march) {
+    ctx.fillStyle = 'rgba(255,240,210,.9)';
+    for (let k = 0; k < 10; k++) { ctx.beginPath(); ctx.arc(X(pt.x + (Math.random() - .5) * pt.rad * 2.4), Y(pt.y + (Math.random() - .5) * pt.rad * 2.4), 1.2 * dpr, 0, 6.283); ctx.fill(); }
+  }
+  // brouillard
+  if (S.fogDirty) updFog();
+  ctx.drawImage(fogCv, X(-WR), Y(-WR), 2 * WR * s, 2 * WR * s);
+  // saison et météo
+  const live = running && !blocked() && speed > 0 ? dt * speed : 0;
+  if (G.weather) {
+    ctx.fillStyle = 'rgba(40,60,90,.18)'; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(180,200,230,.45)'; ctx.lineWidth = 1 * dpr; ctx.beginPath();
+    for (const d of drops) { d[1] += (live ? 0.06 : 0.01) * d[2]; d[0] -= 0.004 * d[2]; if (d[1] > 1) { d[1] = 0; d[0] = Math.random() * 1.2; } const x = d[0] * W, y = d[1] * H; ctx.moveTo(x, y); ctx.lineTo(x - 3 * dpr, y + 12 * dpr * d[2]); }
+    ctx.stroke();
+  }
+  // échelle
+  const nice = [10, 20, 50, 100, 200, 500, 1000], mm = nice.find(v => v * s / dpr > 50) || 1000;
+  $('#scaleBar').style.width = (mm * s / dpr) + 'px'; $('#scaleTxt').textContent = cm(mm);
+}
+
+/* ------------------------------------------------------------------ */
+/* Interface                                                            */
+const sigs = {};
+function setHTML(sel, sig, html) { if (sigs[sel] === sig) return; sigs[sel] = sig; $(sel).innerHTML = typeof html === 'function' ? html() : html; }
+function applySplit() {
+  const [a, b, c] = G.split;
+  $('#seg0').style.width = a + '%'; $('#seg1').style.width = b + '%'; $('#seg2').style.width = c + '%';
+  $('#seg0').textContent = a >= 12 ? a + '%' : ''; $('#seg1').textContent = b >= 12 ? b + '%' : ''; $('#seg2').textContent = c >= 12 ? c + '%' : '';
+  $('#h1').style.left = a + '%'; $('#h2').style.left = (a + b) + '%';
+  for (let i = 0; i < 3; i++) $('#lp' + i).textContent = G.split[i] + ' %';
+  $('#h1').setAttribute('aria-valuenow', a); $('#h2').setAttribute('aria-valuenow', a + b);
+}
+function setHandles(h1, h2) { h1 = Math.round(clamp(h1, 0, 100)); h2 = Math.round(clamp(h2, h1, 100)); S.act.split(h1, h2 - h1, 100 - h2); applySplit(); }
+for (const id of ['h1', 'h2']) {
+  const h = $('#' + id);
+  h.addEventListener('pointerdown', e => { h.setPointerCapture(e.pointerId); e.preventDefault(); });
+  h.addEventListener('pointermove', e => {
+    if (!h.hasPointerCapture(e.pointerId)) return;
+    const r = $('#split').getBoundingClientRect(), v = (e.clientX - r.left) / r.width * 100;
+    const h1 = G.split[0], h2 = G.split[0] + G.split[1];
+    id === 'h1' ? setHandles(Math.min(v, h2), h2) : setHandles(h1, Math.max(v, h1));
+  });
+  h.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0; if (!d) return; e.preventDefault();
+    const h1 = G.split[0], h2 = G.split[0] + G.split[1];
+    id === 'h1' ? setHandles(Math.min(h1 + d, h2), h2) : setHandles(h1, Math.max(h2 + d, h1));
+  });
+}
+document.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { const p = b.dataset.p.split(',').map(Number); setHandles(p[0], p[0] + p[1]); }));
+
+const upTxt = k => {
+  const LV = S.LV;
+  return { spd: () => '×' + LV.spd().toFixed(2).replace('.', ','), carry: () => String(LV.carry()).replace('.', ',') + ' par trajet', str: () => '×' + LV.str().toFixed(2).replace('.', ','), eat: () => 'appétit ×' + LV.eat().toFixed(2).replace('.', ',') }[k]();
+};
+/* Fenêtres (barre d'outils du bas) : le jeu est en pause tant qu'une fenêtre est ouverte. */
+const WINS = ['#wBirth', '#wProj', '#wFarm', '#wEvo', '#wLog'];
+const winOpen = id => !$(id).hidden;
+function openWin(id) { for (const w of WINS) $(w).hidden = true; for (const k of ['#proj', '#queue', '#projAdd', '#farms', '#evo']) delete sigs[k]; $('#' + id.replace('#', '')).hidden = false; ui(); renderLog(); }
+function closeWins() { for (const w of WINS) $(w).hidden = true; }
+document.querySelectorAll('.tb').forEach(b => b.addEventListener('click', () => { SFX.tap(); openWin(b.dataset.w); }));
+document.querySelectorAll('.wclose').forEach(b => b.addEventListener('click', closeWins));
+for (const w of WINS) $(w).addEventListener('click', e => { if (e.target === $(w)) closeWins(); });
+$('#ticker').addEventListener('click', () => openWin('wLog'));
+
+/* Niveau des fondations d'une entrée de la file : compte celles qui passent avant elle. */
+const foundLvlOf = q => G.fondLvl + (G.proj && G.proj.type === 'found' ? 1 : 0) + G.queue.slice(0, G.queue.indexOf(q)).filter(x => x.type === 'found').length;
+const projLabel = q => {
+  if (q.type === 'found') return `Fondations niv. ${foundLvlOf(q) + 1} (${S.foundCost(foundLvlOf(q))} bois)`;
+  const t = S.target(q.tk, q.ti); if (!t) return '?';
+  return q.type === 'hunt' ? `Chasse : ${q.tk === 'pit' ? 'fourmilion' : t.name.toLowerCase()}` : `Assaut : les ${t.name}`;
+};
+const projOdds = q => {
+  if (q.type === 'found') return null;
+  const t = S.target(q.tk, q.ti); if (!t) return null;
+  return q.type === 'hunt' ? S.huntOdds(S.hunters(), t.A) : S.fightOdds(S.army(), t.S);
+};
+/* Éleveuses conseillées : de quoi récolter les 15 de miellat par minute que refait une plante. */
+function advised(p) {
+  const d = Math.hypot(p.x, p.y), trip = 2 * d / (28 * S.LV.spd()) + 3.5, perMin = 60 / trip * 1.2 * S.LV.carry();
+  return Math.max(1, Math.ceil(15 / perMin));
+}
+
+function ui() {
+  if (!S) return;
+  G = S.G;
+  const pop = S.countAnts();
+  $('#day').textContent = `Jour ${G.day} · record ${Math.max(+store.get(KEY_DAYS) || 0, G.day)} j`;
+  $('#stPop b').textContent = fmt(pop); $('#stPop').classList.toggle('warn', pop > G.cap);
+  $('#capFill').style.width = Math.min(100, pop / G.cap * 100) + '%'; $('#capTxt').textContent = `Place ${fmt(G.cap)}`;
+  const fr = Math.round((G.foodRate || 0) * 60), eat = pop * 0.48 + 1;
+  $('#stFood b').innerHTML = `${fmt(G.food)} <small style="color:${fr < 0 ? '#f0a296' : fr > 0 ? '#dbe59a' : 'inherit'}">${fr >= 0 ? '+' : '−'}${fmt(Math.abs(fr))}/min</small>`;
+  $('#stFood').classList.toggle('warn', G.food < 3 || (fr < 0 && G.food < -fr * 3));
+  $('#stWood b').textContent = fmt(G.wood);
+  $('#stEggs b').textContent = G.eggs.length;
+  $('#stLast b').textContent = fmt(G.nearFood || 0);
+  $('#stLast').classList.toggle('warn', G.t > 120 && (G.nearFood || 0) < eat * 3);
+  // bandeau
+  const bn = $('#banner');
+  if (G.raid) {
+    const D = S.defense(), p = S.odds(D, G.raid.S);
+    bn.hidden = false;
+    setHTML('#banner', `r${G.raid.phase}|${Math.round(D)}|${G.raid.S}`, `<strong>${G.raid.phase === 'fight' ? 'Combat au nid' : 'Raid en approche'}</strong><span class="mono">${G.raid.from} · force ${G.raid.S} contre défense ${Math.round(D)} · ${Math.round(p * 100)} %</span>`);
+  } else if (G.weather) { bn.hidden = false; setHTML('#banner', 'rain', `<strong style="color:#9fc0e8">Averse</strong><span class="mono">tout le monde s'abrite · ${Math.ceil(G.weather.t)} s</span>`); bn.style.borderColor = '#6d8bb3'; }
+  else bn.hidden = true;
+  if (G.raid || !G.weather) bn.style.borderColor = '';
+  // barre d'outils
+  const [s0, s1, s2] = G.split, mi = $('#tbSplit').children;
+  mi[0].style.width = s0 + '%'; mi[1].style.width = s1 + '%'; mi[2].style.width = s2 + '%';
+  const f = S.LV.costF(), w = S.LV.costW(), lvOk = G.food >= f && G.wood >= w;
+  $('#tbEvo').textContent = lvOk ? 'à choisir !' : `niveau ${G.lvl}`; $('.tb[data-w="wEvo"]').classList.toggle('hot', lvOk);
+  if (lvOk && G.lvl < 3) toast('level');
+  const nf = G.ants.reduce((n, a) => n + (!a.dead && a.task === 'farm' ? 1 : 0), 0);
+  $('#tbFarm').textContent = G.plants.some(p => p.seen) ? `${nf} éleveuse${nf > 1 ? 's' : ''}` : 'aucune plante';
+  $('#tbProj').textContent = G.proj ? `${Math.round(G.proj.t / G.proj.dur * 100)} %${G.queue.length ? ' · +' + G.queue.length : ''}` : (G.queue.length ? `${G.queue.length} en file` : 'aucun');
+  $('.tb[data-w="wProj"]').classList.toggle('hot', !G.proj && !G.queue.length);
+  if (G.logs[0]) { const l = G.logs[0], t = $('#ticker'); if (t.dataset.m !== l.msg) { t.dataset.m = l.msg; t.textContent = `J${l.d} · ${l.msg}`; t.className = 'ticker ' + l.kind; } }
+  // fenêtres ouvertes seulement
+  if (winOpen('#wBirth')) {
+    for (let i = 0; i < 3; i++) $('#lc' + i).textContent = G.counts[i] + ' en vie';
+    const nxt = Math.round(F.raidForce(G.t + 60, pop));
+    $('#defNow').textContent = `Défense actuelle au nid : ${Math.round(S.defense())}. Un raid maintenant aurait une force d'environ ${nxt}.`;
+  }
+  if (winOpen('#wEvo')) {
+    setHTML('#evo', `${G.lvl}|${lvOk}`, () => `<div class="evo" style="grid-template-columns:1fr"><div><b>Niveau ${G.lvl}</b><small>Prochain niveau : ${f} nourriture + ${w} bois${lvOk ? '' : ` (il te manque ${[G.food < f ? Math.ceil(f - G.food) + ' nourriture' : '', G.wood < w ? Math.ceil(w - G.wood) + ' bois' : ''].filter(Boolean).join(' et ')})`}. Choisis une seule amélioration à chaque niveau.</small></div></div>
+      <div class="ups">${UPS.map(u => `<button class="up" data-u="${u[0]}" ${lvOk ? '' : 'disabled'}><b>${u[1]}</b><small>${u[2]}</small><small>actuel : ${upTxt(u[0])}</small></button>`).join('')}</div>`);
+  }
+  if (winOpen('#wProj')) {
+    if (G.proj) {
+      const p = G.proj, pct = Math.min(100, p.t / p.dur * 100);
+      let phase = '', meta = '';
+      if (p.type === 'found') { phase = 'Creusement'; meta = `Fin dans ${Math.ceil(p.dur - p.t)} s`; }
+      else {
+        const tg = S.target(p.tk, p.ti), crew = G.ants.filter(a => !a.dead && a.task === p.type).length, foe = p.type === 'hunt' ? tg.A : tg.S;
+        phase = p.t < p.march ? 'En marche' : 'Combat';
+        meta = `${crew} engagées · force adverse ${Math.round(foe)} · ${Math.round((p.type === 'hunt' ? S.huntOdds(crew, foe) : S.fightOdds(crew, foe)) * 100)} %`;
+      }
+      setHTML('#proj', `p|${Math.round(pct)}|${meta}`, `<div class="active"><div class="row"><b>En cours · ${p.name}</b><span>${phase}</span></div><div class="bar"><i style="width:${pct}%"></i></div><div class="meta">${meta}</div></div>`);
+    } else setHTML('#proj', 'none', `<p class="empty">Aucun projet en cours.</p>`);
+    const qs = G.queue.map((q, i) => { const st = S.queueState(q), o = projOdds(q); return { q, i, st, o, lab: projLabel(q) }; });
+    const qsig = qs.map(x => `${x.lab}|${x.st}|${x.o == null ? '' : Math.round(x.o * 100)}`).join(';');
+    setHTML('#queue', qsig, () => qs.length ? `<ol class="qlist">${qs.map(x => `<li><span class="num">${x.i + 1}</span><b>${x.lab}</b><small>${x.st === 'gone' ? 'cible disparue : sera retirée' : x.st === 'wait' ? (x.q.type === 'found' ? `attend ${S.foundCost()} bois (tu en as ${Math.floor(G.wood)})` : 'attend des fourmis libres') : 'prêt'}${x.o != null ? ` · ${Math.round(x.o * 100)} % de chances aujourd'hui` : ''}</small><span class="qb"><button data-q="${x.i}" data-m="-1" aria-label="Monter" ${x.i ? '' : 'disabled'}>↑</button><button data-q="${x.i}" data-m="1" aria-label="Descendre" ${x.i < qs.length - 1 ? '' : 'disabled'}>↓</button><button data-q="${x.i}" data-m="x" aria-label="Retirer">✕</button></span></li>`).join('')}</ol>`
+      : `<p class="empty">La file est vide.</p>`);
+    const nA = G.animals.filter(a => a.seen && !a.dead).length + G.pits.filter(a => a.seen && !a.dead).length, nE = G.enemies.filter(e => e.seen && !e.conquered).length, fc = S.foundCost();
+    setHTML('#projAdd', `${nA}|${nE}|${fc}`, `<div class="addrow">
+      <button class="pbtn" data-k="hunt" ${nA ? '' : 'disabled'}><b>Chasse</b><small>${nA ? nA + ' cible' + (nA > 1 ? 's' : '') : 'aucune proie en vue'}</small></button>
+      <button class="pbtn" data-k="attack" ${nE ? '' : 'disabled'}><b>Assaut</b><small>${nE ? nE + ' colonie' + (nE > 1 ? 's' : '') : 'aucune colonie en vue'}</small></button>
+      <button class="pbtn" data-k="found"><b>Fondations</b><small>${fc} bois · construction ×2</small></button></div>`);
+  }
+  if (winOpen('#wFarm')) {
+    const seen = G.plants.map((p, i) => [p, i]).filter(([p]) => p.seen);
+    const free = G.ants.filter(a => !a.dead && !a.task && a.caste === 0).length;
+    const sig = free + '|' + seen.map(([p, i]) => `${i}:${S.farmers(i)}:${Math.round(p.stock / 2)}:${Math.round((p.rate || 0) * 60)}`).join('|');
+    setHTML('#farms', sig, () => seen.length ? `<p class="hint" style="margin:0 0 8px">${free} ouvrière${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}.</p>` + seen.map(([p, i]) => {
+      const n = S.farmers(i), adv = advised(p), rate = Math.round((p.rate || 0) * 60), empty = n > 0 && p.stock < 4 && n > adv;
+      return `<div class="farm"><b>${p.name} <small style="font-weight:400">à ${cm(Math.hypot(p.x, p.y))}</small></b><div class="pm"><button data-f="${i}" data-d="-1" aria-label="Une éleveuse de moins">−</button><span>${n}</span><button data-f="${i}" data-d="1" aria-label="Une éleveuse de plus">+</button></div>
+        <div class="meter"><i style="width:${p.stock / p.max * 100}%"></i></div>
+        <small>${n ? `rapporte ≈ ${rate} de nourriture par minute` : 'personne ne la récolte'} · conseillé : <a href="#" data-f="${i}" data-set="${adv}">${adv} éleveuse${adv > 1 ? 's' : ''}</a>${empty ? ' · <span class="warn">plante vide : trop d\'éleveuses</span>' : ''}</small></div>`;
+    }).join('') : `<p class="empty">Aucune plante à pucerons repérée. Explore : la première n'est jamais loin du nid. Elles apparaissent en vert sur le terrain.</p>`);
+  }
+  if (sheetType) fillSheet();
+}
+$('#projAdd').addEventListener('click', e => {
+  const b = e.target.closest('.pbtn'); if (!b || b.disabled) return;
+  SFX.tap();
+  if (b.dataset.k === 'found') { if (!G.proj && G.wood >= S.foundCost()) S.act.project('found'); else S.act.queue('found'); delete sigs['#queue']; ui(); }
+  else openSheet(b.dataset.k);
+});
+$('#queue').addEventListener('click', e => {
+  const b = e.target.closest('button[data-q]'); if (!b || b.disabled) return;
+  const i = +b.dataset.q; if (b.dataset.m === 'x') S.act.unqueue(i); else S.act.moveQueue(i, +b.dataset.m);
+  SFX.tap(); delete sigs['#queue']; ui();
+});
+$('#farms').addEventListener('click', e => {
+  const a = e.target.closest('[data-set]');
+  if (a) { e.preventDefault(); S.act.farm(+a.dataset.f, +a.dataset.set); SFX.tap(); ui(); return; }
+  const b = e.target.closest('button[data-f]'); if (!b || b.disabled) return;
+  const i = +b.dataset.f; S.act.farm(i, Math.max(0, S.farmers(i) + +b.dataset.d)); SFX.tap(); ui();
+});
+$('#evo').addEventListener('click', e => { const b = e.target.closest('.up'); if (b && !b.disabled) { S.act.levelUp(b.dataset.u); SFX.good(); ui(); } });
+
+/* Victoire */
+function openVictory() {
+  const p = G.pending; if (!p) return;
+  const t = G.enemies[p.ti];
+  $('#vicTitle').textContent = `Les ${t.name} sont vaincues`;
+  $('#vicDestroy').innerHTML = `<b>Raser</b><small>Les soldates rapportent tout de suite ${Math.round(p.food * 0.75)} de nourriture et ${Math.round(p.wood * 0.75)} de bois ; d'autres restes attendent sur place.</small>`;
+  $('#vicAnnex').innerHTML = `<b>Annexer</b><small>Leur nid devient ton nid n° ${G.nests.length + 1} : ${p.food} de nourriture, ${p.wood} de bois, ${p.workers} ouvrières et ${p.cap} places en plus.</small>`;
+  $('#victory').hidden = false;
+}
+$('#vicDestroy').addEventListener('click', () => { S.act.victory(false); $('#victory').hidden = true; ui(); });
+$('#vicAnnex').addEventListener('click', () => { S.act.victory(true); $('#victory').hidden = true; ui(); });
+
+/* Fiches de chasse et d'assaut : « Lancer » si rien n'est en cours, sinon « Mettre en file » */
+let sheetType = null, sheetOne = null;
+function openSheet(type, one) { sheetType = type; sheetOne = one || null; fillSheet(); $('#sheet').hidden = false; }
+function closeSheet() { sheetType = null; sheetOne = null; $('#sheet').hidden = true; delete $('#sheetBody').dataset.html; }
+$('#sheetClose').addEventListener('click', closeSheet);
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+function fillSheet() {
+  const type = sheetType, body = $('#sheetBody'), hunt = type === 'hunt';
+  $('#sheetTitle').textContent = hunt ? 'Chasse' : 'Assaut';
+  const us = hunt ? S.hunters() : S.army(), mine = hunt ? us : Math.round(us * S.LV.str());
+  $('#sheetSub').innerHTML = hunt
+    ? `Ta force de chasse : <b>${mine}</b> (la moitié des ouvrières libres). Plus elle dépasse la force de la proie, plus la chasse est sûre. En cas de succès, elles rentrent chargées de nourriture.`
+    : `Ta force d'assaut : <b>${mine}</b> (toute l'armée libre${S.LV.str() > 1 ? `, ${String(+S.LV.str().toFixed(2)).replace('.', ',')} par soldate` : ''}). Pendant l'assaut, le nid est moins bien défendu.`;
+  let list = hunt
+    ? [...G.animals.map((t, i) => ({ t, tk: 'animal', ti: i, f: t.A })), ...G.pits.map((t, i) => ({ t, tk: 'pit', ti: i, f: t.A }))].filter(o => o.t.seen && !o.t.dead)
+    : G.enemies.map((t, i) => ({ t, tk: 'enemy', ti: i, f: t.S })).filter(o => o.t.seen && !o.t.conquered);
+  if (sheetOne) list = list.filter(o => o.tk === sheetOne.tk && o.ti === sheetOne.ti);
+  list.forEach(o => o.d = Math.hypot(o.t.x, o.t.y)); list.sort((a, b) => a.d - b.d);
+  const more = list.length - 8; list = list.slice(0, 8);
+  const busy = !!G.proj || G.queue.length > 0;
+  const inQ = o => G.queue.some(q => q.type === type && q.tk === o.tk && q.ti === o.ti);
+  const html = list.length ? `<ul class="targets">${list.map((o, i) => {
+    const pr = hunt ? S.huntOdds(us, o.f) : S.fightOdds(us, o.f), v = verdict(pr), p = Math.round(pr * 100);
+    const nm = hunt ? (o.tk === 'pit' ? 'Fourmilion' : o.t.name) : 'Les ' + o.t.name;
+    const btn = inQ(o) ? `<button class="ghost" disabled>En file</button>` : busy ? `<button class="go" data-i="${i}" data-q="1">Mettre en file</button>` : `<button class="go" data-i="${i}" ${us ? '' : 'disabled'}>Lancer</button>`;
+    return `<li><b>${nm} <span class="odds" style="color:${v.c}">· ${v.t} ${p} %</span></b><small>toi ${mine} contre ${Math.round(o.f)} · à ${cm(o.d)}${hunt ? ` · ≈ ${Math.round(Math.max(10, o.f * 3) * 0.6)} de nourriture` : ''}</small>${btn}</li>`;
+  }).join('')}</ul>${more > 0 ? `<p class="empty">Et ${more} autre${more > 1 ? 's' : ''} plus loin.</p>` : ''}${busy ? `<p class="empty">Un projet est en cours : les nouveaux attendent leur tour dans la file (fenêtre Projets).</p>` : ''}`
+    : `<p class="empty">Rien en vue pour l'instant. Pose une balise pour que les éclaireuses explorent plus loin.</p>`;
+  if (body.dataset.html !== html) { body.innerHTML = html; body.dataset.html = html; }
+  body.onclick = e => {
+    const b = e.target.closest('button[data-i]'); if (!b || b.disabled) return;
+    const o = list[+b.dataset.i];
+    const ok = b.dataset.q ? S.act.queue(type, o.tk, o.ti) : S.act.project(type, o.tk, o.ti);
+    if (ok) { SFX.tap(); closeSheet(); delete sigs['#queue']; ui(); }
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Caméra et toucher : glisser = déplacer, pincer/molette = zoomer, toucher = viser ou baliser */
+function zoomAt(f, sx, sy) {
+  const s = cam.scale || 1, mx = sx * dpr - W / 2, my = sy * dpr - H / 2;
+  const nz = clamp(cam.zoom * f, 0.3, 10), rf = nz / cam.zoom; if (rf === 1) return;
+  const wx = cam.px + mx / s, wy = cam.py + my / s;
+  cam.zoom = nz; cam.px = wx - mx / (s * rf); cam.py = wy - my / (s * rf);
+  unfollow();
+}
+function unfollow() { cam.follow = false; $('#zFollow').setAttribute('aria-pressed', 'false'); }
+const ptrs = new Map(); let pinch = 0, tapStart = null;
+const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, local(e)); pinch = 0;
+  tapStart = ptrs.size === 1 ? { p: local(e), t: performance.now(), moved: 0 } : null;
+});
+cv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const p = local(e), prev = ptrs.get(e.pointerId);
+  if (ptrs.size === 1) {
+    const dx = p[0] - prev[0], dy = p[1] - prev[1];
+    if (tapStart) tapStart.moved += Math.abs(dx) + Math.abs(dy);
+    if (!tapStart || tapStart.moved > 8) {
+      const s = cam.scale || 1; cam.px -= dx * dpr / s; cam.py -= dy * dpr / s;
+      cam.px = clamp(cam.px, -WR, WR); cam.py = clamp(cam.py, -WR, WR);
+      if (Math.abs(dx) + Math.abs(dy) > 0) unfollow();
+    }
+    ptrs.set(e.pointerId, p);
+  } else if (ptrs.size === 2) {
+    tapStart = null;
+    ptrs.set(e.pointerId, p);
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (pinch) zoomAt(d / pinch, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    pinch = d;
+  }
+});
+const up = e => {
+  const ts = tapStart; ptrs.delete(e.pointerId); pinch = 0; tapStart = null;
+  if (e.type === 'pointerup' && ts && ts.moved <= 8 && performance.now() - ts.t < 600) onTap(ts.p[0], ts.p[1]);
+};
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+cv.addEventListener('wheel', e => { e.preventDefault(); const p = local(e); zoomAt(Math.exp(-e.deltaY * 0.0015), p[0], p[1]); }, { passive: false });
+$('#zIn').addEventListener('click', () => { cam.zoom = clamp(cam.zoom * 1.4, 0.3, 10); unfollow(); });
+$('#zOut').addEventListener('click', () => { cam.zoom = clamp(cam.zoom / 1.4, 0.3, 10); unfollow(); });
+$('#zFollow').addEventListener('click', () => { cam.follow = true; cam.zoom = 1; $('#zFollow').setAttribute('aria-pressed', 'true'); });
+
+function onTap(sx, sy) {
+  if (!S || !running || blocked()) return;
+  const s = cam.scale || 1, wx = cam.px + (sx * dpr - W / 2) / s, wy = cam.py + (sy * dpr - H / 2) / s;
+  const tol = 22 * dpr / s;
+  const near = (o, r) => Math.hypot(o.x - wx, o.y - wy) < Math.max(r || 0, tol);
+  const pick = (list, tk, ok, rf) => { let best = null, bd = 1e9; list.forEach((o, i) => { if (!ok(o)) return; const d = Math.hypot(o.x - wx, o.y - wy); if (d < Math.max(rf(o), tol) && d < bd) { bd = d; best = { tk, ti: i }; } }); return best; };
+  if (G.beacon && near(G.beacon, 0)) { S.act.beacon(null); SFX.tap(); return; }
+  const hitA = pick(G.animals, 'animal', o => o.seen && !o.dead, o => o.rad * 1.4) || pick(G.pits, 'pit', o => o.seen && !o.dead, o => o.r * 1.5);
+  if (hitA) { SFX.tap(); return openSheet('hunt', hitA); }
+  const hitE = pick(G.enemies, 'enemy', o => o.seen && !o.conquered, o => o.rad * 1.6);
+  if (hitE) { SFX.tap(); return openSheet('attack', hitE); }
+  const hitP = pick(G.plants, 'plant', o => o.seen, o => o.rad * 1.3);
+  if (hitP) { SFX.tap(); return openWin('wFarm'); }
+  if (Math.hypot(wx, wy) < S.nestR() * 1.2) return;
+  if (S.act.beacon(wx, wy)) { SFX.tap(); G.hints.ui_start = 1; if ($('#toast').textContent.includes('balise')) nextToast(); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Courbe de population                                                 */
+const chCv = $('#chartCv'), chCx = chCv.getContext('2d');
+function niceMax(v) { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+function drawChart() {
+  const r = chCv.getBoundingClientRect(), k = Math.min(2, window.devicePixelRatio || 1);
+  const w = chCv.width = Math.max(1, r.width * k | 0), h = chCv.height = Math.max(1, r.height * k | 0);
+  const c = chCx; c.clearRect(0, 0, w, h);
+  const data = G.hist.concat([[G.t, ...G.counts, Math.round(G.food)]]);
+  const ml = 38 * k, mr = 40 * k, mt = 8 * k, mb = 24 * k, pw = w - ml - mr, ph = h - mt - mb;
+  const t1 = Math.max(60, G.t), ymax = niceMax(Math.max(...data.map(d => d[1] + d[2] + d[3]), 1)), fmax = niceMax(Math.max(...data.map(d => d[4] || 0), 1));
+  const X = t => ml + t / t1 * pw, Y = v => mt + ph - v / ymax * ph, YF = v => mt + ph - v / fmax * ph;
+  c.font = `${10 * k}px ui-monospace, Menlo, monospace`; c.fillStyle = COL.muted; c.strokeStyle = 'rgba(163,147,127,.18)'; c.lineWidth = 1;
+  c.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) { const y = Y(ymax * i / 4); c.beginPath(); c.moveTo(ml, y); c.lineTo(w - mr, y); c.stroke(); c.textAlign = 'right'; c.fillText(fmt(ymax * i / 4), ml - 6 * k, y); c.textAlign = 'left'; c.fillText(fmt(fmax * i / 4), w - mr + 5 * k, y); }
+  c.textAlign = 'center'; c.textBaseline = 'top'; c.fillStyle = COL.muted;
+  const days = t1 / DAY, stepD = days <= 8 ? 1 : days <= 20 ? 2 : days <= 50 ? 5 : days <= 100 ? 10 : 20;
+  for (let d = 0; d * DAY <= t1; d += stepD) c.fillText(`J${d + 1}`, X(d * DAY), h - mb + 6 * k);
+  const cols = [COL.food, COL.army, COL.build];
+  for (let layer = 2; layer >= 0; layer--) {
+    c.beginPath();
+    data.forEach((d, i) => { const top = d[1] + (layer >= 1 ? d[2] : 0) + (layer >= 2 ? d[3] : 0); const x = X(d[0]), y = Y(top); i ? c.lineTo(x, y) : c.moveTo(x, y); });
+    c.lineTo(X(data[data.length - 1][0]), Y(0)); c.lineTo(X(data[0][0]), Y(0)); c.closePath();
+    c.globalAlpha = .85; c.fillStyle = cols[layer]; c.fill(); c.globalAlpha = 1;
+  }
+  c.strokeStyle = COL.ink; c.lineWidth = 1.5 * k; c.setLineDash([4 * k, 3 * k]); c.beginPath();
+  data.forEach((d, i) => { const x = X(d[0]), y = YF(d[4] || 0); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.setLineDash([]);
+  const [w0, s0, b0] = G.counts;
+  $('#chartNow').textContent = `Maintenant : ${w0 + s0 + b0} fourmis · ${w0} ouvrières · ${s0} soldates · ${b0} bâtisseuses · ${fmt(G.food)} de nourriture (échelle de droite) · territoire exploré ${cm(G.exploredR)}.`;
+}
+$('#chartBtn').addEventListener('click', () => { if (!S) return; $('#chartBox').hidden = false; drawChart(); });
+$('#chartClose').addEventListener('click', () => { $('#chartBox').hidden = true; });
+$('#chartBox').addEventListener('click', e => { if (e.target.id === 'chartBox') $('#chartBox').hidden = true; });
+
+function renderLog() {
+  logDirty = false;
+  $("#log").innerHTML = G.logs.slice(0, 40).map(l => `<li class="${l.kind}"><span>J${l.d}</span>${l.msg}</li>`).join('');
+}
+
+function dayTick() {
+  if (!S || G.over) return;
+  if (G.stats.maxPop > (+store.get(KEY_BEST) || 0)) store.set(KEY_BEST, G.stats.maxPop);
+  if (G.day > (+store.get(KEY_DAYS) || 0)) store.set(KEY_DAYS, G.day);
+  if (running && G.day > lastDay) { lastDay = G.day; checkpoint(); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Démarrage                                                            */
+$('#startBtn').addEventListener('click', () => { if (actx === null && soundOn) tone(1, 0.01, 'sine', 0); newGame(); });
+$('#resumeBtn').addEventListener('click', () => { if (soundOn) tone(1, 0.01, 'sine', 0); hideAll(); resume(); });
+{
+  const has = !!store.get(KEY), best = +store.get(KEY_BEST) || 0, bestD = +store.get(KEY_DAYS) || 0;
+  $('#resumeBtn').hidden = !has;
+  if (has) { $('#startBtn').className = 'ghost'; }
+  $('#bestTxt').textContent = best ? `Records : ${bestD} jours tenus, ${fmt(best)} fourmis en même temps.` : '';
+  // un monde en fond derrière l'écran titre
+  attach(F.create({ seed: 7 }));
+}
+resize(); requestAnimationFrame(loop);
 })();
-</script>
 
+</script>
 </body></html>
