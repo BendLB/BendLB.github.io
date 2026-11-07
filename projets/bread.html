@@ -962,8 +962,8 @@ body { min-height: 100vh; }
 
   // Les ruelles : un petit dédale. L'odeur de beurre (avant 10h30, hors congés) indique le bon chemin.
   function odeur(s) { return !menardFerme(s) && s.t < h(12); }
-  noeud('A_RUELLE1', {
-    zone: 'A', titre: 'Les ruelles de la butte',
+  lieu('A_RUELLE1', {
+    zone: 'A', pos: [1.25, -0.55], titre: 'Les ruelles de la butte',
     texte: function (s) {
       return 'Trois ruelles partent du coin de la place, toutes pavées, toutes en pente, toutes pareilles.' +
         (odeur(s) ? ' L\'odeur de beurre semble venir de celle de gauche.' : ' Aucune odeur particulière, à part celle des poubelles.');
@@ -976,8 +976,8 @@ body { min-height: 100vh; }
         fx: function (s) { msg(s, 'La ruelle de droite fait le tour du pâté de maisons et vous ramène sur la place du Belvédère.'); } }
     ]
   });
-  noeud('A_RUELLE2', {
-    zone: 'A', titre: 'Les ruelles de la butte',
+  lieu('A_RUELLE2', {
+    zone: 'A', pos: [1.55, -1.15], titre: 'La ruelle à la voûte',
     texte: function (s) {
       return 'Un escalier peint en rouge descend à gauche ; un passage voûté s\'enfonce à droite, entre deux murs couverts de lierre.' +
         (odeur(s) ? ' Sous la voûte, l\'odeur de beurre devient franchement indécente.' : '');
@@ -989,8 +989,8 @@ body { min-height: 100vh; }
       { t: 'Revenir sur vos pas', move: 3, go: 'A_RUELLE1' }
     ]
   });
-  noeud('A_RUELLE3', {
-    zone: 'A', titre: 'Les ruelles de la butte',
+  lieu('A_RUELLE3', {
+    zone: 'A', pos: [2.15, -1.4], titre: 'La placette',
     texte: function (s) {
       return 'Une placette minuscule, une fontaine à sec, deux pigeons qui se disputent un mégot. Une impasse d\'un côté, la rue du Calvaire de l\'autre.' +
         (odeur(s) ? ' Le beurre, c\'est par la rue du Calvaire, aucun doute.' : '');
@@ -1002,8 +1002,8 @@ body { min-height: 100vh; }
       { t: 'Revenir sous la voûte', move: 2, go: 'A_RUELLE2' }
     ]
   });
-  noeud('A_RUELLE4', {
-    zone: 'A', titre: 'La rue du Calvaire',
+  lieu('A_RUELLE4', {
+    zone: 'A', pos: [2.75, -1.3], titre: 'La rue du Calvaire, en bas',
     texte: function (s) {
       return 'La rue du Calvaire monte encore, entre des façades couvertes de glycine. Une vieille dame arrose ses géraniums depuis sa fenêtre, sans regarder en dessous.' +
         (odeur(s) ? ' L\'odeur de beurre est maintenant si forte qu\'elle a presque une couleur.' : '');
@@ -1015,8 +1015,8 @@ body { min-height: 100vh; }
       { t: 'Redescendre vers la placette', move: 2, go: 'A_RUELLE3' }
     ]
   });
-  noeud('A_RUELLE5', {
-    zone: 'A', titre: 'La rue du Calvaire',
+  lieu('A_RUELLE5', {
+    zone: 'A', pos: [3.15, -0.9], titre: 'L\'escalier tordu',
     texte: 'Un dernier escalier de six marches, tout tordu, coincé entre deux maisons. En haut, une porte bleue et une enseigne en bois : on y est presque.',
     choix: [
       { t: 'Monter les six marches', min: 1, go: 'A_CALVAIRE' },
@@ -1025,7 +1025,7 @@ body { min-height: 100vh; }
   });
 
   lieu('A_CALVAIRE', {
-    zone: 'A', pos: [2.1, -0.3], titre: 'La rue du Calvaire', icone: 'boulangerie',
+    zone: 'A', pos: [3.35, -0.35], titre: 'La rue du Calvaire', icone: 'boulangerie',
     texte: function (s) {
       if (menardFerme(s)) return 'La rue du Calvaire. La boulangerie Ménard, enfin… et son rideau de fer baissé. Une affichette : « Congés annuels. Réouverture lundi. Bonne semaine à tous ! » Tout ça pour ça.';
       if (s.t >= h(12)) return 'La rue du Calvaire. Devant la minuscule boulangerie Ménard, une ardoise : « Plus de croissants. Merci et à demain. »';
@@ -2705,7 +2705,8 @@ body { min-height: 100vh; }
   // Noms courts pour la carte d'un petit écran.
   var COURT = {
     A_IMMEUBLE: 'Chez vous', A_TANNEURS_O: 'R. des Tanneurs', A_TANNEURS_E: 'Ludorama', A_CARREFOUR: 'Carrefour', A_COTE: 'Côte',
-    A_ESCALIERS: 'Escalier', A_BELVEDERE: 'Belvédère', A_CALVAIRE: 'Calvaire', A_SAULES: 'Saules', A_HERONS_O: 'Bd des Hérons',
+    A_ESCALIERS: 'Escalier', A_BELVEDERE: 'Belvédère', A_CALVAIRE: 'Calvaire (Ménard)',
+    A_RUELLE1: 'Ruelles', A_RUELLE2: 'Voûte', A_RUELLE3: 'Placette', A_RUELLE4: 'Géraniums', A_RUELLE5: 'Escalier tordu', A_SAULES: 'Saules', A_HERONS_O: 'Bd des Hérons',
     A_BARRAGE: 'Barrage', A_PLACE_HERONS: 'Pl. des Hérons', A_RUE_HERONS: 'R. des Hérons', A_COIN_NE: 'Le Zinc', A_PARC_ENTREE: 'Parc',
     A_PARC_ALLEE: 'Allée', A_FORET: 'Bois', A_PUITS: 'R. du Puits', A_COIN_SE: 'Balto', A_FIACRE: 'St-Fiacre', A_ARRET: 'Arrêt',
     A_COIN_SO: 'Coin', A_GLANEUSES: 'Glaneuses', A_QUAI_C: 'Quai', A_QUAI_O: 'Quai ouest', A_PAVES: 'Pavés', A_RACAILLES: 'Bas des Pavés',
