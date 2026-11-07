@@ -1071,7 +1071,7 @@ body { min-height: 100vh; }
   });
   comptoir('MENARD_COMPTOIR', {
     zone: 'A', nom: 'Boulangerie Ménard', prix: 300, sortie: 'A_CALVAIRE', victoire: 'V_MENARD',
-    fournee: h(10), texteAttente: function () { return '« Les croissants ? Ils sortent du four à dix heures. Pas avant : le four a son caractère. » Une odeur de beurre insoutenable s\'échappe de l\'arrière-boutique.'; },
+    fournee: h(9, 45), texteAttente: function () { return '« Les croissants ? Ils sortent du four à dix heures moins le quart. Pas avant : le four a son caractère. » Une odeur de beurre insoutenable s\'échappe de l\'arrière-boutique.'; },
     texte: '« Et pour vous ? » La boulangère vous sourit. Les croissants, bien dorés, s\'entassent dans une corbeille en osier. 3,00 € pièce.',
     refus: 'La boulangère vous regarde avec une compassion polie. Vous ressortez sur la place.',
     rupture: menardVide, condRupture: 'avant midi (ensuite : plus de croissants)',
@@ -1224,7 +1224,7 @@ body { min-height: 100vh; }
       return 'La place des Hérons. La fontaine glougloute. Au bout de la rue des Hérons, la devanture vert sapin n\'a pas bougé.';
     },
     choix: [
-      { t: 'Prendre la rue des Hérons', move: 2, go: 'A_GALERIE' },
+      { t: 'Traverser le square vers la rue des Hérons', move: 2, go: 'A_SQUARE' },
       { t: 'Regarder sous les bancs', si: function (s) { return !s.f.bancs; }, cond: 'une seule fois', min: 3, effet: '+1,00 €',
         fx: function (s) { s.f.bancs = true; gagner(s, 100); msg(s, 'Sous le troisième banc : une pièce de 1 €, une capsule de bouteille et un gant d\'enfant. Vous prenez la pièce.'); } },
       { t: 'Entrer dans le parc par la grille est', move: 4, go: 'A_PARC_ALLEE' },
@@ -1232,16 +1232,43 @@ body { min-height: 100vh; }
     ]
   });
   lieu('A_RUE_HERONS', {
-    zone: 'A', pos: [8.6, 2.2], titre: 'La rue des Hérons', icone: 'boulangerie',
+    zone: 'A', pos: [8.75, 0.35], titre: 'L\'impasse des Orfèvres', icone: 'boulangerie',
     texte: function (s) {
-      if (s.j.inventaire) return 'La rue des Hérons : des galeries, un fleuriste, et au bout, la boulangerie Delorme, devanture vert sapin… et rideau baissé. Sur la porte : « Fermeture exceptionnelle pour inventaire. La direction vous prie de l\'excuser. »';
-      return 'La rue des Hérons : des galeries, un fleuriste, un magasin de bougies à quarante euros. Au bout, la boulangerie Delorme, devanture vert sapin et lettres dorées. Une ardoise annonce : « Croissant pur beurre AOP — 5,00 €. Sortie du four : 10h00 ». La file déborde sur le trottoir.';
+      if (s.j.inventaire) return 'L\'impasse des Orfèvres : des bijouteries aux volets clos, et au fond, la boulangerie Delorme, devanture vert sapin… et rideau baissé. Sur la porte : « Fermeture exceptionnelle pour inventaire. La direction vous prie de l\'excuser. »';
+      return 'L\'impasse des Orfèvres : des bijouteries, un horloger, un magasin de bougies à quarante euros. Au fond, la boulangerie Delorme, devanture vert sapin et lettres dorées. Une ardoise annonce : « Croissant pur beurre AOP — 5,00 €. Sortie du four : 9h45 ». La file déborde sur le trottoir.';
     },
     choix: [
       { t: 'Entrer chez Delorme', si: function (s) { return !s.j.inventaire; }, cond: 'sauf jour d\'inventaire', min: 1, go: 'DELORME_FILE' },
-      { t: 'Revenir par la galerie', move: 2, go: 'A_GALERIE' }
+      { t: 'Redescendre la rue des Hérons', move: 3, go: 'A_HERONS_HAUT' }
     ]
   });
+  lieu('A_HERONS_HAUT', {
+    zone: 'A', pos: [8.55, 1.0], titre: 'La rue des Hérons', icone: 'lieu',
+    texte: function (s) {
+      return 'La rue des Hérons monte doucement vers le nord, chic et silencieuse. Un fleuriste installe ses seaux de pivoines sur le trottoir et arrose tout, y compris les passants.' +
+        (s.j.inventaire ? '' : ' Tout en haut, dans une impasse, une devanture vert sapin.');
+    },
+    choix: [
+      { t: 'Aider le fleuriste à sortir ses seaux', si: function (s) { return !s.f.fleuriste; }, cond: 'une fois', min: 5, effet: '+1 € ; la file de chez Delorme un peu plus courte',
+        fx: function (s) { s.f.fleuriste = true; gagner(s, 100); msg(s, 'Huit seaux de pivoines, deux de tulipes, un de branches inconnues. Le fleuriste vous donne 1\u00a0€ et un clin d\'œil : « La vendeuse de Delorme, c\'est ma sœur. Dites-lui que Lucien vous envoie, elle vous fera passer devant deux ou trois personnes. »'); } },
+      { t: 'Monter jusqu\'à l\'impasse des Orfèvres', move: 3, go: 'A_RUE_HERONS' },
+      { t: 'Revenir à la galerie', move: 2, go: 'A_GALERIE' }
+    ]
+  });
+  lieu('A_SQUARE', {
+    zone: 'A', pos: [8.1, 1.6], titre: 'Le square des Hérons', icone: 'lieu',
+    texte: function (s) {
+      return 'Un petit square grillagé : un kiosque à musique, un bac à sable, une statue de héron couverte de vrais pigeons. Un gardien en képi surveille les pelouses comme des frontières.' +
+        (s.o.velo ? ' « Vélo à la main dans le square ! » crie-t-il en vous voyant.' : '') + ' De l\'autre côté, l\'entrée de la galerie des Hérons.';
+    },
+    choix: [
+      { t: 'Demander au gardien où trouver un croissant', si: function (s) { return !s.f.gardienSquare; }, cond: 'une fois', min: 2, effet: 'indice',
+        fx: function (s) { s.f.gardienSquare = true; msg(s, s.j.inventaire ? 'Le gardien ajuste son képi. « Delorme est fermé pour inventaire. Tout le quartier pleure. Allez voir Odette, de l\'autre côté du canal, ou prenez le bus pour Kessler. »' : 'Le gardien ajuste son képi. « Delorme, au bout de la galerie. Cinq euros, la file jusqu\'à la rue, et pas une miette avant dix heures moins le quart. Et je ne veux pas de miettes dans mon square. »'); } },
+      { t: 'Entrer dans la galerie des Hérons', move: 2, go: 'A_GALERIE' },
+      { t: 'Revenir sur la place des Hérons', move: 2, go: 'A_PLACE_HERONS' }
+    ]
+  });
+
   noeud('A_GALERIE', {
     zone: 'A', titre: 'La galerie des Hérons',
     texte: function (s) {
@@ -1254,14 +1281,15 @@ body { min-height: 100vh; }
       { t: 'Montrer votre portrait à l\'antiquaire', si: function (s) { return s.o.portrait; }, cond: 'objet : portrait', min: 3, effet: '+3,00 €',
         fx: function (s) { s.o.portrait = false; gagner(s, 300); msg(s, '« Un Gaspard du Belvédère. Il en fait vingt par jour. » Il vous en propose 3\u00a0€ quand même, parce que le cocker a l\'air vraiment inquiet.'); } },
       { t: 'Regarder l\'heure aux pendules', min: 1,
-        fx: function (s) { msg(s, 'Une pendule dit 4h10, une autre 11h55, une troisième n\'a plus d\'aiguilles. L\'antiquaire, sans ouvrir les yeux : « Il est ' + H(s.t) + '. Et Delorme sort ses croissants à 10h. Tout le monde sait ça. »'); } },
-      { t: 'Traverser la galerie jusqu\'à Delorme', move: 2, go: 'A_RUE_HERONS' },
-      { t: 'Revenir sur la place des Hérons', move: 2, go: 'A_PLACE_HERONS' }
+        fx: function (s) { msg(s, 'Une pendule dit 4h10, une autre 11h55, une troisième n\'a plus d\'aiguilles. L\'antiquaire, sans ouvrir les yeux : « Il est ' + H(s.t) + '. Et Delorme sort ses croissants à 9h45. Tout le monde sait ça. »'); } },
+      { t: 'Traverser la galerie jusqu\'à la rue des Hérons', move: 2, go: 'A_HERONS_HAUT' },
+      { t: 'Revenir vers le square', move: 2, go: 'A_SQUARE' }
     ]
   });
   file('DELORME_FILE', {
     zone: 'A', nom: 'Boulangerie Delorme', n: [5, 7], dt: 4, sortie: 'A_RUE_HERONS', comptoir: 'DELORME_COMPTOIR',
     apres: function (s, R, id) {
+      if (s.f.fleuriste && s.file[id] > 2) { s.file[id] -= 2; msg(s, 'Vous glissez « Lucien » à la vendeuse. Elle sourit et vous fait avancer de deux places, sous le regard noir d\'un monsieur en loden.'); }
       if (s.f.farineT && s.t - s.f.farineT < 120) {
         s.file[id] += 2;
         msg(s, 'Le vendeur remarque la farine qui vous blanchit encore les épaules. « Vous travaillez chez Odette, peut-être ? Nous servirons d\'abord nos habitués. » Deux clientes passent devant vous.');
@@ -1286,7 +1314,7 @@ body { min-height: 100vh; }
   });
   comptoir('DELORME_COMPTOIR', {
     zone: 'A', nom: 'Boulangerie Delorme', prix: 500, sortie: 'A_RUE_HERONS', victoire: 'V_DELORME',
-    fournee: h(10), texteAttente: function () { return 'Le vendeur, tablier impeccable, consulte sa montre. « Nos croissants sortent du four à dix heures précises. Nous ne servons pas de croissant tiède, madame, monsieur. » Il dit « madame, monsieur » à tout le monde, par précaution.'; },
+    fournee: h(9, 45), texteAttente: function () { return 'Le vendeur, tablier impeccable, consulte sa montre. « Nos croissants sortent du four à dix heures moins le quart précises. Nous ne servons pas de croissant tiède, madame, monsieur. » Il dit « madame, monsieur » à tout le monde, par précaution.'; },
     texte: 'Le vendeur porte un tablier impeccable. « Un croissant ? Excellent choix. » Il en dépose un dans une boîte en carton, comme un bijou. 5,00 €.',
     refus: 'Le vendeur referme la boîte avec une infinie délicatesse. Vous ressortez sur la place.'
   });
@@ -1342,7 +1370,7 @@ body { min-height: 100vh; }
       { t: 'Tourner à droite, rue du Puits', move: 3, go: 'A_PUITS' },
       { t: 'Rendre son vélo à Fredo, au Zinc', si: function (s) { return s.o.velo && s.f.veloDemande && !s.f.veloCanal && !s.f.veloRendu; }, cond: 'avec le vélo de Fredo', min: 3,
         effet: '+3 € et un tuyau sur la porte de service de Delorme… qui ne mène nulle part',
-        fx: function (s) { s.o.velo = false; s.f.veloRendu = true; gagner(s, 300); noter(s, 'veloRendu', 'Vous avez rendu son vélo à Fredo.'); msg(s, 'Fredo récupère son vélo, ému. « Personne ne me rend jamais rien ! » Il vous glisse 3 € « pour l\'essence », ce qui ne veut rien dire pour un vélo. « Et si tu vas chez Delorme, sache qu\'ils font sortir leurs croissants à dix heures pile. Pas une minute avant. Inutile d\'arriver tôt, ils te feront attendre au comptoir. »'); } },
+        fx: function (s) { s.o.velo = false; s.f.veloRendu = true; gagner(s, 300); noter(s, 'veloRendu', 'Vous avez rendu son vélo à Fredo.'); msg(s, 'Fredo récupère son vélo, ému. « Personne ne me rend jamais rien ! » Il vous glisse 3 € « pour l\'essence », ce qui ne veut rien dire pour un vélo. « Et si tu vas chez Delorme, sache qu\'ils font sortir leurs croissants à dix heures moins le quart pile. Pas une minute avant. Inutile d\'arriver tôt, ils te feront attendre au comptoir. »'); } },
       { t: 'Rejoindre Fredo au Zinc', si: function (s) { return s.f.fredoRefus && !s.f.cafe; }, cond: 'a refusé le café une première fois', min: 1, go: 'BISTROT' },
       { t: 'Revenir vers l\'immeuble', move: 3, go: 'A_TANNEURS_E' }
     ]
@@ -1853,7 +1881,7 @@ body { min-height: 100vh; }
   });
 
   lieu('A_GRANGE', {
-    zone: 'A', pos: [4.6, 6.4], titre: 'La rue de la Grange', icone: 'boulangerie',
+    zone: 'A', pos: [6.9, 7.75], titre: 'La rue de la Grange', icone: 'boulangerie',
     texte: function (s) {
       if (s.t < odette(s)) return 'De l\'autre côté de la passerelle, la rue de la Grange est calme. Au numéro 3, une boulangerie minuscule : « Chez Odette ». Le rideau est baissé. Un écriteau, écrit à la main : « Ouvert de ' + odetteTxt(s) + ' à 12h30. Ne pas insister. »' +
         (s.f.farine || s.t >= odette(s) ? '' : ' Une camionnette blanche est garée devant, hayon ouvert, pleine de sacs de farine. Le livreur regarde la pile en soupirant.');
@@ -1871,9 +1899,54 @@ body { min-height: 100vh; }
       { t: 'Entrer le premier chez Odette', si: function (s) { return s.f.premierOdette && !s.f.premierUtilise && s.t < h(12, 30); }, cond: 'a attendu l\'ouverture devant le rideau', min: 1,
         effet: 'pas de file : directement au comptoir', fx: function (s) { s.f.premierUtilise = true; }, go: 'ODETTE_COMPTOIR' },
       { t: 'Faire la queue chez Odette', si: function (s) { return s.t >= odette(s) && s.t < h(12, 30) && !(s.f.premierOdette && !s.f.premierUtilise); }, cond: 'de l\'ouverture à 12h30', min: 1, go: 'ODETTE_FILE' },
-      { t: 'Retraverser la passerelle', move: 1, go: 'A_PASSERELLE' }
+      { t: 'Revenir vers le lavoir', move: 3, go: 'A_LAVOIR' }
     ]
   });
+  lieu('A_RIVE', {
+    zone: 'A', pos: [4.7, 6.35], titre: 'Le quai d\'en face', icone: 'lieu',
+    texte: function (s) {
+      var t = 'De ce côté du canal, le quai devient un chemin de terre bordé de jardins partagés : des carrés de poireaux, une cabane à outils, un épouvantail en marinière.';
+      if (!s.f.jardin) t += ' Une jardinière se bat avec une brouette pleine de compost.';
+      t += ' Une petite rue pavée, la rue des Tisserands, s\'éloigne vers le sud-est.';
+      if (s.t < odette(s)) t += ' Une odeur de pâte qui lève flotte au loin, de ce côté-là.';
+      return t;
+    },
+    choix: [
+      { t: 'Pousser la brouette de la jardinière', si: function (s) { return !s.f.jardin; }, cond: 'une fois', min: 6, effet: '+1 € et un indice',
+        fx: function (s) { s.f.jardin = true; gagner(s, 100); msg(s, 'Trois allers-retours de compost plus tard, la jardinière vous donne 1\u00a0€ et trois radis. Vous mangez les radis. « Odette ? Rue de la Grange, tout au bout des Tisserands. Elle ouvre à ' + odetteTxt(s) + '. Ne dites pas que c\'est moi qui vous envoie, on est fâchées depuis 1997. »'); } },
+      { t: 'Prendre la rue des Tisserands', move: 3, go: 'A_TISSERANDS' },
+      { t: 'Remonter sur la passerelle', move: 1, go: 'A_PASSERELLE' }
+    ]
+  });
+  lieu('A_LAVOIR', {
+    zone: 'A', pos: [6.2, 7.35], titre: 'Le vieux lavoir', icone: 'lieu',
+    texte: function (s) {
+      return 'Un vieux lavoir couvert, avec son bassin d\'eau claire et ses poutres noircies. Deux dames y rincent des tapis en commentant la vie du quartier, à voix très haute.' +
+        ' La rue de la Grange commence juste derrière.';
+    },
+    choix: [
+      { t: 'Écouter les commérages du lavoir', si: function (s) { return !s.f.lavoir; }, cond: 'une fois', min: 4, effet: 'indices sur Odette et Lemoine',
+        fx: function (s) { s.f.lavoir = true; msg(s, '« … et Lemoine, alors ! Trente ans que personne n\'est servi, et il a toujours du monde. » « Odette, elle, au moins, elle ouvre à ' + odetteTxt(s) + ', et le premier devant le rideau passe en premier. » « Le premier ? Germaine passe toujours en premier, elle ! » Vous avez appris beaucoup de choses, dont certaines utiles.'); } },
+      { t: 'Prendre la rue de la Grange', move: 2, go: 'A_GRANGE' },
+      { t: 'Revenir rue des Tisserands', move: 3, go: 'A_TISSERANDS' }
+    ]
+  });
+  lieu('A_TISSERANDS', {
+    zone: 'A', pos: [5.5, 6.85], titre: 'La rue des Tisserands', icone: 'lieu',
+    texte: function (s) {
+      var t = 'La rue des Tisserands est étroite, pavée, bordée d\'anciens ateliers aux grandes verrières. Un cordonnier a sorti son tabouret sur le trottoir et tape sur une semelle.';
+      if (s.o.velo) t += ' Il jette un coup d\'œil expert à votre vélo.';
+      t += ' Au bout de la rue, la rue de la Grange part sur la droite.';
+      return t;
+    },
+    choix: [
+      { t: 'Faire regonfler le pneu du vélo par le cordonnier', si: function (s) { return s.o.velo && !s.f.cordonnier; }, cond: 'avec un vélo', min: 4, effet: 'plus de crevaison possible à l\'écluse',
+        fx: function (s) { s.f.cordonnier = true; s.f.crevaison = true; msg(s, 'Le cordonnier sort une pompe d\'un autre siècle et regonfle le pneu, puis glisse une rustine « au cas où ». « Les tessons de l\'écluse, je les connais. » Il refuse votre argent : il aime les vélos.'); } },
+      { t: 'Continuer jusqu\'au lavoir', move: 3, go: 'A_LAVOIR' },
+      { t: 'Revenir vers le canal', move: 3, go: 'A_RIVE' }
+    ]
+  });
+
   noeud('A_PASSERELLE', {
     zone: 'A', titre: 'La passerelle',
     texte: function (s) {
@@ -1883,7 +1956,7 @@ body { min-height: 100vh; }
     choix: [
       { t: 'Aider le couple à fermer son cadenas', si: function (s) { return !s.f.cadenas; }, cond: 'une fois', min: 3, effet: 'indice : l\'heure d\'ouverture d\'Odette',
         fx: function (s) { s.f.cadenas = true; msg(s, 'Un coup sec, clic : le cadenas est fermé. Le couple jette la clé dans le canal en s\'embrassant. « Merci ! Vous allez chez Odette ? Elle ouvre à ' + odetteTxt(s) + ', on y va après. Venez tôt : à l\'ouverture, le premier devant le rideau est servi en premier. »' + (s.o.aimant ? ' Vous pensez à votre aimant, et à la clé qui vient de couler. Vous laissez l\'amour en paix.' : '')); } },
-      { t: 'Descendre de l\'autre côté, rue de la Grange', move: 1, go: 'A_GRANGE' },
+      { t: 'Descendre de l\'autre côté du canal', move: 1, go: 'A_RIVE' },
       { t: 'Revenir sur le quai', move: 1, go: 'A_QUAI_E' }
     ]
   });
@@ -2162,7 +2235,7 @@ body { min-height: 100vh; }
   });
   noeud('B_COUR_FOUR', {
     zone: 'B', titre: 'La cour du Four',
-    texte: 'Au fond du passage, une cour pavée où sèchent des draps. La boulangerie Kessler occupe l\'ancien four banal : une devanture jaune, une ardoise « Croissant 1,10\u00a0€ — fournée de 10h15 », et une file qui sort par la porte.',
+    texte: 'Au fond du passage, une cour pavée où sèchent des draps. La boulangerie Kessler occupe l\'ancien four banal : une devanture jaune, une ardoise « Croissant 1,10\u00a0€ — fournée de 10h », et une file qui sort par la porte.',
     choix: [
       { t: 'Entrer chez Kessler', min: 1, go: 'KESSLER_FILE' },
       { t: 'Repartir par le passage', move: 2, go: 'B_PASSAGE' }
@@ -2201,7 +2274,7 @@ body { min-height: 100vh; }
   });
   comptoir('KESSLER_COMPTOIR', {
     zone: 'B', nom: 'Boulangerie Kessler', prix: 110, sortie: 'B_COUR_FOUR', victoire: 'V_KESSLER',
-    fournee: h(10, 15), texteAttente: function () { return 'Le boulanger, moustache farinée, désigne l\'horloge : « Les croissants, c\'est la fournée de dix heures et quart. Les premiers sont partis avec les voyageurs du 7h52. » Derrière lui, le four ronfle comme un vieux chien.'; },
+    fournee: h(10), texteAttente: function () { return 'Le boulanger, moustache farinée, désigne l\'horloge : « Les croissants, c\'est la fournée de dix heures. Les premiers sont partis avec les voyageurs du 7h52. » Derrière lui, le four ronfle comme un vieux chien.'; },
     texte: 'Le boulanger, moustache farinée, vous tend un croissant avant même que vous ayez parlé. « 1,10 €. »',
     refus: 'Le boulanger hausse les épaules, désolé. « Revenez avec la monnaie, je vous le garde au chaud. »'
   });
@@ -2707,10 +2780,10 @@ body { min-height: 100vh; }
     A_IMMEUBLE: 'Chez vous', A_TANNEURS_O: 'R. des Tanneurs', A_TANNEURS_E: 'Ludorama', A_CARREFOUR: 'Carrefour', A_COTE: 'Côte',
     A_ESCALIERS: 'Escalier', A_BELVEDERE: 'Belvédère', A_CALVAIRE: 'Calvaire (Ménard)',
     A_RUELLE1: 'Ruelles', A_RUELLE2: 'Voûte', A_RUELLE3: 'Placette', A_RUELLE4: 'Géraniums', A_RUELLE5: 'Escalier tordu', A_SAULES: 'Saules', A_HERONS_O: 'Bd des Hérons',
-    A_BARRAGE: 'Barrage', A_PLACE_HERONS: 'Pl. des Hérons', A_RUE_HERONS: 'R. des Hérons', A_COIN_NE: 'Le Zinc', A_PARC_ENTREE: 'Parc',
+    A_BARRAGE: 'Barrage', A_PLACE_HERONS: 'Pl. des Hérons', A_RUE_HERONS: 'Orfèvres (Delorme)', A_COIN_NE: 'Le Zinc', A_PARC_ENTREE: 'Parc',
     A_PARC_ALLEE: 'Allée', A_FORET: 'Bois', A_PUITS: 'R. du Puits', A_COIN_SE: 'Balto', A_FIACRE: 'St-Fiacre', A_ARRET: 'Arrêt',
     A_COIN_SO: 'Coin', A_GLANEUSES: 'Glaneuses', A_QUAI_C: 'Quai', A_QUAI_O: 'Quai ouest', A_PAVES: 'Pavés', A_RACAILLES: 'Bas des Pavés',
-    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
+    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_RIVE: 'Quai d\'en face', A_TISSERANDS: 'Tisserands', A_SQUARE: 'Square', A_HERONS_HAUT: 'R. des Hérons', A_LAVOIR: 'Lavoir', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
     B_GARE: 'Gare', B_RUE_GARE: 'R. de la Gare', B_MAIRIE: 'Mairie', B_BOULEVARD: 'Boulevard', B_LAVANDIERES: 'Lavandières', B_PASSAGE: 'Passage du Four'
   };
   function court(id) { return COURT[id] || N[id].titre; }
