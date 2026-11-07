@@ -798,6 +798,7 @@ body { min-height: 100vh; }
       { t: 'Jouer au bonneteau', si: bonneteauLa, cond: 'bonneteau encore là (avant 10h, et pas plié après une victoire)', min: 1, go: 'A_BONNETEAU' },
       { t: 'Prendre la rue qui monte', move: 4, go: 'A_COTE' },
       { t: 'Prendre la rue qui descend', move: 3, go: 'A_PAVES' },
+      { t: 'Prendre la rue du Repos, vers l\'ouest', move: 3, go: 'A_CIM_ENTREE' },
       { t: 'Revenir vers l\'immeuble', move: 3, go: 'A_TANNEURS_O' }
     ]
   });
@@ -861,8 +862,8 @@ body { min-height: 100vh; }
     ]
   });
 
-  noeud('A_COTE_HAUT', {
-    zone: 'A', titre: 'Le haut de la rue de la Côte',
+  lieu('A_COTE_HAUT', {
+    zone: 'A', pos: [1, 1.5], titre: 'Le haut de la rue de la Côte',
     texte: function (s) {
       return 'La rue devient si raide qu\'on a posé une rampe le long des façades. Un chat dort sur le capot d\'une voiture garée en travers, et un livreur pousse son diable en jurant.' + (s.o.velo ? ' Vous poussez le vélo de Fredo, qui a l\'air de trouver ça injuste.' : '');
     },
@@ -1168,8 +1169,8 @@ body { min-height: 100vh; }
     ]
   });
 
-  noeud('A_DEVIATION', {
-    zone: 'A', titre: 'La rue du Moulin',
+  lieu('A_DEVIATION', {
+    zone: 'A', pos: [6.45, 1.05], titre: 'La rue du Moulin',
     texte: function (s) {
       return 'La déviation fait un grand crochet par la rue du Moulin, entre des façades couvertes de lierre. Elle monte, tourne, redescend, et n\'a visiblement aucune intention d\'arriver quelque part.' +
         (s.f.moulin ? '' : ' Entre deux pavés, une pièce de 50 centimes brille modestement.');
@@ -1182,8 +1183,8 @@ body { min-height: 100vh; }
     ]
   });
 
-  noeud('A_DEVIATION2', {
-    zone: 'A', titre: 'La rue du Moulin',
+  lieu('A_DEVIATION2', {
+    zone: 'A', pos: [7.05, 0.7], titre: 'Le vieux moulin',
     texte: 'La rue du Moulin passe devant un moulin qui n\'en est plus un depuis deux siècles, puis devant une école dont la cloche sonne. Une flèche « Déviation » a été tournée par un plaisantin : elle indique le ciel.',
     choix: [
       { t: 'Continuer tout droit', move: 4, go: 'A_DEVIATION3' },
@@ -1191,8 +1192,8 @@ body { min-height: 100vh; }
       { t: 'Revenir en arrière', move: 4, go: 'A_DEVIATION' }
     ]
   });
-  noeud('A_DEVIATION3', {
-    zone: 'A', titre: 'La rue du Moulin',
+  lieu('A_DEVIATION3', {
+    zone: 'A', pos: [7.55, 1.35], titre: 'La descente du Moulin',
     texte: 'La déviation redescend enfin vers l\'est. Au bout de la rue, on aperçoit la fontaine de la place des Hérons, et derrière, le haut des arbres du parc.',
     choix: [
       { t: 'Descendre jusqu\'à la place des Hérons', move: 3, go: 'A_PLACE_HERONS' },
@@ -1228,11 +1229,12 @@ body { min-height: 100vh; }
       { t: 'Regarder sous les bancs', si: function (s) { return !s.f.bancs; }, cond: 'une seule fois', min: 3, effet: '+1,00 €',
         fx: function (s) { s.f.bancs = true; gagner(s, 100); msg(s, 'Sous le troisième banc : une pièce de 1 €, une capsule de bouteille et un gant d\'enfant. Vous prenez la pièce.'); } },
       { t: 'Entrer dans le parc par la grille est', move: 4, go: 'A_PARC_ALLEE' },
+      { t: 'Prendre la passerelle de la voie ferrée', move: 3, go: 'A_PASS_FERREE' },
       { t: 'Descendre l\'avenue du Sud', move: 8, go: 'A_AVENUE_SUD' }
     ]
   });
   lieu('A_RUE_HERONS', {
-    zone: 'A', pos: [8.75, 0.35], titre: 'L\'impasse des Orfèvres', icone: 'boulangerie',
+    zone: 'A', pos: [8.8, 0.2], titre: 'L\'impasse des Orfèvres', icone: 'boulangerie',
     texte: function (s) {
       if (s.j.inventaire) return 'L\'impasse des Orfèvres : des bijouteries aux volets clos, et au fond, la boulangerie Delorme, devanture vert sapin… et rideau baissé. Sur la porte : « Fermeture exceptionnelle pour inventaire. La direction vous prie de l\'excuser. »';
       return 'L\'impasse des Orfèvres : des bijouteries, un horloger, un magasin de bougies à quarante euros. Au fond, la boulangerie Delorme, devanture vert sapin et lettres dorées. Une ardoise annonce : « Croissant pur beurre AOP — 5,00 €. Sortie du four : 9h45 ». La file déborde sur le trottoir.';
@@ -1243,7 +1245,7 @@ body { min-height: 100vh; }
     ]
   });
   lieu('A_HERONS_HAUT', {
-    zone: 'A', pos: [8.55, 1.0], titre: 'La rue des Hérons', icone: 'lieu',
+    zone: 'A', pos: [8.6, 0.8], titre: 'La rue des Hérons', icone: 'lieu',
     texte: function (s) {
       return 'La rue des Hérons monte doucement vers le nord, chic et silencieuse. Un fleuriste installe ses seaux de pivoines sur le trottoir et arrose tout, y compris les passants.' +
         (s.j.inventaire ? '' : ' Tout en haut, dans une impasse, une devanture vert sapin.');
@@ -1256,7 +1258,7 @@ body { min-height: 100vh; }
     ]
   });
   lieu('A_SQUARE', {
-    zone: 'A', pos: [8.1, 1.6], titre: 'Le square des Hérons', icone: 'lieu',
+    zone: 'A', pos: [8.15, 2.15], titre: 'Le square des Hérons', icone: 'lieu',
     texte: function (s) {
       return 'Un petit square grillagé : un kiosque à musique, un bac à sable, une statue de héron couverte de vrais pigeons. Un gardien en képi surveille les pelouses comme des frontières.' +
         (s.o.velo ? ' « Vélo à la main dans le square ! » crie-t-il en vous voyant.' : '') + ' De l\'autre côté, l\'entrée de la galerie des Hérons.';
@@ -1269,8 +1271,8 @@ body { min-height: 100vh; }
     ]
   });
 
-  noeud('A_GALERIE', {
-    zone: 'A', titre: 'La galerie des Hérons',
+  lieu('A_GALERIE', {
+    zone: 'A', pos: [8.45, 1.3], titre: 'La galerie des Hérons',
     texte: function (s) {
       return 'La rue des Hérons commence par une galerie couverte, verrière et carrelage en damier. Un antiquaire somnole derrière une vitrine pleine de pendules arrêtées, toutes à des heures différentes.' +
         (s.o.vieillePiece || s.o.portrait ? ' Il entrouvre un œil en vous voyant passer : il a le flair des choses anciennes.' : '');
@@ -1316,7 +1318,11 @@ body { min-height: 100vh; }
     zone: 'A', nom: 'Boulangerie Delorme', prix: 500, sortie: 'A_RUE_HERONS', victoire: 'V_DELORME',
     fournee: h(9, 45), texteAttente: function () { return 'Le vendeur, tablier impeccable, consulte sa montre. « Nos croissants sortent du four à dix heures moins le quart précises. Nous ne servons pas de croissant tiède, madame, monsieur. » Il dit « madame, monsieur » à tout le monde, par précaution.'; },
     texte: 'Le vendeur porte un tablier impeccable. « Un croissant ? Excellent choix. » Il en dépose un dans une boîte en carton, comme un bijou. 5,00 €.',
-    refus: 'Le vendeur referme la boîte avec une infinie délicatesse. Vous ressortez sur la place.'
+    refus: 'Le vendeur referme la boîte avec une infinie délicatesse. Vous ressortez sur la place.',
+    extra: [{ t: 'Présenter la carte de fidélité (dixième croissant offert)', si: function (s) { return s.o.carteFidelite && s.t >= h(9, 45); }, cond: 'objet : carte de fidélité, après la fournée', min: 1,
+      effet: 'croissant offert (victoire sans payer)',
+      fx: function (s) { s.o.carteFidelite = false; noter(s, 'carteFidelite', 'Le dixième croissant de la carte de fidélité d\'un vieux monsieur vous a été offert.'); msg(s, 'Le vendeur examine la carte, les neuf tampons, puis vous. « Monsieur Albert… Il ne vient plus ? » Il appose le dixième tampon avec solennité et vous tend la boîte. « Offert par la maison, et par monsieur Albert. »'); },
+      go: 'V_DELORME' }]
   });
   victoire('V_DELORME', 'Delorme', 'C\'est sans doute le croissant le plus cher de votre vie. Il est, hélas, délicieux. Vous le mangez sur le trottoir de la rue des Hérons, en essayant de faire durer chaque bouchée un euro.');
 
@@ -1425,8 +1431,11 @@ body { min-height: 100vh; }
   lieu('A_PARC_ENTREE', {
     zone: 'A', pos: [5, 3], titre: 'L\'entrée du parc', icone: 'parc', sansTrott: true,
     entree: function (s) { rendreTrott(s, 'Un panneau interdit les trottinettes dans le parc. Vous rendez la vôtre à l\'entrée.'); },
-    texte: 'Les grilles du parc des Hérons sont ouvertes. Une grande allée file tout droit entre les pelouses. Un panneau prévient : « Le bois est réservé aux promeneurs avertis. » Vous ne savez pas très bien si vous en faites partie.',
+    texte: 'Un marchand de ballons fait le pied de grue devant l\'entrée, une grappe de ballons rouges au-dessus de la tête. Les grilles du parc des Hérons sont ouvertes. Une grande allée file tout droit entre les pelouses. Un panneau prévient : « Le bois est réservé aux promeneurs avertis. » Vous ne savez pas très bien si vous en faites partie.',
     choix: [
+      { t: 'Acheter un ballon rouge au marchand (2,00 €)', si: function (s) { return !s.o.ballon && !s.f.ballonDonne && s.argent >= 200; }, cond: 'avoir 2 €, une fois', min: 2,
+        effet: 'objet caché : un ballon rouge',
+        fx: function (s) { payer(s, 200); s.o.ballon = true; msg(s, 'Le marchand vous tend un ballon rouge au bout d\'une ficelle. Vous ne savez pas pourquoi vous l\'avez acheté. Lui non plus. Il flotte au-dessus de vous comme une question.'); } },
       { t: 'Suivre la grande allée', move: 3, go: 'A_PARC_ALLEE' },
       { t: 'Ressortir et contourner le parc', move: 3, go: 'A_HERONS_O' },
       { t: 'Revenir au coin de la rue', move: 2, go: 'A_COIN_NE' }
@@ -1437,10 +1446,14 @@ body { min-height: 100vh; }
     zone: 'A', pos: [6.3, 3], titre: 'La grande allée', icone: 'fontaine', sansTrott: true,
     entree: function (s) { rendreTrott(s, 'Un panneau interdit les trottinettes dans le parc. Vous rendez la vôtre.'); },
     texte: function (s) {
-      return 'Au milieu du parc, une fontaine glougloute.' + (s.t < h(11) && !s.f.canards ? ' Sur un banc, un vieux monsieur émiette un croissant entier pour les canards. Un croissant entier.' : '') + (s.f.fontaine ? '' : ' Au fond du bassin, des pièces : des vœux de promeneurs, sans doute.') +
+      return 'Au milieu du parc, une fontaine glougloute.' + (s.t < h(11) && !s.f.ballonDonne ? ' Près du bassin, un petit garçon pleure à chaudes larmes : son ballon s\'est envolé.' : '') + (s.t < h(11) && !s.f.canards ? ' Sur un banc, un vieux monsieur émiette un croissant entier pour les canards. Un croissant entier.' : '') + (s.f.fontaine ? '' : ' Au fond du bassin, des pièces : des vœux de promeneurs, sans doute.') +
         (s.t < h(10, 30) ? ' Un sentier part vers le bois en promettant un raccourci.' : ' Le sentier du bois est fermé par une chaîne : « Accès interdit après 10h30 ».') + ' La grande allée continue jusqu\'à la grille est. Une autre grille donne au sud, sur l\'avenue.';
     },
     choix: [
+      { t: 'Offrir votre ballon rouge à l\'enfant qui pleure', si: function (s) { return s.o.ballon && s.t < h(11); }, cond: 'objet : ballon, avant 11h', min: 2,
+        effet: 'le grand-père vous donne sa carte de fidélité Delorme (croissant offert)',
+        fx: function (s) { s.o.ballon = false; s.f.ballonDonne = true; s.o.carteFidelite = true; noter(s, 'ballon', 'Vous avez consolé un enfant avec un ballon rouge.');
+          msg(s, 'L\'enfant cesse de pleurer à la seconde. Son grand-père, le vieux monsieur aux canards, sort son portefeuille avec émotion et vous tend une petite carte vert sapin. « Ma carte de fidélité Delorme. Neuf tampons sur dix : le prochain croissant est offert. Moi, maintenant, je donne tout aux canards. Allez-y, ça me fera plaisir. »'); } },
       { t: 'Donner un bout de baguette aux canards, avec le vieux monsieur', si: function (s) { return s.o.baguette > 0 && s.t < h(11) && !s.f.canardsPain; }, cond: 'objet : demi-baguette, avant 11h', min: 4,
         effet: '+1 € et le chemin des ruelles jusqu\'à Ménard',
         fx: function (s) {
@@ -1712,10 +1725,13 @@ body { min-height: 100vh; }
 
   bus('A_BUS_', { zone: 'A', arret: 'A_ARRET', ligne: '46', arret1: 'B_MAIRIE', nom1: 'Mairie', arret2: 'B_GARE', nom2: 'la gare' });
 
+  var texteCoinSO = ' ' + 'Un escalier de pierre descend vers le canal, d\'où montent des cris de mouettes. Ou de canards qui se prennent pour des mouettes.';
   lieu('A_COIN_SO', {
     zone: 'A', pos: [2.2, 4], titre: 'Le coin de la rue des Glaneuses',
-    texte: 'Le coin de la rue des Glaneuses. Un escalier de pierre descend vers le canal, d\'où montent des cris de mouettes. Ou de canards qui se prennent pour des mouettes.',
+    texte: function (s) { return 'Le coin de la rue des Glaneuses.' + (s.t < h(11, 30) ? ' Un artiste, à genoux sur le trottoir, dessine à la craie un croissant géant, plus vrai que nature. Son chapeau est vide.' : '') + texteCoinSO; },
     choix: [
+      { t: 'Laisser une pièce à l\'artiste à la craie (0,50 €)', si: function (s) { return !s.f.craie && s.argent >= 50 && s.t < h(11, 30); }, cond: 'avoir 0,50 €, une fois', min: 2, effet: 'un indice dessiné',
+        fx: function (s) { s.f.craie = true; payer(s, 50); msg(s, 'L\'artiste lève la tête, touché. « Pour la peine, je vous en dessine un vrai. » Il ajoute au croissant géant une petite flèche vers le sud, une passerelle, et une enseigne : « Chez Odette ». « Le modèle, c\'est le sien. Le meilleur de tous. »'); } },
       { t: 'Tourner à droite, rue des Glaneuses', move: 3, go: 'A_GLANEUSES' },
       { t: 'Descendre l\'escalier vers le canal', move: 2, go: 'A_QUAI_C' },
       { t: 'Revenir vers l\'arrêt de bus', move: 2, go: 'A_ARRET' }
@@ -1783,8 +1799,8 @@ body { min-height: 100vh; }
       return t;
     },
     choix: [
-      { t: 'Se pencher pour voir', si: function (s) { return !s.f.recule; }, cond: 'tant qu\'on n\'a pas déjà reculé', min: 2, effet: '15 % : on tombe à l\'eau (défaite)',
-        fx: function (s, R) { s.f.penche = R.chance(0.15); if (!s.f.penche) s.f.recule = true; if (!s.f.penche) msg(s, 'Vous vous penchez. C\'est bien un vélo. Il a l\'air plus triste que vous. Le quai glisse un peu ; vous reculez juste à temps.'); },
+      { t: 'Se pencher pour voir', si: function (s) { return !s.f.recule; }, cond: 'tant qu\'on n\'a pas déjà reculé', min: 2, effet: '22 % : on tombe à l\'eau (défaite)',
+        fx: function (s, R) { s.f.penche = R.chance(0.22); if (!s.f.penche) s.f.recule = true; if (!s.f.penche) msg(s, 'Vous vous penchez. C\'est bien un vélo. Il a l\'air plus triste que vous. Le quai glisse un peu ; vous reculez juste à temps.'); },
         go: function (s) { return s.f.penche ? 'D_CANAL' : null; }, vers: ['D_CANAL'] },
       { t: 'Aider l\'adolescent à tirer sur la corde', si: function (s) { return !s.f.ado; }, cond: 'une fois', min: 8, effet: 'objet caché : aimant ; indice (la grille de la rue des Tanneurs)',
         fx: function (s) { s.f.ado = true; s.o.aimant = true; noter(s, 'aimant', 'Un adolescent qui pêche à l\'aimant vous a donné un aimant.'); msg(s, 'À deux, vous remontez un caddie entier, couvert d\'algues. L\'adolescent rayonne. « C\'est de la pêche à l\'aimant ! Tenez, j\'en ai un de rechange. » Il vous tend un gros aimant au bout d\'une ficelle. « Il y a une pièce coincée au fond d\'une grille, rue des Tanneurs. Moi, j\'ose pas : il y a un monsieur assis juste à côté. »'); } },
@@ -1799,6 +1815,7 @@ body { min-height: 100vh; }
           else if (s.f.peche === 2) { s.o.vieillePiece = true; msg(s, 'L\'aimant remonte une grosse pièce noircie : 10 francs, 1986. Elle ne vaut plus rien dans les boulangeries. Ailleurs, qui sait.'); }
           else msg(s, 'L\'aimant remonte une trottinette de location entière, qui clignote encore. Vous la rendez au canal, par respect pour la nature.');
         } },
+      { t: 'Traverser le pont tournant', move: 2, go: 'A_PONT_TOURNANT' },
       { t: 'Remonter la rue des Pavés', move: 3, go: 'A_RACAILLES' },
       { t: 'Revenir vers l\'escalier', move: 3, go: 'A_QUAI_C' }
     ]
@@ -1820,10 +1837,184 @@ body { min-height: 100vh; }
   });
 
   function racaillesLa(s) { return s.f.racaillesLa && !s.f.racaillesParties; }
+  lieu('A_PASS_FERREE', {
+    zone: 'A', pos: [9.25, 3.55], titre: 'La passerelle de la voie ferrée', icone: 'lieu',
+    texte: function (s) {
+      return 'Une longue passerelle grillagée enjambe une dizaine de voies. Un monsieur en anorak, carnet à la main, note les numéros des trains qui passent avec une concentration de moine copiste.';
+    },
+    choix: [
+      { t: 'Demander au monsieur ce qu\'il note', si: function (s) { return !s.f.trainspotter; }, cond: 'une fois', min: 4, effet: 'indice : Kessler',
+        fx: function (s) { s.f.trainspotter = true; msg(s, '« Le 7h52 avait quatre minutes de retard. Le 8h15 était pile. » Il vous montre son carnet, plein de colonnes. « Vous voulez un croissant ? Kessler, à la gare, au fond de la cour du Four. Les voyageurs du 7h52 lui prennent tout, mais il refait une fournée. Je note aussi les fournées. »'); } },
+      { t: 'Descendre de l\'autre côté, rue des Cheminots', move: 3, go: 'A_CHEMINOTS' },
+      { t: 'Revenir sur la place des Hérons', move: 3, go: 'A_PLACE_HERONS' }
+    ]
+  });
+  lieu('A_CHEMINOTS', {
+    zone: 'B', pos: [9.95, 4.35], titre: 'La rue des Cheminots', icone: 'lieu',
+    texte: function (s) {
+      return 'La rue des Cheminots longe les entrepôts de la gare. Dans un ancien atelier, un vieux cheminot répare des vélos au milieu d\'un enchevêtrement de roues et de chambres à air.' +
+        (s.o.velo ? ' Il jette un regard connaisseur à votre vélo.' : '') + ' Au bout de la rue, le parvis de la gare.';
+    },
+    choix: [
+      { t: 'Acheter un vélo d\'occasion (4,00 €)', si: function (s) { return !s.o.velo && !s.veloAttache && !s.f.veloAtelier; }, cond: 'sans vélo, une fois', min: 4,
+        effet: 'objet caché : un vélo (déplacements plus rapides)',
+        fx: function (s) {
+          if (s.argent < 400) { msg(s, 'Il vous manque ' + E(400 - s.argent) + '. Le cheminot range le vélo : « Repassez quand vous serez riche. »'); return; }
+          payer(s, 400); s.f.veloAtelier = true; s.o.velo = true; rendreTrott(s); noter(s, 'veloAtelier', 'Vous avez acheté un vieux vélo à un cheminot.');
+          msg(s, 'Le cheminot vous vend un vélo de facteur, jaune, increvable. « Il a quarante ans, il en fera quarante de plus. » À vélo, vous irez deux fois plus vite.');
+        } },
+      { t: 'Proposer votre clé de 12 au cheminot', si: function (s) { return s.o.cle; }, cond: 'objet : clé de 12', min: 2, effet: '+2,00 €',
+        fx: function (s) { s.o.cle = false; gagner(s, 200); msg(s, '« Une Facom de 1970 ! On n\'en fait plus des comme ça. » Le cheminot vous en donne 2\u00a0€ et la range dans un tiroir où dorment déjà trois cents clés de 12.'); } },
+      { t: 'Continuer jusqu\'au parvis de la gare', move: 4, go: 'B_GARE' },
+      { t: 'Remonter sur la passerelle', move: 3, go: 'A_PASS_FERREE' }
+    ]
+  });
+
+  lieu('B_HALL', {
+    zone: 'B', pos: [11.0, 4.85], titre: 'Le hall de la gare', icone: 'lieu',
+    texte: function (s) {
+      var t = 'Le grand hall de la gare : une verrière immense, des pigeons qui ont élu domicile sous la charpente, une horloge géante qui affiche ' + H(s.t) + '. Une voix annonce des retards avec beaucoup de regret.';
+      if (!s.f.valise) t += ' Un voyageur en costume, essoufflé, cherche quelqu\'un du regard en serrant une valise à roulettes.';
+      t += ' Au fond, le buffet de la gare.';
+      return t;
+    },
+    choix: [
+      { t: 'Garder la valise du voyageur pressé', si: function (s) { return !s.f.valise; }, cond: 'une fois', min: 8, effet: '+3 € (15 % : la sécurité de la gare s\'en mêle, défaite)',
+        fx: function (s, R) { s.f.valise = true; s.f.valiseSuspecte = R.chance(0.15);
+          if (!s.f.valiseSuspecte) { gagner(s, 300); noter(s, 'valise', 'Vous avez gardé la valise d\'un voyageur pressé.'); msg(s, '« Juste cinq minutes, je reviens ! » Il revient en huit, un billet à la main, et vous glisse 3\u00a0€. « Vous m\'avez sauvé la vie. Enfin, mon train. »'); } },
+        go: function (s) { return s.f.valiseSuspecte ? 'D_VALISE' : null; }, vers: ['D_VALISE'] },
+      { t: 'Aller au buffet de la gare', move: 1, go: 'B_BUFFET' },
+      { t: 'Ressortir sur le parvis', move: 1, go: 'B_GARE' }
+    ]
+  });
+  noeud('B_BUFFET', {
+    zone: 'B', titre: 'Le buffet de la gare',
+    texte: 'Le buffet de la gare : banquettes en moleskine, garçons en gilet, un chef en toque qui fume à la porte des cuisines. Sur le comptoir, une cloche à fromages et une affiche jaunie : « Ici, pas de croissant : allez chez Kessler. »',
+    choix: [
+      { t: 'Parler au chef', si: function (s) { return !s.f.chef; }, cond: 'une fois', min: 4, effet: 'indices sur Ménard et Kessler',
+        fx: function (s) { s.f.chef = true; msg(s, '« Ménard ? J\'y ai été apprenti, il y a trente ans. Rue du Calvaire, tout en haut de la butte, au bout des ruelles : on suit l\'odeur. La fournée sort à dix heures moins le quart, et ils n\'en font que quarante. Kessler, ici, c\'est mon cousin : fournée à dix heures, au fond de la cour du Four. Dites-lui que vous venez du buffet, il vous fera un sourire. Juste un sourire. »'); } },
+      { t: 'Prendre un café au comptoir (1,50 €)', si: function (s) { return !s.st.reveille && s.argent >= 150; }, cond: 'avoir 1,50 €, sans avoir déjà pris un café', min: 3, effet: 'café : protège du pigeon, du sommeil dans le bus et de la sieste',
+        fx: function (s) { payer(s, 150); s.st.reveille = true; msg(s, 'Un garçon pose devant vous un café sur une soucoupe, avec un sucre emballé et un verre d\'eau, en deux secondes chrono. Vous voilà les yeux grands ouverts.'); } },
+      { t: 'Retourner dans le hall', min: 1, go: 'B_HALL' }
+    ]
+  });
+
+  lieu('B_MEDIATHEQUE', {
+    zone: 'B', pos: [10.1, 0.35], titre: 'La médiathèque', icone: 'lieu',
+    texte: 'La médiathèque sent le papier et le chauffage. Des étudiants dorment sur leurs cahiers, un monsieur lit le même journal depuis l\'ouverture. Au mur, un grand plan du quartier, avec ses rues, ses places et ses canaux.',
+    choix: [
+      { t: 'Étudier le grand plan du quartier', si: function (s) { return !s.f.planMediatheque; }, cond: 'une fois', min: 6, effet: 'toutes les rues apparaissent sur votre carte',
+        fx: function (s) { s.f.planMediatheque = true; s.f.planAchete = true; s.f.connu = s.f.connu || {}; Object.keys(N).forEach(function (id) { if (N[id].lieu) s.f.connu[id] = true; }); msg(s, 'Vous étudiez le plan, rue par rue, en suivant du doigt. Une bibliothécaire vous regarde faire avec tendresse. Vous en savez maintenant beaucoup plus sur le quartier : votre carte est complète, à défaut d\'être visitée.'); } },
+      { t: 'Feuilleter les journaux du jour', si: function (s) { return !s.f.journauxMed; }, cond: 'une fois', min: 5, effet: 'l\'annonce du chat perdu ; l\'article sur le bonneteau',
+        fx: function (s) { s.f.journauxMed = true; s.f.annonceLue = true; msg(s, 'Page 7 : « Arnaques au bonneteau : la police veille. » Page 12, dans les annonces : « Perdu chat roux, Moustache. Récompense. 12, rue du Puits. » Page 18 : l\'horoscope vous promet « une rencontre gourmande avant midi ». On verra.'); } },
+      { t: 'Ressortir sur la place de la Mairie', move: 1, go: 'B_MAIRIE' }
+    ]
+  });
+  lieu('B_HOPITAL', {
+    zone: 'B', pos: [12.0, 0.35], titre: 'L\'hôpital Saint-Lazare', icone: 'lieu',
+    texte: function (s) {
+      return 'Le hall de l\'hôpital Saint-Lazare : des brancards, des gens en pyjama qui fument dehors, une machine à café qui fait un bruit d\'avion. À la cafétéria, des viennoiseries sous cellophane qu\'aucun malade n\'oserait manger.';
+    },
+    choix: [
+      { t: 'Prendre un café à la machine (1,00 €)', si: function (s) { return !s.st.reveille && s.argent >= 100; }, cond: 'avoir 1 €, sans avoir déjà pris un café', min: 3, effet: 'café : protège du pigeon, du sommeil dans le bus et de la sieste sur le banc',
+        fx: function (s) { payer(s, 100); s.st.reveille = true; msg(s, 'La machine rugit et vous sert un liquide noir, brûlant, qui a vaguement le goût du café et entièrement celui de l\'hôpital. Vous voilà les yeux grands ouverts.'); } },
+      { t: 'Regarder les viennoiseries de la cafétéria', min: 2,
+        fx: function (s) { msg(s, 'Des croissants sous cellophane, aplatis, d\'une pâleur de convalescent. « Ils sont d\'hier », dit la caissière. « Ou d\'avant-hier. » Vous décidez que ça ne compte pas. Ça ne peut pas compter.'); } },
+      { t: 'Couper par le parking vers le boulevard', move: 3, go: 'B_BOULEVARD' },
+      { t: 'Redescendre vers la mairie', move: 3, go: 'B_MAIRIE' }
+    ]
+  });
+
+  noeud('A_PONT_TOURNANT', {
+    zone: 'A', titre: 'Le pont tournant',
+    entree: function (s, R) { s.f.pontOuvert = R.chance(0.4); },
+    texte: function (s) {
+      return s.f.pontOuvert ? 'Le pont tournant pivote lentement pour laisser passer une péniche chargée de sable. Le pontier, dans sa guérite, vous fait signe d\'attendre. Il n\'a pas l\'air pressé.'
+        : 'Le pont tournant, en fer riveté, enjambe le canal. De l\'autre côté, sous les platanes, on entend un accordéon s\'échauffer.';
+    },
+    choix: [
+      { t: 'Attendre que le pont se referme', si: function (s) { return s.f.pontOuvert; }, cond: 'pont ouvert (40 %)', min: 6,
+        fx: function (s) { s.f.pontOuvert = false; msg(s, 'La péniche passe, le pont grince et se remet en place. Le pontier vous salue d\'un coup de casquette.'); } },
+      { t: 'Passer de l\'autre côté', si: function (s) { return !s.f.pontOuvert; }, cond: 'pont fermé', move: 2, go: 'A_GUINGUETTE' },
+      { t: 'Revenir sur le quai ouest', move: 1, go: 'A_QUAI_O' }
+    ]
+  });
+  lieu('A_GUINGUETTE', {
+    zone: 'A', pos: [1.4, 6.75], titre: 'La guinguette du bassin', icone: 'lieu',
+    texte: function (s) {
+      var t = 'Sous les platanes, une guinguette ouvre ses volets : tables en fer, lampions, une piste de danse en bois. Lulu, la patronne, déplie des chaises en chantant. Un accordéoniste répète la même valse depuis l\'aube.';
+      if (s.t >= h(9, 30)) t += ' Quelques habitués dansent déjà, en charentaises.';
+      return t + ' Un chemin longe la rive sud du canal, vers l\'est.';
+    },
+    choix: [
+      { t: 'Aider Lulu à déplier les chaises', si: function (s) { return !s.f.lulu; }, cond: 'une fois', min: 8, effet: '+1,50 € et un café (le café de Fredo, en mieux)',
+        fx: function (s) { s.f.lulu = true; s.st.reveille = true; gagner(s, 150); noter(s, 'lulu', 'Vous avez aidé Lulu à ouvrir sa guinguette.'); msg(s, 'Quarante chaises, dix tables, une piste à balayer. Lulu vous paie 1,50\u00a0€ et un café serré comme un poing. Vous voilà les yeux grands ouverts pour la journée.'); } },
+      { t: 'Accepter une danse', si: function (s) { return s.t >= h(9, 30); }, cond: 'après 9h30', min: 6, effet: '18 % : on ne vous lâche plus (défaite)',
+        fx: function (s, R) { s.f.valse = R.chance(0.18); if (!s.f.valse) msg(s, 'Une valse avec une dame de quatre-vingt-sept ans qui mène comme un sergent. Vous vous en sortez avec dignité, et un orteil écrasé.'); },
+        go: function (s) { return s.f.valse ? 'D_VALSE' : null; }, vers: ['D_VALSE'] },
+      { t: 'Suivre le chemin de la rive sud', move: 8, go: 'A_RIVE' },
+      { t: 'Repasser le pont tournant', move: 2, go: 'A_PONT_TOURNANT' }
+    ]
+  });
+
+  lieu('A_CIM_ENTREE', {
+    zone: 'A', pos: [-0.25, 3.0], titre: 'La rue du Repos', icone: 'lieu',
+    texte: function (s) {
+      var t = 'La rue du Repos porte bien son nom : pas une voiture, pas un bruit. Elle finit devant la grande grille du cimetière des Tanneurs, où un gardien en blouse grise compte ses clés.';
+      t += s.t < h(8, 30) ? ' La grille est encore fermée : « Ouverture à huit heures et demie ! »' : (s.t < h(12) ? ' La grille est ouverte. « On ferme à midi pile, hein. Je compte les visiteurs. »' : ' La grille est fermée : le gardien est parti déjeuner.');
+      return t;
+    },
+    choix: [
+      { t: 'Entrer dans le cimetière', si: function (s) { return s.t >= h(8, 30) && s.t < h(12); }, cond: 'de 8h30 à midi', move: 2, go: 'A_CIM_ALLEE' },
+      { t: 'Revenir au carrefour', move: 3, go: 'A_CARREFOUR' }
+    ]
+  });
+  lieu('A_CIM_ALLEE', {
+    zone: 'A', pos: [-0.75, 2.2], titre: 'L\'allée des tilleuls', icone: 'lieu',
+    entree: function (s, R) {
+      if (s.o.chat && !s.f.chatTente) {
+        s.f.chatTente = true;
+        if (s.o.comte) msg(s, 'Moustache fait mine de rejoindre les chats du cimetière… puis renifle le comté dans votre poche et revient se coller à vos jambes. L\'amitié a ses limites ; le fromage, non.');
+        else if (R.chance(0.35)) { s.o.chat = false; s.f.chatParti = true; msg(s, 'Moustache saute sur une tombe, se frotte à trois chats, et disparaît avec eux entre les tilleuls. Vous l\'appelez. Il ne se retourne pas. Mme Duval attendra encore un peu.'); }
+      }
+    },
+    texte: function (s) {
+      var t = 'Une longue allée bordée de tilleuls et de tombes moussues. Une dizaine de chats y prennent le soleil, chacun sur sa tombe, comme des propriétaires. Une vieille dame en manteau violet parle à voix haute à une pierre tombale.';
+      if (s.o.chat) t += ' Les chats regardent Moustache avec un respect mêlé de méfiance. Moustache, lui, a l\'air de reconnaître de vieux amis.';
+      return t;
+    },
+    choix: [
+      { t: 'Lire les noms sur les tombes', si: function (s) { return !s.f.tombe; }, cond: 'une fois', min: 4, effet: 'une tombe très instructive',
+        fx: function (s) { s.f.tombe = true; noter(s, 'tombe', 'Au cimetière, vous avez trouvé la tombe d\'Auguste Lemoine.'); msg(s, 'Entre deux tilleuls, une stèle de granit : « Ici repose Auguste Lemoine, boulanger, 1902-1987. Il fit la queue toute sa vie, et ses clients aussi. » Une photo jaunie montre une file d\'attente devant une boulangerie. La même file qu\'aujourd\'hui, rue Saint-Fiacre. Exactement la même.'); } },
+      { t: 'Partager votre demi-baguette avec les chats', si: function (s) { return s.o.baguette > 0 && !s.f.chatsPain; }, cond: 'objet : demi-baguette', min: 3, effet: '+1 € et un indice',
+        fx: function (s) { s.o.baguette--; s.f.chatsPain = true; gagner(s, 100); msg(s, 'Les chats boudent le pain, mais la vieille dame en violet est conquise. « Vous nourrissez mes petits ! » Elle vous donne 1\u00a0€. « Et si vous cherchez une boulangerie, montez par la petite grille du haut : elle donne au pied de la butte. Ménard est là-haut, dans les ruelles. »'); } },
+      { t: 'Parler à la dame en violet', si: function (s) { return !s.f.dameViolet; }, cond: 'une fois', min: 5, effet: 'du temps, et peut-être un indice',
+        fx: function (s) { s.f.dameViolet = true; msg(s, s.f.gardienne ? '« Ribeiro ? La gardienne de la rue des Tanneurs ? C\'est ma cousine. Elle a toujours eu des goûts de luxe : elle va chez Delorme, à cinq euros le croissant ! Moi, je vais chez Odette, de l\'autre côté du canal. »' : 'La dame vous présente Gustave, son défunt mari, puis tous les voisins de Gustave, un par un. Cinq minutes. Vous apprenez que Gustave aimait les croissants d\'Odette, de l\'autre côté du canal.'); } },
+      { t: 'S\'asseoir un moment sur un banc, à l\'ombre', min: 10, effet: 'après 11h15 : vous vous endormez et le gardien ferme (défaite)',
+        fx: function (s) { if (s.t < h(11, 30)) msg(s, 'Dix minutes de calme absolu sous les tilleuls. Un chat vient s\'installer sur vos genoux, puis repart, déçu par l\'absence de fromage.'); },
+        go: function (s) { return s.t >= h(11, 30) ? 'D_CIMETIERE' : null; }, vers: ['D_CIMETIERE'] },
+      { t: 'Monter vers le haut du cimetière', move: 3, go: 'A_CIM_HAUT' },
+      { t: 'Revenir vers la grille', move: 2, go: 'A_CIM_ENTREE' }
+    ]
+  });
+  lieu('A_CIM_HAUT', {
+    zone: 'A', pos: [-0.35, 1.15], titre: 'Le haut du cimetière', icone: 'lieu',
+    texte: function (s) {
+      return 'Le haut du cimetière domine les toits. Un tailleur de pierre grave une épitaphe en sifflotant. Dans le mur, une petite grille donne sur l\'escalier de la butte.' +
+        (s.t < h(9) ? ' Elle est fermée par un cadenas : « Ouverture à 9 heures ».' : ' Elle est ouverte.');
+    },
+    choix: [
+      { t: 'Donner votre avis au tailleur de pierre', si: function (s) { return !s.f.epitaphe; }, cond: 'une fois', min: 4,
+        fx: function (s) { s.f.epitaphe = true; msg(s, '« Je grave : \'Il est parti trop tôt\'. Ou alors \'Il est parti chercher du pain\'. Vous en pensez quoi ? » Vous votez pour la deuxième. Il hoche la tête : c\'était aussi son choix. Il vous serre la main, poussiéreuse.'); } },
+      { t: 'Passer par la petite grille vers la butte', si: function (s) { return s.t >= h(9); }, cond: 'après 9h', move: 2, go: 'A_ESCALIERS' },
+      { t: 'Redescendre l\'allée des tilleuls', move: 3, go: 'A_CIM_ALLEE' }
+    ]
+  });
+
   lieu('A_RACAILLES', {
     zone: 'A', pos: [1, 4.8], titre: 'En bas de la rue des Pavés', icone: 'danger',
     anim: function (s) { return racaillesLa(s) ? 'racailles' : null; },
-    entree: function (s, R) { s.f.racaillesLa = !s.f.racaillesParties && R.chance((s.st.bonneteauGagne > 0 ? 0.35 : 0.08) * (s.j.meteo === 'pluie' ? 0.5 : 1)); },
+    entree: function (s, R) { s.f.racaillesLa = !s.f.racaillesParties && R.chance((s.st.bonneteauGagne > 0 ? 0.35 : 0.11) * (s.j.meteo === 'pluie' ? 0.5 : 1)); },
     texte: function (s) {
       if (racaillesLa(s) && s.st.bonneteauGagne > 0) return 'Les deux types du carrefour vous attendaient, avec un troisième. Le plus petit fait craquer ses doigts. « C\'est toi qui as plumé notre oncle ? On vient récupérer la monnaie. Toute la monnaie. »';
       if (racaillesLa(s)) return 'Trois types en survêtement vous barrent le passage. Le plus petit fait craquer ses doigts. « Bonjour. Tu as l\'heure ? Et ton argent ? »';
@@ -1832,7 +2023,7 @@ body { min-height: 100vh; }
       return 'En bas de la rue des Pavés, trois canettes vides et un scooter sans roues. Les petits du quartier ne sont pas là. Pas maintenant, en tout cas.';
     },
     choix: [
-      { t: 'Continuer vers le canal', si: function (s) { return !racaillesLa(s); }, cond: 'personne en bas (92 % des passages, 65 % si on a gagné au bonneteau)', move: 2, go: 'A_QUAI_O' },
+      { t: 'Continuer vers le canal', si: function (s) { return !racaillesLa(s); }, cond: 'personne en bas (89 % des passages, 65 % si on a gagné au bonneteau)', move: 2, go: 'A_QUAI_O' },
       { t: 'Remonter vers le carrefour', si: function (s) { return !racaillesLa(s); }, cond: 'personne en bas', move: 4, go: 'A_PAVES' },
       { t: 'Leur proposer le jeu vidéo', si: function (s) { return racaillesLa(s) && s.o.jeu; }, cond: 'racailles là, objet : jeu vidéo', min: 2, effet: 'perd le jeu, on passe',
         fx: function (s) { s.o.jeu = false; s.f.jeuDonne = true; s.f.racaillesParties = true; noter(s, 'racailles', 'Vous avez calmé trois racailles avec un jeu vidéo.'); msg(s, 'Vous sortez la boîte de Pixel Quest 3. Les trois types se figent. Ils se disputent pour savoir qui jouera le premier et vous oublient complètement. Vous passez.'); },
@@ -1915,7 +2106,8 @@ body { min-height: 100vh; }
       { t: 'Pousser la brouette de la jardinière', si: function (s) { return !s.f.jardin; }, cond: 'une fois', min: 6, effet: '+1 € et un indice',
         fx: function (s) { s.f.jardin = true; gagner(s, 100); msg(s, 'Trois allers-retours de compost plus tard, la jardinière vous donne 1\u00a0€ et trois radis. Vous mangez les radis. « Odette ? Rue de la Grange, tout au bout des Tisserands. Elle ouvre à ' + odetteTxt(s) + '. Ne dites pas que c\'est moi qui vous envoie, on est fâchées depuis 1997. »'); } },
       { t: 'Prendre la rue des Tisserands', move: 3, go: 'A_TISSERANDS' },
-      { t: 'Remonter sur la passerelle', move: 1, go: 'A_PASSERELLE' }
+      { t: 'Remonter sur la passerelle', move: 1, go: 'A_PASSERELLE' },
+      { t: 'Suivre la rive vers l\'ouest, vers la guinguette', move: 8, go: 'A_GUINGUETTE' }
     ]
   });
   lieu('A_LAVOIR', {
@@ -2082,6 +2274,8 @@ body { min-height: 100vh; }
       { t: 'Aller au kiosque', min: 1, go: 'KIOSQUE_FILE' },
       { t: 'Attendre le bus du retour', min: 1, go: 'B_BUS_ATT' },
       { t: 'Remonter la rue de la Gare', move: 3, go: 'B_RUE_GARE' },
+      { t: 'Prendre la rue des Cheminots', move: 4, go: 'A_CHEMINOTS' },
+      { t: 'Entrer dans le hall de la gare', move: 1, go: 'B_HALL' },
       { t: 'Regarder le tableau des départs', si: function (s) { return s.t >= h(11, 30); }, cond: 'après 11h30', min: 2, go: 'B_TRAIN' }
     ]
   });
@@ -2156,7 +2350,9 @@ body { min-height: 100vh; }
       { t: 'Se glisser parmi les invités de la noce', si: mariageEnCours, cond: 'jours de mariage, entre 10h et 12h30', min: 2, go: 'B_MARIAGE' },
       { t: 'Prendre le boulevard', move: 3, go: 'B_BOULEVARD' },
       { t: 'Prendre la rue des Lavandières', move: 3, go: 'B_LAVANDIERES' },
-      { t: 'Descendre la rue de la Gare', move: 3, go: 'B_RUE_GARE' }
+      { t: 'Descendre la rue de la Gare', move: 3, go: 'B_RUE_GARE' },
+      { t: 'Entrer à la médiathèque', move: 1, go: 'B_MEDIATHEQUE' },
+      { t: 'Monter vers l\'hôpital', move: 3, go: 'B_HOPITAL' }
     ]
   });
 
@@ -2305,6 +2501,12 @@ body { min-height: 100vh; }
     function (s) { s.t += 170; });
   defaite('D_MARIAGE', 'Invité surprise', '« Mais vous n\'êtes pas Jérôme ! » Trop tard : la tante vous a déjà installé dans la voiture pour le vin d\'honneur, entre deux grands-mères. Il y aura un buffet, des discours, une chenille. Il n\'y aura pas de croissant.',
     function (s) { s.t += 240; });
+  defaite('D_CIMETIERE', 'Enfermé au cimetière', 'Quand vous rouvrez les yeux, le cimetière est désert et silencieux. La grille est fermée à double tour : le gardien est parti déjeuner, comme tous les jours à midi. Vous passez deux heures en compagnie des chats et d\'Auguste Lemoine, qui n\'a toujours servi personne.',
+    function (s) { s.t = Math.max(s.t, h(14)); });
+  defaite('D_VALSE', 'Valse sans fin', 'La musique ne s\'arrête jamais. Après la valse, un tango ; après le tango, une java ; après la java, une autre valse. Votre cavalière a quatre-vingt-sept ans et une énergie inépuisable. Vers midi, on vous sert un verre de blanc et une assiette de frites. Ce n\'est pas un croissant, mais vous n\'avez plus la force de protester.',
+    function (s) { s.t = Math.max(s.t, h(12, 30)); });
+  defaite('D_VALISE', 'Valise suspecte', 'Le voyageur ne revient pas. Au bout de dix minutes, deux agents de la sécurité de la gare s\'approchent de vous et de la valise abandonnée. Vous passez la matinée dans un petit bureau sans fenêtre, à expliquer que vous vouliez juste un croissant, pendant qu\'un chien renifle des chaussettes.',
+    function (s) { s.t += 150; });
   defaite('D_MARATHON', 'Emporté par la course', 'Vous courez. Vous courez encore. Au kilomètre 15, on vous tend une banane. Au kilomètre 21, on vous passe une médaille autour du cou et une couverture de survie sur les épaules. Vous n\'avez plus la force de chercher quoi que ce soit, même pas un croissant.',
     function (s) { s.t += 120; });
 
@@ -2355,6 +2557,10 @@ body { min-height: 100vh; }
     { k: 'fredoVelo', si: function (s) { return s.f.veloDemande && !s.o.velo && !s.veloAttache && !s.f.crevaison; }, fx: function () { return 'Fredo passe à vélo en sifflotant. « Tu vois, il est très bien, ce vélo ! » Il disparaît dans un grincement de pneu mou.'; } },
     { k: 'duval', si: function (s) { return s.f.chatRendu || s.f.duvalOdette; }, fx: function () { return 'À une fenêtre du premier étage, Mme Duval secoue un tapis et vous fait un grand signe. Moustache, sur son épaule, fait semblant de ne pas vous connaître.'; } },
     { k: 'velo', si: function (s) { return s.o.velo; }, fx: function (s) { return 'Une montée. Le vélo de Fredo grince, vous pédalez debout, et un enfant en trottinette vous double en vous regardant avec pitié.'; } },
+    { k: 'accordeon', si: function (s) { return !s.vu.A_GUINGUETTE && s.t > h(8); }, fx: function () { return 'Un air d\'accordéon traverse le canal, venu de quelque part au sud-ouest. Une valse, puis la même valse, puis encore la même.'; } },
+    { k: 'train', si: function (s) { return true; }, fx: function () { return 'Au loin, un train siffle longuement en passant sur la voie ferrée, à l\'est. Tout le quartier s\'arrête une seconde pour l\'écouter, puis repart.'; } },
+    { k: 'chatsCimetiere', si: function (s) { return s.f.chatParti; }, fx: function () { return 'Sur un muret, trois chats du cimetière font leur toilette en ligne. Le quatrième, roux, ressemble furieusement à Moustache. Il ne vous regarde pas.'; } },
+    { k: 'ambulance', si: function (s) { return s.node && s.node.indexOf('B_') === 0; }, fx: function (s) { M_avancer(s, 1); return 'Une ambulance remonte la rue vers l\'hôpital, sirène hurlante. Vous vous collez au mur pour la laisser passer.'; } },
     { k: 'pompiers', si: function () { return true; }, fx: function (s) { M_avancer(s, 2); return 'Un camion de pompiers passe, toutes sirènes hurlantes. Tout le monde s\'arrête pour le regarder. Vous aussi. Deux minutes de perdues, mais quel camion.'; } },
     { k: 'dent', si: function () { return true; }, fx: function () { return 'Un enfant vous arrête pour vous montrer sa dent tombée, dans un mouchoir. Vous la complimentez. Il repart, satisfait.'; } },
     { k: 'trottinettes', si: function (s) { return s.trott; }, fx: function (s) { return 'Le compteur de la trottinette affiche ' + E(s.argent) + ' de solde. Il clignote. C\'est sans doute normal.'; } },
@@ -2416,6 +2622,10 @@ body { min-height: 100vh; }
       utilite: 'Toutes les rues du quartier apparaissent sur votre carte.', indice: 'Il ne dit pas où sont les boulangeries. Et un certain visiteur cherche désespérément un plan.' },
     { id: 'dossard', ici: function (s) { return s.o.dossard; }, nom: 'Un dossard de coureur, n° 1847', desc: 'Épinglé sur votre ventre depuis la course du boulevard.',
       utilite: 'Vous avez l\'air d\'un athlète.', indice: 'Les jours de course, les participants voyagent gratuitement dans le bus.' },
+    { id: 'ballon', ici: function (s) { return s.o.ballon; }, nom: 'Un ballon rouge', desc: 'Il flotte au bout de sa ficelle, au-dessus de votre tête. Vous ne savez toujours pas pourquoi vous l\'avez acheté.',
+      utilite: 'Faire plaisir.', indice: 'Au milieu du parc, quelqu\'un vient justement de perdre le sien.' },
+    { id: 'carteFidelite', ici: function (s) { return s.o.carteFidelite; }, nom: 'Une carte de fidélité Delorme', desc: 'Vert sapin, au nom de M. Albert. Neuf tampons sur dix.',
+      utilite: 'Le dixième croissant est offert.', indice: 'Chez Delorme, au comptoir, une fois les croissants sortis du four.' },
     { id: 'comte', ici: function (s) { return s.o.comte; }, nom: 'Un morceau de comté', desc: 'Emballé dans du papier par le fromager du quai. Il parfume vos poches, et un peu plus.',
       utilite: 'Les chiens l\'adorent.', indice: 'Un homme dort avec son chien près de la gare. Mais attention : certaines boutiques chics ont le nez fin.' },
     { id: 'cle', ici: function (s) { return s.o.cle; }, nom: 'Une clé de 12', desc: 'Repêchée dans le canal, rouillée mais solide.',
@@ -2783,7 +2993,7 @@ body { min-height: 100vh; }
     A_BARRAGE: 'Barrage', A_PLACE_HERONS: 'Pl. des Hérons', A_RUE_HERONS: 'Orfèvres (Delorme)', A_COIN_NE: 'Le Zinc', A_PARC_ENTREE: 'Parc',
     A_PARC_ALLEE: 'Allée', A_FORET: 'Bois', A_PUITS: 'R. du Puits', A_COIN_SE: 'Balto', A_FIACRE: 'St-Fiacre', A_ARRET: 'Arrêt',
     A_COIN_SO: 'Coin', A_GLANEUSES: 'Glaneuses', A_QUAI_C: 'Quai', A_QUAI_O: 'Quai ouest', A_PAVES: 'Pavés', A_RACAILLES: 'Bas des Pavés',
-    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_RIVE: 'Quai d\'en face', A_TISSERANDS: 'Tisserands', A_SQUARE: 'Square', A_HERONS_HAUT: 'R. des Hérons', A_LAVOIR: 'Lavoir', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
+    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_RIVE: 'Quai d\'en face', A_TISSERANDS: 'Tisserands', A_SQUARE: 'Square', A_COTE_HAUT: 'Haut de la Côte', A_DEVIATION: 'R. du Moulin', A_DEVIATION2: 'Vieux moulin', A_DEVIATION3: 'Descente du Moulin', A_GALERIE: 'Galerie', A_CIM_ENTREE: 'R. du Repos', A_CIM_ALLEE: 'Cimetière', A_CIM_HAUT: 'Haut du cimetière', A_GUINGUETTE: 'Guinguette', A_PASS_FERREE: 'Passerelle ferrée', A_CHEMINOTS: 'Cheminots', B_MEDIATHEQUE: 'Médiathèque', B_HALL: 'Hall de la gare', B_HOPITAL: 'Hôpital', A_HERONS_HAUT: 'R. des Hérons', A_LAVOIR: 'Lavoir', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
     B_GARE: 'Gare', B_RUE_GARE: 'R. de la Gare', B_MAIRIE: 'Mairie', B_BOULEVARD: 'Boulevard', B_LAVANDIERES: 'Lavandières', B_PASSAGE: 'Passage du Four'
   };
   function court(id) { return COURT[id] || N[id].titre; }
