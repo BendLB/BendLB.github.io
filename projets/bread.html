@@ -1132,6 +1132,7 @@ body { min-height: 100vh; }
       { t: 'Lui accorder cinq minutes', si: function (s) { return !s.f.planete; }, cond: 'une seule fois', min: 8, effet: 'indice : Delorme, et son horreur des odeurs de fromage',
         fx: function (s) { s.f.planete = true; msg(s, 'Cela fait huit minutes. La planète vous remercie. Elle aurait aimé votre RIB, mais vous n\'avez sur vous qu\'un appétit.'); if (s.j.inventaire) msg(s, 'Pour la peine, la jeune femme vous donne un tuyau : « Un croissant ? Pas chez Delorme aujourd\'hui, ils font l\'inventaire. Essayez Odette, de l\'autre côté du canal : circuit court, beurre du fromager du quai. »'); else msg(s, 'Pour la peine, la jeune femme vous donne un tuyau : « Un croissant ? Delorme, place des Hérons, de l\'autre côté du parc. Cinq euros, et ils sont très à cheval sur les odeurs : ce matin, ils ont fait attendre un monsieur qui sentait le fromage jusqu\'à ce qu\'il s\'en aille. »'); } },
       { t: 'Longer le parc vers l\'est', move: 4, go: 'A_BARRAGE' },
+      { t: 'Prendre la petite rue de l\'école', move: 2, go: 'A_ECOLE' },
       { t: 'Monter la rue des Saules', move: 5, go: 'A_SAULES' },
       { t: 'Rejoindre le coin de la rue du Puits', move: 3, go: 'A_COIN_NE' }
     ]
@@ -1179,6 +1180,7 @@ body { min-height: 100vh; }
       { t: 'Ramasser les 50 centimes', si: function (s) { return !s.f.moulin; }, cond: 'une seule fois', min: 1, effet: '+0,50 €',
         fx: function (s) { s.f.moulin = true; gagner(s, 50); msg(s, 'Cinquante centimes. Ce n\'est pas un croissant, mais c\'est un début de croissant.'); } },
       { t: 'Continuer la déviation', move: 4, go: 'A_DEVIATION2' },
+      { t: 'Descendre la petite rue de l\'école', move: 3, go: 'A_ECOLE' },
       { t: 'Revenir vers le ruban', move: 5, go: 'A_BARRAGE' }
     ]
   });
@@ -1450,6 +1452,9 @@ body { min-height: 100vh; }
         (s.t < h(10, 30) ? ' Un sentier part vers le bois en promettant un raccourci.' : ' Le sentier du bois est fermé par une chaîne : « Accès interdit après 10h30 ».') + ' La grande allée continue jusqu\'à la grille est. Une autre grille donne au sud, sur l\'avenue.';
     },
     choix: [
+      { t: 'Offrir votre part de quatre-quarts à l\'enfant qui pleure', si: function (s) { return s.o.gateau && !s.o.ballon && !s.f.ballonDonne && s.t < h(11); }, cond: 'objet : quatre-quarts, avant 11h', min: 2,
+        effet: 'il se console un peu ; le grand-père vous remercie (indice)',
+        fx: function (s) { s.o.gateau = false; s.f.gateauEnfant = true; msg(s, 'L\'enfant mange le quatre-quarts sans cesser de pleurer, ce qui est un exploit. Son grand-père soupire : « C\'est le ballon qu\'il veut. Le marchand est à l\'entrée du parc. Si vous lui en rapportez un, je vous ferai un cadeau. »'); } },
       { t: 'Offrir votre ballon rouge à l\'enfant qui pleure', si: function (s) { return s.o.ballon && s.t < h(11); }, cond: 'objet : ballon, avant 11h', min: 2,
         effet: 'le grand-père vous donne sa carte de fidélité Delorme (croissant offert)',
         fx: function (s) { s.o.ballon = false; s.f.ballonDonne = true; s.o.carteFidelite = true; noter(s, 'ballon', 'Vous avez consolé un enfant avec un ballon rouge.');
@@ -1957,6 +1962,31 @@ body { min-height: 100vh; }
     ]
   });
 
+  function rentree(s) { return s.t >= h(8, 10) && s.t < h(8, 50); }
+  lieu('A_ECOLE', {
+    zone: 'A', pos: [5.35, 1.0], titre: 'La rue de l\'école', icone: 'lieu',
+    texte: function (s) {
+      var t = 'Une petite rue en pente devant l\'école primaire des Hérons, avec sa grille verte et son préau.';
+      if (rentree(s)) t += ' C\'est l\'heure de la rentrée : trottinettes, cartables, parents pressés, un petit qui pleure parce qu\'il a oublié son doudou. Une dame en gilet jaune fait traverser tout le monde avec un panneau « STOP ».';
+      else if (s.t < h(8, 10)) t += ' La grille est encore fermée. Le gardien balaie la cour en sifflant.';
+      else t += ' La cour résonne de cris. Par une fenêtre ouverte, on entend une classe réciter une table de multiplication.';
+      if (!s.f.gateau && s.t >= h(8) && s.t < h(11)) t += ' Devant la grille, les parents d\'élèves tiennent une table : « Vente de gâteaux pour la classe verte ! »';
+      return t;
+    },
+    choix: [
+      { t: 'Acheter une part de quatre-quarts (1,00 €)', si: function (s) { return !s.f.gateau && s.t >= h(8) && s.t < h(11) && s.argent >= 100; }, cond: 'de 8h à 11h, avoir 1 €, une fois', min: 2,
+        effet: 'objet caché : une part de quatre-quarts',
+        fx: function (s) { s.f.gateau = true; s.o.gateau = true; payer(s, 100); msg(s, 'Une maman vous emballe une part de quatre-quarts dans une serviette en papier. « C\'est moi qui l\'ai fait. Enfin, mon fils a cassé les œufs. » Ce n\'est pas un croissant. Vous le gardez quand même.'); } },
+      { t: 'Aider la dame en gilet jaune à faire traverser', si: function (s) { return rentree(s) && !s.f.stop; }, cond: 'entre 8h10 et 8h50, une fois', min: 8, effet: '+1 € et un indice',
+        fx: function (s) { s.f.stop = true; gagner(s, 100); msg(s, 'Vous tenez le panneau « STOP » pendant huit minutes. Trois voitures pilent, un livreur vous insulte, quarante enfants traversent. La dame vous donne 1\u00a0€ « pour le café » et un conseil : « Un croissant ? Les mamans de la classe de CM2 ne jurent que par Delorme, rue des Hérons. Cinq euros, mais elles ont les moyens. »'); } },
+      { t: 'Proposer votre aide à la maîtresse', si: function (s) { return s.t >= h(8, 30) && s.t < h(10) && !s.f.maitresse; }, cond: 'de 8h30 à 10h, une fois', min: 3, effet: '30 % : elle vous embarque en sortie scolaire (défaite)',
+        fx: function (s, R) { s.f.maitresse = true; s.f.sortie = R.chance(0.3); if (!s.f.sortie) msg(s, 'La maîtresse vous regarde de la tête aux pieds. « Vous avez un extrait de casier judiciaire ? Non ? Alors merci, ce sera pour une autre fois. » Elle referme la grille.'); },
+        go: function (s) { return s.f.sortie ? 'D_SORTIE' : null; }, vers: ['D_SORTIE'] },
+      { t: 'Redescendre vers le boulevard des Hérons', move: 2, go: 'A_HERONS_O' },
+      { t: 'Continuer jusqu\'à la rue du Moulin', move: 3, go: 'A_DEVIATION' }
+    ]
+  });
+
   lieu('A_CIM_ENTREE', {
     zone: 'A', pos: [-0.25, 3.0], titre: 'La rue du Repos', icone: 'lieu',
     texte: function (s) {
@@ -2028,6 +2058,10 @@ body { min-height: 100vh; }
       { t: 'Leur proposer le jeu vidéo', si: function (s) { return racaillesLa(s) && s.o.jeu; }, cond: 'racailles là, objet : jeu vidéo', min: 2, effet: 'perd le jeu, on passe',
         fx: function (s) { s.o.jeu = false; s.f.jeuDonne = true; s.f.racaillesParties = true; noter(s, 'racailles', 'Vous avez calmé trois racailles avec un jeu vidéo.'); msg(s, 'Vous sortez la boîte de Pixel Quest 3. Les trois types se figent. Ils se disputent pour savoir qui jouera le premier et vous oublient complètement. Vous passez.'); },
         go: function (s) { return s.prev === 'A_QUAI_O' ? 'A_PAVES' : 'A_QUAI_O'; }, vers: ['A_QUAI_O', 'A_PAVES'] },
+      { t: 'Leur offrir votre part de quatre-quarts', si: function (s) { return racaillesLa(s) && s.o.gateau; }, cond: 'racailles là, objet : quatre-quarts', min: 2, effet: '70 % : ils vous laissent passer',
+        fx: function (s, R) { s.o.gateau = false; s.f.gateauOk = R.chance(0.7);
+          msg(s, s.f.gateauOk ? 'Le plus petit renifle le quatre-quarts. « C\'est celui de la vente de l\'école ? C\'est ma mère qui l\'a fait ! » Il le partage en trois avec un soin infini. Vous passez pendant qu\'ils mangent.' : 'Ils mangent le quatre-quarts en deux bouchées, puis se tournent de nouveau vers vous, l\'air de dire : « Et maintenant, le plat principal. »'); },
+        go: function (s) { return s.f.gateauOk ? (s.prev === 'A_QUAI_O' ? 'A_PAVES' : 'A_QUAI_O') : 'D_RACAILLES'; }, vers: ['A_PAVES', 'A_QUAI_O', 'D_RACAILLES'] },
       { t: 'Montrer votre bracelet de l\'amitié', si: function (s) { return racaillesLa(s) && s.o.bracelet; }, cond: 'racailles là, objet : bracelet', min: 1, effet: 'on passe sans rien payer',
         fx: function (s) { s.f.braceletOk = true; noter(s, 'bracelet', 'Le bracelet de Toto vous a protégé des racailles.'); msg(s, 'Le plus petit voit le bracelet rouge et jaune et pâlit. « Tu connais Toto ? Fallait le dire ! » Ils s\'écartent en vous souhaitant une excellente journée. L\'amitié, finalement, ça vaut 5 €.'); },
         go: function (s) { return s.prev === 'A_QUAI_O' ? 'A_PAVES' : 'A_QUAI_O'; }, vers: ['A_QUAI_O', 'A_PAVES'] },
@@ -2507,6 +2541,8 @@ body { min-height: 100vh; }
     function (s) { s.t = Math.max(s.t, h(12, 30)); });
   defaite('D_VALISE', 'Valise suspecte', 'Le voyageur ne revient pas. Au bout de dix minutes, deux agents de la sécurité de la gare s\'approchent de vous et de la valise abandonnée. Vous passez la matinée dans un petit bureau sans fenêtre, à expliquer que vous vouliez juste un croissant, pendant qu\'un chien renifle des chaussettes.',
     function (s) { s.t += 150; });
+  defaite('D_SORTIE', 'Sortie scolaire', '« Formidable, il me manquait justement un accompagnateur ! » La maîtresse vous met un gilet fluo, vous confie la main de deux enfants collants et monte avec toute la classe dans un car pour le musée des Arts et Métiers. Vous passez la journée à compter des enfants devant des machines à vapeur. On vous donne un goûter à 16h. Ce n\'est pas un croissant.',
+    function (s) { s.t = Math.max(s.t, h(16, 30)); });
   defaite('D_MARATHON', 'Emporté par la course', 'Vous courez. Vous courez encore. Au kilomètre 15, on vous tend une banane. Au kilomètre 21, on vous passe une médaille autour du cou et une couverture de survie sur les épaules. Vous n\'avez plus la force de chercher quoi que ce soit, même pas un croissant.',
     function (s) { s.t += 120; });
 
@@ -2622,6 +2658,8 @@ body { min-height: 100vh; }
       utilite: 'Toutes les rues du quartier apparaissent sur votre carte.', indice: 'Il ne dit pas où sont les boulangeries. Et un certain visiteur cherche désespérément un plan.' },
     { id: 'dossard', ici: function (s) { return s.o.dossard; }, nom: 'Un dossard de coureur, n° 1847', desc: 'Épinglé sur votre ventre depuis la course du boulevard.',
       utilite: 'Vous avez l\'air d\'un athlète.', indice: 'Les jours de course, les participants voyagent gratuitement dans le bus.' },
+    { id: 'gateau', ici: function (s) { return s.o.gateau; }, nom: 'Une part de quatre-quarts', desc: 'Achetée à la vente de gâteaux de l\'école, emballée dans une serviette en papier. Le fils de la vendeuse a cassé les œufs.',
+      utilite: 'Ce n\'est pas un croissant, mais ça fait plaisir.', indice: 'Les enfants du quartier, petits et grands, reconnaissent le quatre-quarts de leur mère.' },
     { id: 'ballon', ici: function (s) { return s.o.ballon; }, nom: 'Un ballon rouge', desc: 'Il flotte au bout de sa ficelle, au-dessus de votre tête. Vous ne savez toujours pas pourquoi vous l\'avez acheté.',
       utilite: 'Faire plaisir.', indice: 'Au milieu du parc, quelqu\'un vient justement de perdre le sien.' },
     { id: 'carteFidelite', ici: function (s) { return s.o.carteFidelite; }, nom: 'Une carte de fidélité Delorme', desc: 'Vert sapin, au nom de M. Albert. Neuf tampons sur dix.',
@@ -2993,7 +3031,7 @@ body { min-height: 100vh; }
     A_BARRAGE: 'Barrage', A_PLACE_HERONS: 'Pl. des Hérons', A_RUE_HERONS: 'Orfèvres (Delorme)', A_COIN_NE: 'Le Zinc', A_PARC_ENTREE: 'Parc',
     A_PARC_ALLEE: 'Allée', A_FORET: 'Bois', A_PUITS: 'R. du Puits', A_COIN_SE: 'Balto', A_FIACRE: 'St-Fiacre', A_ARRET: 'Arrêt',
     A_COIN_SO: 'Coin', A_GLANEUSES: 'Glaneuses', A_QUAI_C: 'Quai', A_QUAI_O: 'Quai ouest', A_PAVES: 'Pavés', A_RACAILLES: 'Bas des Pavés',
-    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_RIVE: 'Quai d\'en face', A_TISSERANDS: 'Tisserands', A_SQUARE: 'Square', A_COTE_HAUT: 'Haut de la Côte', A_DEVIATION: 'R. du Moulin', A_DEVIATION2: 'Vieux moulin', A_DEVIATION3: 'Descente du Moulin', A_GALERIE: 'Galerie', A_CIM_ENTREE: 'R. du Repos', A_CIM_ALLEE: 'Cimetière', A_CIM_HAUT: 'Haut du cimetière', A_GUINGUETTE: 'Guinguette', A_PASS_FERREE: 'Passerelle ferrée', A_CHEMINOTS: 'Cheminots', B_MEDIATHEQUE: 'Médiathèque', B_HALL: 'Hall de la gare', B_HOPITAL: 'Hôpital', A_HERONS_HAUT: 'R. des Hérons', A_LAVOIR: 'Lavoir', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
+    A_QUAI_E: 'Quai est', A_GRANGE: 'R. de la Grange', A_RIVE: 'Quai d\'en face', A_TISSERANDS: 'Tisserands', A_SQUARE: 'Square', A_ECOLE: 'École', A_COTE_HAUT: 'Haut de la Côte', A_DEVIATION: 'R. du Moulin', A_DEVIATION2: 'Vieux moulin', A_DEVIATION3: 'Descente du Moulin', A_GALERIE: 'Galerie', A_CIM_ENTREE: 'R. du Repos', A_CIM_ALLEE: 'Cimetière', A_CIM_HAUT: 'Haut du cimetière', A_GUINGUETTE: 'Guinguette', A_PASS_FERREE: 'Passerelle ferrée', A_CHEMINOTS: 'Cheminots', B_MEDIATHEQUE: 'Médiathèque', B_HALL: 'Hall de la gare', B_HOPITAL: 'Hôpital', A_HERONS_HAUT: 'R. des Hérons', A_LAVOIR: 'Lavoir', A_ECLUSE: 'Écluse', A_AVENUE_SUD: 'Av. du Sud',
     B_GARE: 'Gare', B_RUE_GARE: 'R. de la Gare', B_MAIRIE: 'Mairie', B_BOULEVARD: 'Boulevard', B_LAVANDIERES: 'Lavandières', B_PASSAGE: 'Passage du Four'
   };
   function court(id) { return COURT[id] || N[id].titre; }
