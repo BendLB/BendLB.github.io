@@ -100,7 +100,7 @@ tr.key td:first-child{font-weight:600}
     <div class="race"><div><div class="name">10 km</div><div class="dist" data-d="10"></div></div><input id="t10" data-d="10" inputmode="numeric" aria-label="Temps 10 km"></div>
     <div class="race"><div><div class="name">Semi-marathon</div><div class="dist" data-d="21.0975"></div></div><input id="t21" data-d="21.0975" inputmode="numeric" aria-label="Temps semi-marathon"></div>
     <div class="race"><div><div class="name">Marathon</div><div class="dist" data-d="42.195"></div></div><input id="t42" data-d="42.195" inputmode="numeric" aria-label="Temps marathon"></div>
-    <p class="hint">Tape un temps cible (ex. 3:30:00 ou 45:00) pour obtenir l'allure correspondante.</p>
+    <p class="hint">Tape les chiffres d'un temps cible, les deux-points se placent tout seuls (ex. 33000 → 3:30:00, 4500 → 45:00) pour obtenir l'allure correspondante.</p>
   </section>
 
   <section class="races">
@@ -150,7 +150,11 @@ for(const id of["pm","ps"]){$(id).addEventListener("input",()=>{const m=parseInt
   if(m>=2&&s<60){pace=(m*60+s)/(unit==="km"?1:MI);render("pace")}});$(id).addEventListener("blur",()=>render())}
 $("range").addEventListener("input",e=>{pace=3600/parseFloat(e.target.value);render()});
 for(const id of["t10","t21","t42"]){const el=$(id);
-  el.addEventListener("input",()=>{const t=parseT(el.value);if(t){const p=t/parseFloat(el.dataset.d);if(p>=120&&p<=600){pace=p;render(id)}}});
+  el.addEventListener("input",()=>{
+    /* Clavier numérique sans « : » (iPhone) : on place les deux-points tout seuls, 33000 → 3:30:00 */
+    if(/^[\d:]*$/.test(el.value)){const d=el.value.replace(/\D/g,"").replace(/^0+(?=\d{3})/,"").slice(-6);
+      const g=[];for(let i=d.length;i>0;i-=2)g.unshift(d.slice(Math.max(0,i-2),i));el.value=g.join(":")}
+    const t=parseT(el.value);if(t){const p=t/parseFloat(el.dataset.d);if(p>=120&&p<=600){pace=p;render(id)}}});
   el.addEventListener("blur",()=>render());
   el.addEventListener("focus",()=>el.select())}
 const WR=[
