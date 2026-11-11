@@ -214,6 +214,10 @@ textarea.code{width:100%;height:110px;background:#0b1220;color:#bfe;border:1px s
 .li > .ic:last-child:not(:first-child){font-size:16px}
 #screen > button.x{display:flex;align-items:center;justify-content:center}
 @media (max-width:360px){#screen[data-name="diff"] .card{font-size:21px!important}#screen[data-name="diff"] .card .nm{font-size:11px!important}}
+.tk.tip{border-color:rgba(255,226,122,.55);background:rgba(20,18,6,.9);color:#fff;font-weight:600;text-align:left;padding:8px 12px}
+.tk.tip b{color:#ffe27a;font-weight:800;margin-right:4px}
+#screen[data-name="smith"] .detail .acts{flex-direction:column}
+#screen[data-name="smith"] .detail .acts button{flex:none;height:44px;width:100%}
 
 </style>
 </head>
@@ -3559,7 +3563,7 @@ textarea.code{width:100%;height:110px;background:#0b1220;color:#bfe;border:1px s
     const Z = typeof W.zid === 'number' ? E.S.zones[W.zid] : null, items = Z ? W.map.items : [], took = it => Z.took[it.kind + ':' + it.cell + (it.id != null ? ':' + it.id : '')];
     const cnt = (k, icn, col) => { const l = items.filter(it => it.kind === k); return l.length ? '<span class="chip" style="color:' + col + '">' + ic(icn) + l.filter(took).length + '/' + l.length + ' <small>' + CNT[k] + '</small></span>' : ''; };
     UI.show('<div class="panel">' + top('map', !Z ? '' : '<span class="chip" style="color:' + W.def.pal.acc + '">' + W.def.name + '</span>' + cnt('drone', 'drone', '#ffd36b') + cnt('memory', 'memory', '#bff6ff') + cnt('hull', 'hull', '#ff9aaa')) + '<canvas id="bigmap" style="width:100%;flex:1;min-height:0"></canvas><div class="row" style="justify-content:center">' +
-      ['drill', 'phase', 'hover', 'hack'].map(a => '<span class="chip" style="color:' + E.ABIL_COLOR[a] + ';opacity:' + (E.has(a) ? 1 : .55) + '">' + ic(E.has(a) ? 'check' : 'lock') + ic(a) + ' ' + T.abil[a][0] + '</span>').join('') + '<span class="chip" style="color:#ffd36b">' + ic('key') + (W.zid !== 'H' && E.S.zones[W.zid].key ? ' Clé ' + ic('check') : ' Clé à trouver') + '</span></div></div>', { name: 'map' });
+      ['drill', 'phase', 'hover', 'hack'].map(a => '<span class="chip" style="color:' + E.ABIL_COLOR[a] + ';opacity:' + (E.has(a) ? 1 : .55) + '">' + ic(E.has(a) ? 'check' : 'lock') + ic(a) + ' ' + T.abil[a][0] + '</span>').join('') + '<span class="chip" style="color:#ffd36b">' + ic('key') + (W.zid !== 'H' && E.S.zones[W.zid].key ? ' Clé ' + ic('check') : ' Clé à trouver') + '</span></div><div class="sub">Carré clair : toi. Crâne : le gardien. Un cadenas marque un passage qui demande le pouvoir indiqué.</div></div>', { name: 'map' });
     const cvs = $('#bigmap'); const r = cvs.getBoundingClientRect(); const d = Math.min(2, devicePixelRatio || 1);
     cvs.width = r.width * d; cvs.height = r.height * d; const c = cvs.getContext('2d'); c.scale(d, d);
     E.drawMap(c, r.width, r.height, true);
@@ -3577,7 +3581,7 @@ textarea.code{width:100%;height:110px;background:#0b1220;color:#bfe;border:1px s
 
   UI.contracts = function () {
     const S = E.S, C = S.contracts || [];
-    UI.show('<div class="panel">' + top('target', '<span class="chip">' + (S.contractsDone || 0) + ' remplis</span>') + '<div class="scroll"><div class="sub">Élimine les créatures demandées : tu gagnes des cristaux et de la ferraille.</div><div class="list">' +
+    UI.show('<div class="panel">' + top('target', '<span class="chip">' + (S.contractsDone || 0) + ' remplis</span>') + '<div class="scroll"><div class="sub">Élimine les créatures demandées : tu gagnes des cristaux et de la ferraille.</div>' + (C.length ? '' : '<div class="txt">Aucun contrat pour l’instant. Les premiers arrivent à l’Arche après la victoire sur le gardien des ' + E.ZONES[0].name + '.</div>') + '<div class="list">' +
       C.map((c, i) => '<div class="hrow" style="grid-template-columns:90px 1fr auto"><canvas data-c="' + i + '" width="180" height="120" style="width:90px;height:60px"></canvas><span style="flex-direction:column;align-items:stretch;gap:6px"><b style="font:800 15px system-ui">' + (T.enemy[c.t] || '') + ' : ' + c.got + ' / ' + c.n + '</b><span style="display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden"><i style="display:block;height:100%;width:' + Math.min(100, c.got / c.n * 100) + '%;background:#ffe27a"></i></span></span><span style="flex-direction:column;font-size:15px"><span style="color:#d6a8ff">' + ic('crystal') + c.cry + '</span><span>' + ic('scrap') + E.fmt(c.scrap) + '</span></span></div>').join('') +
       '</div></div></div>', { name: 'con' });
     scr.querySelectorAll('canvas[data-c]').forEach(cv => { const x = cv.getContext('2d'); x.scale(2, 2); E.drawEnemyOn(x, C[+cv.dataset.c].t, 45, 30, 1); });
@@ -3767,7 +3771,7 @@ textarea.code{width:100%;height:110px;background:#0b1220;color:#bfe;border:1px s
     const cryPrice = Math.round(60 * Math.pow(1.12, (S.maxZone || 0) * 5));
     let det = '';
     if (sel) { const p = E.itemPrice(sel); det = UI.itemCard(sel, '<div class="acts"><button class="go" data-buy ' + (S.scrap < p || S.inv.length >= 24 ? 'disabled' : '') + '>Acheter : ' + E.fmt(p) + ' ' + ic('scrap') + '</button></div>' + (S.inv.length >= 24 ? '<div class="sub">Le sac est plein.</div>' : S.scrap < p ? '<div class="sub">Pas assez de ferraille.</div>' : '')); }
-    UI.show('<div class="panel">' + top('shop', '<span class="chip">' + ic('scrap') + E.fmt(S.scrap) + ' <small>ferraille</small></span>') + '<div class="scroll"><div class="hd">Objets à vendre — touche pour voir le détail</div><div class="grid" style="grid-template-columns:repeat(3,1fr)">' +
+    UI.show('<div class="panel">' + top('shop', '<span class="chip">' + ic('scrap') + E.fmt(S.scrap) + ' <small>ferraille</small></span>') + '<div class="scroll"><div class="hd">Objets à vendre (prix en ferraille) — touche pour voir le détail</div><div class="grid" style="grid-template-columns:repeat(3,1fr)">' +
       sh.items.map((it, i) => it ? '<button class="slot' + (it === sel ? ' sel' : '') + '" data-i="' + i + '" style="color:' + E.RAR[it.r].c + ';border-color:' + E.hexA(E.RAR[it.r].c, .5) + '">' + ic(UI.itemIcon(it)) + '<small>' + it.l + '</small><em style="font-size:10px">' + E.fmt(E.itemPrice(it)) + '</em></button>' : '<div class="slot empty">' + ic('check') + '</div>').join('') + '</div>' + det +
       '<div class="hd">Améliorations d’Écho</div><div class="list">' + [['kit', 'heal', 2, 1500, 'Une trousse de soin en plus'], ['en', 'energy', 3, 1000, 'Plus d’énergie']].map(([k, i, mx, base, lab]) => { const n = (S.upg || {})[k] || 0, pr = Math.round(base * Math.pow(3, n) * Math.pow(1.1, Math.max(0, (S.maxZone || 0) * 2))); return '<button class="li" data-upg="' + k + '" data-pr="' + pr + '" ' + (n >= mx || S.scrap < pr ? 'disabled' : '') + '><span style="flex:none;color:#7fe8ff">' + ic(i) + '</span><span>' + lab + ' ' + '●'.repeat(n) + '○'.repeat(mx - n) + '</span>' + (n >= mx ? 'complet' : E.fmt(pr) + ' ' + ic('scrap')) + '</button>'; }).join('') + '<button class="li" data-cry ' + (S.scrap < cryPrice ? 'disabled' : '') + '><span style="color:#d6a8ff;flex:none">' + ic('crystal') + '</span><span>Acheter un cristal</span>' + E.fmt(cryPrice) + ' ' + ic('scrap') + '</button><button class="li" data-sell>' + ic('recycle') + '<span>Recycler les objets communs du sac</span></button></div></div></div>', { name: 'shop' });
     scr.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { click(); const it = sh.items[+b.dataset.i]; UI.shop(it === sel ? null : it); }));
@@ -3981,6 +3985,38 @@ textarea.code{width:100%;height:110px;background:#0b1220;color:#bfe;border:1px s
       return c.toDataURL('image/png');
     } catch (e) { return null; }
   };
+  // Conseils en cours de jeu : chacun n'apparaît qu'une fois par partie, au moment où il sert
+  const TIPS = {
+    explore: 'Explore les salles une à une. La flèche au bord de l’écran montre le but. Touche la mini-carte pour l’agrandir.',
+    sealed: 'Les portes se sont fermées : bats tous les ennemis de la salle pour les rouvrir. Reste près d’eux, Écho tire tout seul.',
+    cleared: 'Salle nettoyée : les portes sont rouvertes. Ramasse ce que les ennemis ont laissé.',
+    hurt: 'Tu prends des coups. L’Élan (gros bouton) traverse les ennemis et leurs tirs sans dégât.',
+    low: 'Vie basse ! Appuie sur le bouton vert « Soin ».',
+    nokits: 'Plus de trousse de soin. Les balises les rechargent, et rendent toute la vie.',
+    scrap: 'Ferraille ramassée. Elle sert à acheter et à améliorer des objets à l’Arche.',
+    pulse: 'Encerclé ? L’Onde repousse les ennemis proches et efface leurs tirs.',
+    boss: 'Un gardien ! Observe ses attaques, esquive avec l’Élan et reste à portée de tir.',
+    hubback: 'De retour à l’Arche : la vie et les trousses sont rechargées. Approche-toi d’un poste et appuie sur le bouton blanc.'
+  };
+  const tipQ = []; let tipT = 0;
+  UI.tip = function (id) { const S = E.S; if (!S || !TIPS[id]) return; S.seen = S.seen || {}; if (S.seen['t_' + id]) return; S.seen['t_' + id] = 1; tipQ.push(id); };
+  setInterval(() => {
+    const S = E.S, P = G.P; if (!S || !P || !G.W || G.mode !== 'play' || UI.open) return;
+    const st = G.st, now = Date.now();
+    if (st && typeof G.W.zid === 'number') {
+      if (P.hp < st.maxHp * .4 && S.kits > 0) { if (!S.seen.t_low) flash('#bHeal'); UI.tip('low'); }
+      else if (P.hp < st.maxHp * .8) UI.tip('hurt');
+      if (S.kits === 0 && P.hp < st.maxHp * .6) UI.tip('nokits');
+    }
+    if (tipQ.length && now > tipT) { const id = tipQ.shift(); tipT = now + 7000; const d = document.createElement('div'); d.className = 'tk tip'; d.innerHTML = '<b>Conseil</b> ' + TIPS[id]; const ms = 6500 + TIPS[id].length * 30; d.style.animationDuration = ms + 'ms'; tick.appendChild(d); setTimeout(() => d.remove(), ms + 100); }
+  }, 500);
+  let sealedN = 0, pulsed = 0;
+  E.on('zone', z => { tipQ.length = 0; if (!E.S) return; if (z.hub) { if (Object.keys(E.S.bosses).length || E.S.deaths) setTimeout(() => UI.tip('hubback'), 2500); } else if (typeof z.zid === 'number') setTimeout(() => UI.tip('explore'), 3200); });
+  E.on('room', () => setTimeout(() => { if (G.W && G.W.sealed && !G.W.boss) { UI.tip('sealed'); if (++sealedN >= 3 && !pulsed) UI.tip('pulse'); } }, 300));
+  E.on('cleared', () => UI.tip('cleared'));
+  E.on('used', u => { if (u === 'pulse') pulsed = 1; });
+  E.on('gain', g => { if (g.k === 'scrap') UI.tip('scrap'); });
+  E.on('boss', () => setTimeout(() => UI.tip('boss'), 2800));
   E.ICONS.arrowright = '<path d="M4 12h15M13 6l6 6-6 6" stroke-width="2.6"/>';
 })();
 
