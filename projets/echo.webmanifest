@@ -1,0 +1,24 @@
+{
+ "name": "Écho",
+ "short_name": "Écho",
+ "start_url": "echo.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#05070c",
+ "theme_color": "#05070c",
+ "lang": "fr",
+ "icons": [
+  {
+   "src": "../img/echo-icone.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  },
+  {
+   "src": "../img/echo-icone-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
